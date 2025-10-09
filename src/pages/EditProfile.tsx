@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,15 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const [profile, setProfile] = useState({
-    name: "Alex Johnson",
-    age: "28",
-    bio: "Love connecting with new people at celebrations! Looking for genuine connections.",
-    interests: ["Travel", "Food", "Music", "Dancing", "Photography"],
+    name: "",
+    age: "",
+    gender: "",
+    bio: "",
+    interests: [] as string[],
   });
 
   const [newInterest, setNewInterest] = useState("");
@@ -26,9 +31,78 @@ const EditProfile = () => {
     "Yoga", "Cooking", "Art", "Sports", "Movies", "Gaming", "Fitness"
   ];
 
-  const handleSave = () => {
-    toast.success("Profile updated successfully!");
-    navigate("/profile");
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        navigate("/auth");
+        return;
+      }
+
+      setUserId(user.id);
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Failed to load profile");
+        return;
+      }
+
+      setProfile({
+        name: profileData.name || "",
+        age: profileData.age?.toString() || "",
+        gender: profileData.gender || "",
+        bio: profileData.bio || "",
+        interests: profileData.interests || [],
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!userId) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          name: profile.name,
+          age: profile.age ? parseInt(profile.age) : null,
+          gender: profile.gender,
+          bio: profile.bio,
+          interests: profile.interests,
+        })
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile");
+        return;
+      }
+
+      toast.success("Profile updated successfully!");
+      navigate("/profile");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addInterest = (interest: string) => {
@@ -51,6 +125,14 @@ const EditProfile = () => {
       interests: profile.interests.filter((i) => i !== interest),
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -112,6 +194,8 @@ const EditProfile = () => {
               <Input
                 id="age"
                 type="number"
+                min="18"
+                max="100"
                 value={profile.age}
                 onChange={(e) => setProfile({ ...profile, age: e.target.value })}
               />
@@ -174,8 +258,14 @@ const EditProfile = () => {
           </div>
         </Card>
 
-        <Button variant="gradient" className="w-full" size="lg" onClick={handleSave}>
-          Save Changes
+        <Button 
+          variant="gradient" 
+          className="w-full" 
+          size="lg" 
+          onClick={handleSave}
+          disabled={saving || !profile.name}
+        >
+          {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </div>

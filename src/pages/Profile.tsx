@@ -1,32 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Edit, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const navigate = useNavigate();
-  
-  // Mock user data - will be replaced with real data from Lovable Cloud
-  const [user] = useState({
-    name: "Alex Johnson",
-    age: 28,
-    gender: "Female",
-    bio: "Love connecting with new people at celebrations! Looking for genuine connections.",
-    interests: ["Travel", "Food", "Music", "Dancing", "Photography"],
-    photos: ["/placeholder.svg", "/placeholder.svg"],
-    prompts: [
-      { question: "My perfect date would be...", answer: "Dancing under the stars at a rooftop venue" },
-      { question: "I'm looking for...", answer: "Someone who loves adventure and spontaneity" },
-    ],
-  });
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Failed to load profile");
+        return;
+      }
+
+      setUser(profile);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/auth");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const prompts = user.prompts || [];
+  const interests = user.interests || [];
+  const photos = user.photos && user.photos.length > 0 ? user.photos : ["/placeholder.svg", "/placeholder.svg"];
 
   return (
     <div className="min-h-screen bg-background pb-6">
@@ -69,12 +109,15 @@ const Profile = () => {
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            {user.photos.map((photo, idx) => (
+            {photos.map((photo: string, idx: number) => (
               <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted">
                 <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
               </div>
             ))}
-            <button className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+            <button 
+              className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+              onClick={() => navigate("/edit-profile")}
+            >
               <Camera className="w-6 h-6 mb-1" />
               <span className="text-xs">Add Photo</span>
             </button>
@@ -85,7 +128,7 @@ const Profile = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Basic Info</h2>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
@@ -106,7 +149,7 @@ const Profile = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">About Me</h2>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
@@ -118,39 +161,47 @@ const Profile = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Prompts</h2>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
           </div>
-          <div className="space-y-4">
-            {user.prompts.map((prompt, idx) => (
-              <div key={idx}>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
-                  {prompt.question}
-                </p>
-                <p className="text-foreground">{prompt.answer}</p>
-              </div>
-            ))}
-          </div>
+          {prompts.length > 0 ? (
+            <div className="space-y-4">
+              {prompts.map((prompt: any, idx: number) => (
+                <div key={idx}>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    {prompt.question}
+                  </p>
+                  <p className="text-foreground">{prompt.answer}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No prompts added yet</p>
+          )}
         </Card>
 
         {/* Interests Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Interests</h2>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {user.interests.map((interest, idx) => (
-              <Badge key={idx} variant="secondary" className="px-3 py-1">
-                {interest}
-              </Badge>
-            ))}
-          </div>
+          {interests.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {interests.map((interest: string, idx: number) => (
+                <Badge key={idx} variant="secondary" className="px-3 py-1">
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No interests added yet</p>
+          )}
         </Card>
       </div>
     </div>
