@@ -36,17 +36,17 @@ const EditProfile = () => {
   const [newInterest, setNewInterest] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const availablePrompts = [  
-    "The most trouble I could get into tonight is…
-"My favorite thing about weddings isn’t the cake, it’s…"
-"If you find me on the dance floor, I’m probably…"
-"I’ll flirt with you if you catch me at the… (bar / photo booth / balcony / buffet line)"
-"The one thing I really want from tonight is…"
-"My “wedding alter ego” is… (the champagne bandit / dance-floor menace / smooth talker)"
-"The hottest moment at a wedding I’ve ever seen was…"
-"If I catch the bouquet/garter, I’m expecting…"
-"My favorite part of a wedding outfit is… (on me / on you)"
-"The morning after a wedding, I’m usually guilty of…",
+  const availablePrompts = [
+    "The most trouble I could get into tonight is…",
+    "My favorite thing about weddings isn't the cake, it's…",
+    "If you find me on the dance floor, I'm probably…",
+    "I'll flirt with you if you catch me at the… (bar / photo booth / balcony / buffet line)",
+    "The one thing I really want from tonight is…",
+    "My \"wedding alter ego\" is… (the champagne bandit / dance-floor menace / smooth talker)",
+    "The hottest moment at a wedding I've ever seen was…",
+    "If I catch the bouquet/garter, I'm expecting…",
+    "My favorite part of a wedding outfit is… (on me / on you)",
+    "The morning after a wedding, I'm usually guilty of…",
   ];
 
   const allInterests = [
