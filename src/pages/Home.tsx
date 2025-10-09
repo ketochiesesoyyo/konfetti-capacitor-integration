@@ -103,12 +103,21 @@ const Home = () => {
                       <Users className="w-4 h-4" />
                       <span>{event.guestCount} guests</span>
                     </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => navigate("/matchmaking")}
-                    >
-                      Open Event
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={() => navigate("/matchmaking")}
+                      >
+                        Open Event
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => navigate("/event-dashboard")}
+                      >
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))

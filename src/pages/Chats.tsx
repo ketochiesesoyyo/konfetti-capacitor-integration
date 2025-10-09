@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Chats = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"matches" | "hosts">("matches");
 
   // Mock data - will be replaced with real data from Lovable Cloud
@@ -42,7 +44,10 @@ const Chats = () => {
   ];
 
   const ChatItem = ({ chat }: { chat: any }) => (
-    <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+    <Card 
+      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => navigate("/chat/" + chat.id)}
+    >
       <div className="flex gap-3">
         <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 gradient-sunset">
           <img src={chat.photo} alt={chat.name} className="w-full h-full object-cover" />

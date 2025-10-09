@@ -37,14 +37,24 @@ const Profile = () => {
             <h1 className="text-3xl font-bold mb-1">Profile</h1>
             <p className="text-white/90 text-sm">Your dating profile for all weddings</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={() => navigate("/edit-profile")}
+            >
+              <Edit className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -53,7 +63,7 @@ const Profile = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Photos</h2>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
