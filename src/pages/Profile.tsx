@@ -83,7 +83,22 @@ const Profile = () => {
         
         setUser(newProfile);
       } else {
-        setUser(profile);
+        // Parse prompts safely
+        let parsedPrompts: Array<{ question: string; answer: string }> = [];
+        if (profile.prompts) {
+          try {
+            if (Array.isArray(profile.prompts)) {
+              parsedPrompts = profile.prompts as Array<{ question: string; answer: string }>;
+            }
+          } catch (e) {
+            console.error("Error parsing prompts:", e);
+          }
+        }
+
+        setUser({
+          ...profile,
+          prompts: parsedPrompts,
+        });
       }
     } catch (error) {
       console.error("Error:", error);
