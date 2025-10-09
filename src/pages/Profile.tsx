@@ -13,15 +13,37 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        fetchProfile();
+      }
+    });
+
+    // Check initial session
+    checkInitialAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const checkInitialAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+    } else {
+      await fetchProfile();
+    }
+  };
 
   const fetchProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        navigate("/auth");
         return;
       }
 
@@ -29,41 +51,40 @@ const Profile = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        
-        // If profile doesn't exist, create a default one
-        if (profileError.code === 'PGRST116') {
-          const { error: insertError } = await supabase
-            .from("profiles")
-            .insert({
-              user_id: session.user.id,
-              name: session.user.email?.split('@')[0] || 'User',
-            });
-          
-          if (insertError) {
-            console.error("Error creating profile:", insertError);
-            toast.error("Failed to create profile");
-            return;
-          }
-          
-          // Fetch the newly created profile
-          const { data: newProfile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", session.user.id)
-            .single();
-          
-          setUser(newProfile);
-        } else {
-          toast.error("Failed to load profile");
-        }
+        toast.error("Failed to load profile");
         return;
       }
 
-      setUser(profile);
+      if (!profile) {
+        // Create profile if it doesn't exist
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: session.user.id,
+            name: session.user.email?.split('@')[0] || 'User',
+          });
+        
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          toast.error("Failed to create profile");
+          return;
+        }
+        
+        // Fetch the newly created profile
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+        
+        setUser(newProfile);
+      } else {
+        setUser(profile);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to load profile");
