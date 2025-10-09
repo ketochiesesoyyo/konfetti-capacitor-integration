@@ -1,44 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Heart, Info } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+type Profile = {
+  id: string;
+  name: string;
+  age: number | null;
+  photos: string[] | null;
+  prompts: any;
+  bio: string | null;
+  interests: string[] | null;
+  user_id: string;
+};
 
 const Matchmaking = () => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Mock profiles - will be replaced with real data from Lovable Cloud
-  const profiles = [
-    {
-      id: "1",
-      name: "Emma",
-      age: 26,
-      photos: ["/placeholder.svg", "/placeholder.svg"],
-      prompts: [
-        { question: "I'm looking for...", answer: "Someone who loves good conversation and spontaneous adventures" },
-        { question: "My ideal Sunday...", answer: "Brunch with friends, then exploring a new part of the city" },
-      ],
-      bio: "Marketing manager who loves trying new restaurants and weekend getaways",
-      interests: ["Travel", "Food", "Yoga", "Reading"],
-      side: "Bride's side",
-    },
-    {
-      id: "2",
-      name: "Michael",
-      age: 29,
-      photos: ["/placeholder.svg"],
-      prompts: [
-        { question: "My perfect date would be...", answer: "Wine tasting followed by a cooking class together" },
-      ],
-      bio: "Software engineer with a passion for music and photography",
-      interests: ["Photography", "Music", "Hiking", "Cooking"],
-      side: "Groom's side",
-    },
-  ];
+  useEffect(() => {
+    const loadProfiles = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUserId(session.user.id);
+
+      // Fetch profiles of users in same events
+      // The RLS policy will automatically filter to only show same-event users
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .neq("user_id", session.user.id); // Don't show own profile
+
+      if (error) {
+        toast.error("Failed to load profiles");
+        console.error(error);
+      } else {
+        setProfiles(data || []);
+      }
+      setLoading(false);
+    };
+
+    loadProfiles();
+  }, [navigate]);
 
   const currentProfile = profiles[currentIndex];
   const hasMoreProfiles = currentIndex < profiles.length - 1;
+
+  // Parse prompts safely
+  const parsedPrompts = currentProfile?.prompts 
+    ? (Array.isArray(currentProfile.prompts) ? currentProfile.prompts : [])
+    : [];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="p-8 text-center max-w-md">
+          <p className="text-muted-foreground">Loading profiles...</p>
+        </Card>
+      </div>
+    );
+  }
 
   const handleSwipe = (liked: boolean) => {
     if (liked) {
@@ -68,14 +99,15 @@ const Matchmaking = () => {
     }
   };
 
-  if (!currentProfile) {
+  if (!currentProfile || profiles.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
-          <p className="text-muted-foreground">
-            You've seen everyone! Check back later when more guests join.
+          <h2 className="text-2xl font-bold mb-2">No profiles available</h2>
+          <p className="text-muted-foreground mb-4">
+            There are no other guests from your events yet. Check back later when more guests join!
           </p>
+          <Button onClick={() => navigate("/")}>Go Home</Button>
         </Card>
       </div>
     );
@@ -100,18 +132,14 @@ const Matchmaking = () => {
             {/* Photo Section */}
             <div className="relative h-[450px] gradient-sunset">
               <img
-                src={currentProfile.photos[0]}
+                src={currentProfile.photos?.[0] || "/placeholder.svg"}
                 alt={currentProfile.name}
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
                 <h2 className="text-3xl font-bold mb-1">
-                  {currentProfile.name}, {currentProfile.age}
+                  {currentProfile.name}, {currentProfile.age || "?"}
                 </h2>
-                <p className="text-sm flex items-center gap-2">
-                  <Info className="w-4 h-4" />
-                  {currentProfile.side}
-                </p>
               </div>
             </div>
 
@@ -126,7 +154,7 @@ const Matchmaking = () => {
               )}
 
               {/* Prompts */}
-              {currentProfile.prompts.map((prompt, idx) => (
+              {parsedPrompts.length > 0 && parsedPrompts.map((prompt: any, idx: number) => (
                 <div key={idx}>
                   <h3 className="font-semibold text-sm text-muted-foreground mb-1">
                     {prompt.question}
@@ -136,7 +164,7 @@ const Matchmaking = () => {
               ))}
 
               {/* Interests */}
-              {currentProfile.interests.length > 0 && (
+              {currentProfile.interests && currentProfile.interests.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-2">

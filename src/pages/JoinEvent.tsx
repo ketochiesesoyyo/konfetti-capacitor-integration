@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,22 +13,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 const JoinEvent = () => {
   const navigate = useNavigate();
   const [eventCode, setEventCode] = useState("");
   const [side, setSide] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleJoin = () => {
-    if (!eventCode || !side) {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUserId(session.user.id);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  const handleJoin = async () => {
+    if (!eventCode || !side || !userId) {
       toast.error("Please enter event code and select a side");
       return;
     }
 
-    // Mock validation - will check if code exists in backend
     const normalizedCode = eventCode.toUpperCase().trim();
     
-    // For demo, redirect to the link-based join flow
+    // Check if event exists
+    const { data: event, error } = await supabase
+      .from("events")
+      .select("id")
+      .eq("invite_code", normalizedCode)
+      .single();
+
+    if (error || !event) {
+      toast.error("Invalid event code");
+      return;
+    }
+    
+    // Redirect to the link-based join flow with the validated code
     navigate(`/join/${normalizedCode}`);
   };
 

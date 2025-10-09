@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ const CreateEvent = () => {
   const [showPaywall, setShowPaywall] = useState(true);
   const [isPaid] = useState(false); // Will be connected to real payment state
   const [step, setStep] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const [eventData, setEventData] = useState({
     coupleName1: "",
@@ -36,6 +39,18 @@ const CreateEvent = () => {
     theme: "sunset",
     agreedToTerms: false,
   });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUserId(session.user.id);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const themes = [
     { id: "sunset", name: "Sunset Blush", gradient: "gradient-sunset" },
@@ -50,11 +65,57 @@ const CreateEvent = () => {
     setShowPaywall(false);
   };
 
-  const handleCreateEvent = () => {
-    toast.success("Event created! 🎊", {
-      description: "Your wedding matchmaking space is ready!",
-    });
-    navigate("/");
+  const generateInviteCode = () => {
+    const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, '');
+    const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, '');
+    const year = new Date(eventData.eventDate).getFullYear();
+    return `${name1}-${name2}-${year}`;
+  };
+
+  const handleCreateEvent = async () => {
+    if (!userId) return;
+    
+    setIsCreating(true);
+    try {
+      const inviteCode = generateInviteCode();
+      const eventName = `${eventData.coupleName1} & ${eventData.coupleName2}`;
+      
+      // Create event
+      const { data: event, error: eventError } = await supabase
+        .from("events")
+        .insert({
+          name: eventName,
+          date: eventData.eventDate,
+          description: `Wedding celebration for ${eventName}`,
+          invite_code: inviteCode,
+          created_by: userId,
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      // Auto-join creator to the event
+      const { error: attendeeError } = await supabase
+        .from("event_attendees")
+        .insert({
+          event_id: event.id,
+          user_id: userId,
+        });
+
+      if (attendeeError) throw attendeeError;
+
+      toast.success("Event created! 🎊", {
+        description: `Share code: ${inviteCode}`,
+      });
+      navigate("/");
+    } catch (error: any) {
+      toast.error("Failed to create event", {
+        description: error.message,
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   if (showPaywall && !isPaid) {
@@ -295,8 +356,9 @@ const CreateEvent = () => {
                 variant="gradient"
                 onClick={handleCreateEvent}
                 className="flex-1"
+                disabled={isCreating}
               >
-                Create Event
+                {isCreating ? "Creating..." : "Create Event"}
               </Button>
             </div>
           </Card>

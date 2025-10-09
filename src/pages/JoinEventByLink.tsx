@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,56 +12,117 @@ import {
 } from "@/components/ui/select";
 import { Calendar, MapPin, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const JoinEventByLink = () => {
   const navigate = useNavigate();
   const { code } = useParams();
   const [side, setSide] = useState("");
   const [isJoining, setIsJoining] = useState(false);
+  const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Mock event data - will be fetched from backend using the code
-  const event = {
-    id: "1",
-    coupleName: "Sarah & James",
-    eventDate: "2025-11-15",
-    theme: "sunset",
-    guestCount: 47,
-    isValid: true,
-  };
+  useEffect(() => {
+    const checkAuthAndLoadEvent = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUserId(session.user.id);
+      
+      // Fetch event by invite code
+      const { data: eventData, error } = await supabase
+        .from("events")
+        .select("*, event_attendees(count)")
+        .eq("invite_code", code?.toUpperCase())
+        .single();
+
+      if (error || !eventData) {
+        setEvent({ isValid: false });
+      } else {
+        setEvent({
+          ...eventData,
+          coupleName: eventData.name,
+          eventDate: eventData.date,
+          guestCount: eventData.event_attendees?.[0]?.count || 0,
+          isValid: true,
+        });
+      }
+      setLoading(false);
+    };
+    checkAuthAndLoadEvent();
+  }, [code, navigate]);
 
   const getThemeClass = (theme: string) => {
-    const themes = {
+    const themes: Record<string, string> = {
       sunset: "gradient-sunset",
       ocean: "gradient-ocean",
       golden: "gradient-golden",
       emerald: "gradient-emerald",
       midnight: "gradient-midnight",
     };
-    return themes[theme as keyof typeof themes] || themes.sunset;
+    return themes[theme] || themes.sunset;
   };
 
   const handleJoin = async () => {
-    if (!side) {
+    if (!side || !userId || !event?.id) {
       toast.error("Please select which side you're on");
       return;
     }
 
     setIsJoining(true);
     
-    // Mock join - will call backend
-    setTimeout(() => {
-      // Show champagne animation (mock)
+    try {
+      // Check if already joined
+      const { data: existing } = await supabase
+        .from("event_attendees")
+        .select("id")
+        .eq("event_id", event.id)
+        .eq("user_id", userId)
+        .single();
+
+      if (existing) {
+        toast.info("You've already joined this event!");
+        navigate("/");
+        return;
+      }
+
+      // Join event
+      const { error } = await supabase
+        .from("event_attendees")
+        .insert({
+          event_id: event.id,
+          user_id: userId,
+        });
+
+      if (error) throw error;
+
       toast.success("🥂 Welcome to the wedding!", {
         description: `You've joined ${event.coupleName}'s celebration`,
       });
-      
-      // Redirect to complete profile or home
       navigate("/");
+    } catch (error: any) {
+      toast.error("Failed to join event", {
+        description: error.message,
+      });
+    } finally {
       setIsJoining(false);
-    }, 1000);
+    }
   };
 
-  if (!event.isValid) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="p-8 text-center max-w-md">
+          <p className="text-muted-foreground">Loading event...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!event?.isValid) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="p-8 text-center max-w-md">
@@ -78,10 +139,10 @@ const JoinEventByLink = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Theme */}
-      <div className={`${getThemeClass(event.theme)} text-white p-8 pb-16`}>
+      <div className={`${getThemeClass(event?.theme || 'sunset')} text-white p-8 pb-16`}>
         <div className="max-w-lg mx-auto text-center">
           <Sparkles className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-          <h1 className="text-4xl font-bold mb-2">{event.coupleName}</h1>
+          <h1 className="text-4xl font-bold mb-2">{event?.coupleName}</h1>
           <p className="text-white/90 text-lg">You're Invited!</p>
         </div>
       </div>
@@ -95,7 +156,7 @@ const JoinEventByLink = () => {
               <div>
                 <p className="text-sm font-medium text-foreground">Wedding Date</p>
                 <p className="text-sm">
-                  {new Date(event.eventDate).toLocaleDateString("en-US", {
+                  {event?.eventDate && new Date(event.eventDate).toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
                     month: "long",
@@ -109,7 +170,7 @@ const JoinEventByLink = () => {
               <Users className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Guests Joined</p>
-                <p className="text-sm">{event.guestCount} singles ready to mingle</p>
+                <p className="text-sm">{event?.guestCount || 0} singles ready to mingle</p>
               </div>
             </div>
           </div>
