@@ -80,9 +80,17 @@ const EventDashboard = () => {
     setRemovalReason("");
   };
 
+  const eventCode = "ABC123"; // Will come from event data
+  const eventLink = `${window.location.origin}/join/${eventCode}`;
+
   const handleShareLink = () => {
-    navigator.clipboard.writeText("https://plusone.app/join/SARAH-JAMES-2025");
-    toast.success("Link copied to clipboard!");
+    navigator.clipboard.writeText(eventLink);
+    toast.success("Event link copied to clipboard!");
+  };
+
+  const handleShareCode = () => {
+    navigator.clipboard.writeText(eventCode);
+    toast.success("Event code copied!");
   };
 
   return (
@@ -104,15 +112,30 @@ const EventDashboard = () => {
               <p className="text-white/90 text-sm">Event Dashboard</p>
             </div>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full"
-            onClick={handleShareLink}
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share Event Link
-          </Button>
+          <div className="space-y-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              onClick={handleShareLink}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Copy Event Link
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-muted/50 px-3 py-2 rounded text-center">
+                <p className="text-xs text-muted-foreground mb-1">Event Code</p>
+                <p className="font-mono font-bold text-sm">{eventCode}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShareCode}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

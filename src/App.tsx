@@ -14,6 +14,7 @@ import Chats from "./pages/Chats";
 import ChatThread from "./pages/ChatThread";
 import CreateEvent from "./pages/CreateEvent";
 import JoinEvent from "./pages/JoinEvent";
+import JoinEventByLink from "./pages/JoinEventByLink";
 import EventDashboard from "./pages/EventDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/chat/:id" element={<ChatThread />} />
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/join-event" element={<JoinEvent />} />
+          <Route path="/join/:code" element={<JoinEventByLink />} />
           <Route path="/event-dashboard" element={<EventDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

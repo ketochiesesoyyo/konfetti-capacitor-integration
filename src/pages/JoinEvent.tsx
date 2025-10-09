@@ -25,13 +25,11 @@ const JoinEvent = () => {
       return;
     }
 
-    // Mock join success
-    toast.success("Joined wedding! 🎉", {
-      description: "Welcome to Sarah & James Wedding",
-    });
+    // Mock validation - will check if code exists in backend
+    const normalizedCode = eventCode.toUpperCase().trim();
     
-    // Navigate to profile if incomplete, otherwise to home
-    navigate("/");
+    // For demo, redirect to the link-based join flow
+    navigate(`/join/${normalizedCode}`);
   };
 
   return (
@@ -59,8 +57,11 @@ const JoinEvent = () => {
           <div className="text-center">
             <LinkIcon className="w-12 h-12 mx-auto mb-4 text-primary" />
             <h2 className="text-xl font-bold mb-2">Join a Wedding</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-2">
               Enter the unique code from your wedding invite
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Received a link? Just click it to join instantly!
             </p>
           </div>
 
@@ -69,10 +70,10 @@ const JoinEvent = () => {
               <Label htmlFor="code">Event Code</Label>
               <Input
                 id="code"
-                placeholder="e.g., SARAH-JAMES-2025"
+                placeholder="e.g., ABC123 or SARAH-JAMES-2025"
                 value={eventCode}
                 onChange={(e) => setEventCode(e.target.value.toUpperCase())}
-                className="text-center text-lg tracking-wider"
+                className="text-center text-lg tracking-wider font-mono"
               />
             </div>
 
