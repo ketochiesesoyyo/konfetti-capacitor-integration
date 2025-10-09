@@ -165,15 +165,26 @@ const Home = () => {
           )}
         </div>
 
-        {/* Floating Action Button */}
-        <Button
-          variant="gradient"
-          size="lg"
-          className="fixed bottom-20 right-4 rounded-full w-14 h-14 shadow-xl"
-          onClick={handleCreateEvent}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-20 right-4 flex flex-col gap-3">
+          <Button
+            variant="gradient"
+            size="lg"
+            className="shadow-xl"
+            onClick={handleCreateEvent}
+          >
+            <Plus className="w-5 h-5" />
+            Create Event
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="shadow-xl bg-background"
+            onClick={() => navigate("/join-event")}
+          >
+            Join Event
+          </Button>
+        </div>
       </div>
     </div>
   );
