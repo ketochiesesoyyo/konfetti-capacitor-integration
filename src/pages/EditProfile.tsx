@@ -37,24 +37,50 @@ const EditProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (authError || !user) {
+      if (!session?.user) {
         navigate("/auth");
         return;
       }
 
-      setUserId(user.id);
+      setUserId(session.user.id);
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", session.user.id)
         .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("Failed to load profile");
+        
+        // If profile doesn't exist, create a default one
+        if (profileError.code === 'PGRST116') {
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: session.user.id,
+              name: session.user.email?.split('@')[0] || 'User',
+            });
+          
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+            toast.error("Failed to create profile");
+            return;
+          }
+          
+          // Set default values for new profile
+          setProfile({
+            name: session.user.email?.split('@')[0] || 'User',
+            age: "",
+            gender: "",
+            bio: "",
+            interests: [],
+          });
+        } else {
+          toast.error("Failed to load profile");
+        }
         return;
       }
 
