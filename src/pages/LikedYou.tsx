@@ -1,63 +1,162 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, X } from "lucide-react";
+import { Heart, X, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+type ProfileWithEvent = {
+  id: string;
+  name: string;
+  age: number | null;
+  photo: string;
+  bio: string | null;
+  interests: string[] | null;
+  eventName: string;
+  eventId: string;
+  swipeId: string;
+};
 
 const LikedYou = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"new" | "passed">("new");
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [newLikes, setNewLikes] = useState<ProfileWithEvent[]>([]);
+  const [passedLikes, setPassedLikes] = useState<ProfileWithEvent[]>([]);
 
-  // Mock data - will be replaced with real data from Lovable Cloud
-  const newLikes = [
-    {
-      id: "1",
-      name: "Sophie",
-      age: 27,
-      photo: "/placeholder.svg",
-      bio: "Adventure seeker and coffee enthusiast",
-      interests: ["Travel", "Coffee", "Hiking"],
-      side: "Bride's side",
-    },
-    {
-      id: "2",
-      name: "Jake",
-      age: 30,
-      photo: "/placeholder.svg",
-      bio: "Music lover who enjoys long walks and good conversations",
-      interests: ["Music", "Art", "Running"],
-      side: "Groom's side",
-    },
-  ];
+  useEffect(() => {
+    const loadLikes = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUserId(session.user.id);
 
-  const passedLikes = [
-    {
-      id: "3",
-      name: "Rachel",
-      age: 25,
-      photo: "/placeholder.svg",
-      bio: "Yoga instructor with a passion for wellness",
-      interests: ["Yoga", "Wellness", "Cooking"],
-      side: "Bride's side",
-    },
-  ];
+      // Fetch people who liked current user
+      const { data: incomingSwipes, error } = await supabase
+        .from("swipes")
+        .select(`
+          id,
+          user_id,
+          event_id,
+          direction,
+          profiles!swipes_user_id_fkey(id, name, age, photos, bio, interests),
+          events(id, name)
+        `)
+        .eq("swiped_user_id", session.user.id)
+        .eq("direction", "right");
 
-  const handleLike = (name: string) => {
-    toast("It's a Match! 🎉", {
-      description: `You and ${name} liked each other!`,
-      action: {
-        label: "Send Message",
-        onClick: () => {},
-      },
-    });
+      if (error) {
+        console.error("Error loading likes:", error);
+        toast.error("Failed to load likes");
+        setLoading(false);
+        return;
+      }
+
+      // Check if current user has responded to these swipes
+      const { data: userSwipes } = await supabase
+        .from("swipes")
+        .select("swiped_user_id, direction")
+        .eq("user_id", session.user.id);
+
+      const userSwipeMap = new Map(
+        userSwipes?.map(s => [s.swiped_user_id, s.direction]) || []
+      );
+
+      const formattedLikes = incomingSwipes?.map((swipe: any) => ({
+        id: swipe.profiles.id,
+        name: swipe.profiles.name,
+        age: swipe.profiles.age,
+        photo: swipe.profiles.photos?.[0] || "/placeholder.svg",
+        bio: swipe.profiles.bio,
+        interests: swipe.profiles.interests,
+        eventName: swipe.events.name,
+        eventId: swipe.event_id,
+        swipeId: swipe.id,
+        userResponse: userSwipeMap.get(swipe.user_id),
+      })) || [];
+
+      // Separate into new likes (no response) and passed
+      setNewLikes(formattedLikes.filter((like: any) => !like.userResponse));
+      setPassedLikes(formattedLikes.filter((like: any) => like.userResponse === "left"));
+      setLoading(false);
+    };
+
+    loadLikes();
+  }, [navigate]);
+
+  const handleLike = async (profile: ProfileWithEvent) => {
+    if (!userId) return;
+
+    try {
+      // Create a swipe record
+      const { error: swipeError } = await supabase
+        .from("swipes")
+        .insert({
+          user_id: userId,
+          swiped_user_id: profile.id,
+          event_id: profile.eventId,
+          direction: "right",
+        });
+
+      if (swipeError) throw swipeError;
+
+      // Check if there's a match
+      const { data: match } = await supabase
+        .from("matches")
+        .select("*")
+        .eq("event_id", profile.eventId)
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+        .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
+        .maybeSingle();
+
+      if (!match) {
+        // Create match
+        await supabase.from("matches").insert({
+          user1_id: userId,
+          user2_id: profile.id,
+          event_id: profile.eventId,
+        });
+      }
+
+      toast("It's a Match! 🎉", {
+        description: `You and ${profile.name} liked each other!`,
+      });
+
+      // Remove from new likes
+      setNewLikes(prev => prev.filter(p => p.id !== profile.id));
+    } catch (error) {
+      console.error("Error creating match:", error);
+      toast.error("Failed to create match");
+    }
   };
 
-  const handlePass = (name: string) => {
-    toast(`Passed on ${name}`);
+  const handlePass = async (profile: ProfileWithEvent) => {
+    if (!userId) return;
+
+    try {
+      await supabase.from("swipes").insert({
+        user_id: userId,
+        swiped_user_id: profile.id,
+        event_id: profile.eventId,
+        direction: "left",
+      });
+
+      toast(`Passed on ${profile.name}`);
+      setNewLikes(prev => prev.filter(p => p.id !== profile.id));
+      setPassedLikes(prev => [...prev, profile]);
+    } catch (error) {
+      console.error("Error passing:", error);
+      toast.error("Failed to pass");
+    }
   };
 
-  const ProfileCard = ({ profile, isPassed = false }: { profile: any; isPassed?: boolean }) => (
+  const ProfileCard = ({ profile, isPassed = false }: { profile: ProfileWithEvent; isPassed?: boolean }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex gap-4 p-4">
         <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0 gradient-sunset">
@@ -67,26 +166,33 @@ const LikedYou = () => {
           <div className="flex items-start justify-between mb-2">
             <div>
               <h3 className="font-semibold text-lg">
-                {profile.name}, {profile.age}
+                {profile.name}, {profile.age || "?"}
               </h3>
-              <p className="text-xs text-muted-foreground">{profile.side}</p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                <Calendar className="w-3 h-3" />
+                <span>{profile.eventName}</span>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{profile.bio}</p>
-          <div className="flex flex-wrap gap-1 mb-3">
-            {profile.interests.slice(0, 3).map((interest: string, idx: number) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
-                {interest}
-              </Badge>
-            ))}
-          </div>
+          {profile.bio && (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{profile.bio}</p>
+          )}
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {profile.interests.slice(0, 3).map((interest: string, idx: number) => (
+                <Badge key={idx} variant="secondary" className="text-xs">
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2">
             {isPassed ? (
               <Button
                 size="sm"
                 variant="gradient"
                 className="flex-1"
-                onClick={() => handleLike(profile.name)}
+                onClick={() => handleLike(profile)}
               >
                 <Heart className="w-4 h-4 mr-2" />
                 Like
@@ -97,7 +203,7 @@ const LikedYou = () => {
                   size="sm"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => handlePass(profile.name)}
+                  onClick={() => handlePass(profile)}
                 >
                   <X className="w-4 h-4 mr-2" />
                   Pass
@@ -106,7 +212,7 @@ const LikedYou = () => {
                   size="sm"
                   variant="gradient"
                   className="flex-1"
-                  onClick={() => handleLike(profile.name)}
+                  onClick={() => handleLike(profile)}
                 >
                   <Heart className="w-4 h-4 mr-2" />
                   Like
@@ -160,10 +266,14 @@ const LikedYou = () => {
 
         {/* Likes List */}
         <div className="space-y-4 pb-6">
-          {activeTab === "new" ? (
+          {loading ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Loading likes...</p>
+            </Card>
+          ) : activeTab === "new" ? (
             newLikes.length > 0 ? (
               newLikes.map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} />
+                <ProfileCard key={profile.swipeId} profile={profile} />
               ))
             ) : (
               <Card className="p-8 text-center">
@@ -175,7 +285,7 @@ const LikedYou = () => {
             )
           ) : passedLikes.length > 0 ? (
             passedLikes.map((profile) => (
-              <ProfileCard key={profile.id} profile={profile} isPassed />
+              <ProfileCard key={profile.swipeId} profile={profile} isPassed />
             ))
           ) : (
             <Card className="p-8 text-center">
