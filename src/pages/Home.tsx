@@ -38,14 +38,15 @@ const Home = () => {
         setHostingEvents(hosting || []);
 
         // Fetch events user is attending (joined via event_attendees)
+        // Use secure view to prevent invite code leakage
         const { data: attending, error: attendingError } = await supabase
           .from("event_attendees")
-          .select("event_id, events(*)")
+          .select("event_id, events_secure(*)")
           .eq("user_id", session.user.id);
 
         if (attendingError) throw attendingError;
         
-        const attendingEventsData = attending?.map((a: any) => a.events) || [];
+        const attendingEventsData = attending?.map((a: any) => a.events_secure) || [];
         setAttendingEvents(attendingEventsData);
         
       } catch (error: any) {
