@@ -284,7 +284,7 @@ const Profile = () => {
           {/* Fully Scrollable Preview */}
           <div className="overflow-y-auto max-h-[90vh]">
             {/* First Photo with Name Overlay */}
-            <div className="relative h-[450px]">
+            <div className="relative aspect-[3/4]">
               <img
                 src={user?.photos?.[0] || "/placeholder.svg"}
                 alt={user?.name || "User"}
@@ -310,22 +310,22 @@ const Profile = () => {
 
             {/* Second Photo */}
             {user?.photos?.[1] && (
-              <div className="rounded-lg overflow-hidden">
+              <div className="rounded-lg overflow-hidden aspect-[3/4]">
                 <img 
                   src={user.photos[1]} 
                   alt="Photo 2" 
-                  className="w-full h-64 object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
             )}
 
             {/* Third Photo */}
             {user?.photos?.[2] && (
-              <div className="rounded-lg overflow-hidden">
+              <div className="rounded-lg overflow-hidden aspect-[3/4]">
                 <img 
                   src={user.photos[2]} 
                   alt="Photo 3" 
-                  className="w-full h-64 object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
             )}
