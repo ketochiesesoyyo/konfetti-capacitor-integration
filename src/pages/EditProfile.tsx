@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Camera, X, Plus } from "lucide-react";
+import { ArrowLeft, Camera, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -19,6 +19,7 @@ import {
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -162,6 +163,15 @@ const EditProfile = () => {
   const handleSave = async () => {
     if (!userId) return;
 
+    // Validate required fields for new users
+    const isNewUser = location.state?.isNewUser;
+    if (isNewUser) {
+      if (!profile.name || !profile.age || profile.photos.length === 0) {
+        toast.error("Please complete all required fields: Name, Age, and at least one photo");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -184,7 +194,14 @@ const EditProfile = () => {
       }
 
       toast.success("Profile updated successfully!");
-      navigate("/profile");
+      
+      // Check if there's a pending invite
+      const pendingInvite = localStorage.getItem("pendingInvite") || location.state?.pendingInvite;
+      if (pendingInvite && isNewUser) {
+        navigate(`/join/${pendingInvite}`);
+      } else {
+        navigate("/profile");
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to update profile");
@@ -360,6 +377,27 @@ const EditProfile = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        {/* New User Warning */}
+        {location.state?.isNewUser && (
+          <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                  Complete Your Profile
+                </h3>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  {location.state?.pendingInvite 
+                    ? "Please add your name, age, and at least one photo to join the wedding event!"
+                    : "Fill in your profile to start matching with other singles at wedding events."}
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+        
         {/* Photos */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Photos (Max 3)</h2>

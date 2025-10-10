@@ -26,11 +26,36 @@ const JoinEventByLink = () => {
   useEffect(() => {
     const checkAuthAndLoadEvent = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
+        // Save invite code for after authentication
+        if (code) {
+          localStorage.setItem("pendingInvite", code.toUpperCase());
+        }
         navigate("/auth");
         return;
       }
+      
       setUserId(session.user.id);
+      
+      // Check if user has completed their profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("name, age, gender, bio, photos")
+        .eq("user_id", session.user.id)
+        .single();
+      
+      // If profile incomplete, redirect to profile creation
+      if (!profileData || !profileData.name || !profileData.age || profileData.photos?.length === 0) {
+        toast.info("Please complete your profile first");
+        navigate("/edit-profile", { 
+          state: { 
+            isNewUser: true,
+            pendingInvite: code 
+          } 
+        });
+        return;
+      }
       
       // Fetch event by invite code
       const { data: eventData, error } = await supabase
@@ -85,6 +110,7 @@ const JoinEventByLink = () => {
 
       if (existing) {
         toast.info("You've already joined this event!");
+        localStorage.removeItem("pendingInvite"); // Clear pending invite
         navigate("/");
         return;
       }
@@ -99,6 +125,7 @@ const JoinEventByLink = () => {
 
       if (error) throw error;
 
+      localStorage.removeItem("pendingInvite"); // Clear pending invite
       toast.success("🥂 Welcome to the wedding!", {
         description: `You've joined ${event.coupleName}'s celebration`,
       });
