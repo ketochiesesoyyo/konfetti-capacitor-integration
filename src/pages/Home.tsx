@@ -148,13 +148,6 @@ const Home = () => {
                       >
                         Open Event
                       </Button>
-                       <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => navigate(`/event-dashboard/${event.id}`)}
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
                 </Card>
