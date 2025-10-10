@@ -191,13 +191,26 @@ const EditProfile = () => {
   const handleSave = async () => {
     if (!userId) return;
 
-    // Validate required fields for new users
+    // Validate required fields
     const isNewUser = location.state?.isNewUser;
     if (isNewUser) {
       if (!profile.name || !profile.age || profile.photos.length === 0) {
         toast.error("Please complete all required fields: Name, Age, and at least one photo");
         return;
       }
+    }
+
+    // Validate prompts are required
+    if (profile.prompts.length === 0) {
+      toast.error("Please answer at least 1 prompt");
+      return;
+    }
+
+    // Validate that answered prompts have content
+    const hasEmptyPrompt = profile.prompts.some(p => !p.answer.trim());
+    if (hasEmptyPrompt) {
+      toast.error("Please complete all prompt answers");
+      return;
     }
 
     setSaving(true);
@@ -597,8 +610,8 @@ const EditProfile = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold">Prompts (Optional, Max 3)</h2>
-              <p className="text-xs text-muted-foreground">Answer prompts to make your profile more interesting</p>
+              <h2 className="text-lg font-semibold">Prompts (Required, Min 1, Max 3)</h2>
+              <p className="text-xs text-muted-foreground">Answer at least 1 prompt to complete your profile</p>
             </div>
             {profile.prompts.length < 3 && (
               <Button
@@ -614,9 +627,14 @@ const EditProfile = () => {
           </div>
           
           {profile.prompts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No prompts added yet. Click "Add" to get started!
-            </p>
+            <div className="text-center py-4">
+              <p className="text-sm text-destructive font-semibold mb-2">
+                At least 1 prompt is required
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Click "Add" to get started!
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {profile.prompts.map((prompt, idx) => {
@@ -679,7 +697,7 @@ const EditProfile = () => {
           className="w-full" 
           size="lg" 
           onClick={handleSave}
-          disabled={saving || !profile.name}
+          disabled={saving || !profile.name || profile.prompts.length === 0}
         >
           {saving ? "Saving..." : "Save Changes"}
         </Button>
