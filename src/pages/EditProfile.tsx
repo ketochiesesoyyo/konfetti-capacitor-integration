@@ -10,6 +10,22 @@ import { ArrowLeft, Camera, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
+import { SortablePhoto } from "@/components/SortablePhoto";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 import {
   Select,
   SelectContent,
@@ -40,6 +56,14 @@ const EditProfile = () => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const availablePrompts = [
     "The most trouble I could get into tonight is…",
@@ -310,6 +334,23 @@ const EditProfile = () => {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = profile.photos.indexOf(active.id as string);
+      const newIndex = profile.photos.indexOf(over.id as string);
+
+      const newPhotos = arrayMove(profile.photos, oldIndex, newIndex);
+      setProfile({
+        ...profile,
+        photos: newPhotos,
+      });
+      
+      toast.success("Photo order updated");
+    }
+  };
+
   const handlePromptAdd = () => {
     if (profile.prompts.length >= 3) {
       toast.error("Maximum 3 prompts allowed");
@@ -429,40 +470,43 @@ const EditProfile = () => {
             )}
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Photos are automatically centered and cropped to fit
+            Drag photos to reorder them. First photo shows in matchmaking
           </p>
-          <div className="grid grid-cols-3 gap-3">
-            {profile.photos.map((photo, idx) => (
-              <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted relative group">
-                <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                {idx === 0 && (
-                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md">
-                    Main
-                  </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={profile.photos}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-3 gap-3">
+                {profile.photos.map((photo, idx) => (
+                  <SortablePhoto
+                    key={photo}
+                    id={photo}
+                    photo={photo}
+                    index={idx}
+                    onDelete={() => handlePhotoDelete(photo, idx)}
+                  />
+                ))}
+                {profile.photos.length < 3 && (
+                  <label className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/jpg"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                    />
+                    <Camera className="w-6 h-6 mb-1" />
+                    <span className="text-xs">{uploadingPhoto ? "Uploading..." : "Add Photo"}</span>
+                  </label>
                 )}
-                <button 
-                  onClick={() => handlePhotoDelete(photo, idx)}
-                  className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  type="button"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
-            ))}
-            {profile.photos.length < 3 && (
-              <label className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/jpg"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                  disabled={uploadingPhoto}
-                />
-                <Camera className="w-6 h-6 mb-1" />
-                <span className="text-xs">{uploadingPhoto ? "Uploading..." : "Add Photo"}</span>
-              </label>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
           <p className="text-xs text-muted-foreground mt-2">
             Upload up to 3 photos. First photo will be your main photo. Max 5MB each.
           </p>
