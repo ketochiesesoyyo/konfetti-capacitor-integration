@@ -24,6 +24,7 @@ const Matchmaking = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfiles = async () => {
@@ -33,6 +34,18 @@ const Matchmaking = () => {
         return;
       }
       setUserId(session.user.id);
+
+      // Get the user's event
+      const { data: attendeeData } = await supabase
+        .from("event_attendees")
+        .select("event_id")
+        .eq("user_id", session.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (attendeeData) {
+        setEventId(attendeeData.event_id);
+      }
 
       // Fetch profiles of users in same events
       // The RLS policy will automatically filter to only show same-event users
@@ -71,20 +84,74 @@ const Matchmaking = () => {
     );
   }
 
-  const handleSwipe = (liked: boolean) => {
+  const handleSwipe = async (liked: boolean) => {
+    if (!userId || !eventId || !currentProfile) return;
+
+    // Save the swipe
+    const { error: swipeError } = await supabase
+      .from("swipes")
+      .insert({
+        user_id: userId,
+        swiped_user_id: currentProfile.user_id,
+        event_id: eventId,
+        direction: liked ? "right" : "left",
+      });
+
+    if (swipeError) {
+      console.error("Error saving swipe:", swipeError);
+      toast.error("Failed to save swipe");
+      return;
+    }
+
     if (liked) {
       toast.success("Liked! 💕");
-      // Random chance of match for demo
-      if (Math.random() > 0.5) {
-        setTimeout(() => {
-          toast("It's a Match! 🎉", {
-            description: `You and ${currentProfile.name} liked each other!`,
-            action: {
-              label: "Send Message",
-              onClick: () => {},
-            },
-          });
-        }, 500);
+
+      // Check if the other user already liked us
+      const { data: reciprocalSwipe } = await supabase
+        .from("swipes")
+        .select("*")
+        .eq("user_id", currentProfile.user_id)
+        .eq("swiped_user_id", userId)
+        .eq("event_id", eventId)
+        .eq("direction", "right")
+        .maybeSingle();
+
+      if (reciprocalSwipe) {
+        // Check if match already exists
+        const { data: existingMatch } = await supabase
+          .from("matches")
+          .select("id")
+          .eq("event_id", eventId)
+          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+          .or(`user1_id.eq.${currentProfile.user_id},user2_id.eq.${currentProfile.user_id}`)
+          .maybeSingle();
+
+        if (!existingMatch) {
+          // Create match
+          const { data: newMatch, error: matchError } = await supabase
+            .from("matches")
+            .insert({
+              user1_id: userId,
+              user2_id: currentProfile.user_id,
+              event_id: eventId,
+            })
+            .select()
+            .single();
+
+          if (matchError) {
+            console.error("Error creating match:", matchError);
+          } else {
+            setTimeout(() => {
+              toast("It's a Match! 🎉", {
+                description: `You and ${currentProfile.name} liked each other!`,
+                action: {
+                  label: "Send Message",
+                  onClick: () => navigate(`/chat/${newMatch.id}`),
+                },
+              });
+            }, 500);
+          }
+        }
       }
     } else {
       toast("Passed");
