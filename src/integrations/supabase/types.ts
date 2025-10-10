@@ -123,6 +123,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      user_is_event_attendee: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       users_share_event: {
         Args: { user_a: string; user_b: string }
         Returns: boolean
