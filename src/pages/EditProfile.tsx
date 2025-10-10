@@ -400,11 +400,26 @@ const EditProfile = () => {
         
         {/* Photos */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Photos (Max 3)</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Photos (Max 3)</h2>
+            {profile.photos.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                First photo shows in matchmaking
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Photos are automatically centered and cropped to fit
+          </p>
           <div className="grid grid-cols-3 gap-3">
             {profile.photos.map((photo, idx) => (
               <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted relative group">
                 <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                {idx === 0 && (
+                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md">
+                    Main
+                  </div>
+                )}
                 <button 
                   onClick={() => handlePhotoDelete(photo, idx)}
                   className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
