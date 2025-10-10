@@ -306,6 +306,28 @@ const Profile = () => {
               </div>
             )}
 
+            {/* Second Photo */}
+            {user?.photos?.[1] && (
+              <div className="rounded-lg overflow-hidden">
+                <img 
+                  src={user.photos[1]} 
+                  alt="Photo 2" 
+                  className="w-full h-64 object-cover"
+                />
+              </div>
+            )}
+
+            {/* Third Photo */}
+            {user?.photos?.[2] && (
+              <div className="rounded-lg overflow-hidden">
+                <img 
+                  src={user.photos[2]} 
+                  alt="Photo 3" 
+                  className="w-full h-64 object-cover"
+                />
+              </div>
+            )}
+
             {/* Prompts */}
             {user?.prompts && user.prompts.length > 0 && user.prompts.map((prompt: any, idx: number) => (
               <div key={idx}>
