@@ -52,6 +52,7 @@ export type Database = {
       }
       events: {
         Row: {
+          allow_intro_requests: boolean
           close_date: string
           created_at: string
           created_by: string
@@ -64,6 +65,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_intro_requests?: boolean
           close_date?: string
           created_at?: string
           created_by: string
@@ -76,6 +78,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_intro_requests?: boolean
           close_date?: string
           created_at?: string
           created_by?: string
@@ -88,6 +91,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      intro_requests: {
+        Row: {
+          created_at: string
+          event_id: string
+          host_note: string | null
+          id: string
+          message: string | null
+          requester_id: string
+          status: string
+          target_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          host_note?: string | null
+          id?: string
+          message?: string | null
+          requester_id: string
+          status?: string
+          target_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          host_note?: string | null
+          id?: string
+          message?: string | null
+          requester_id?: string
+          status?: string
+          target_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intro_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       matches: {
         Row: {
@@ -287,6 +334,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_intro_request_eligibility: {
+        Args: { _event_id: string; _requester_id: string; _target_id: string }
+        Returns: boolean
+      }
+      create_facilitated_match: {
+        Args: { _host_note: string; _intro_request_id: string }
+        Returns: string
+      }
       user_is_event_attendee: {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
