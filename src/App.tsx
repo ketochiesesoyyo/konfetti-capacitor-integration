@@ -43,7 +43,7 @@ const App = () => (
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/join-event" element={<JoinEvent />} />
           <Route path="/join/:code" element={<JoinEventByLink />} />
-          <Route path="/event-dashboard" element={<EventDashboard />} />
+          <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

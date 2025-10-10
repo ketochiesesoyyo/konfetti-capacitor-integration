@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -21,66 +33,229 @@ import {
 import { ArrowLeft, MessageCircle, UserX, Share2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { format, addDays } from "date-fns";
 
 const EventDashboard = () => {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const [activeTab, setActiveTab] = useState<"guests" | "stats" | "settings">("guests");
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [closeEventDialogOpen, setCloseEventDialogOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<any>(null);
   const [removalReason, setRemovalReason] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  // Event data
+  const [event, setEvent] = useState<any>(null);
+  const [guests, setGuests] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalGuests: 0,
+    totalLikes: 0,
+    matchesCreated: 0,
+    topActive: [] as { name: string; swipes: number }[],
+  });
 
-  // Mock data
-  const guests = [
-    {
-      id: "1",
-      name: "Emma Wilson",
-      side: "Bride",
-      profileComplete: true,
-      active: true,
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: "2",
-      name: "Michael Chen",
-      side: "Groom",
-      profileComplete: true,
-      active: true,
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: "3",
-      name: "Sophie Martin",
-      side: "Bride",
-      profileComplete: false,
-      active: false,
-      avatar: "/placeholder.svg",
-    },
-  ];
+  // Edit mode for settings
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedEvent, setEditedEvent] = useState({
+    name: "",
+    description: "",
+    date: "",
+    close_date: "",
+  });
 
-  const stats = {
-    totalGuests: 47,
-    profileCompleted: 89,
-    totalLikes: 234,
-    matchesCreated: 18,
-    topActive: [
-      { name: "Emma Wilson", swipes: 45 },
-      { name: "Michael Chen", swipes: 38 },
-      { name: "Jake Stevens", swipes: 32 },
-    ],
+  useEffect(() => {
+    fetchEventData();
+  }, [eventId]);
+
+  const fetchEventData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch event details
+      const { data: eventData, error: eventError } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", eventId || "")
+        .eq("created_by", user.id)
+        .single();
+
+      if (eventError) throw eventError;
+      setEvent(eventData);
+      setEditedEvent({
+        name: eventData.name,
+        description: eventData.description || "",
+        date: eventData.date,
+        close_date: eventData.close_date,
+      });
+
+      // Fetch guests (attendees with their profiles)
+      const { data: attendeesData, error: attendeesError } = await supabase
+        .from("event_attendees")
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            user_id,
+            name,
+            photos
+          )
+        `)
+        .eq("event_id", eventId || "");
+
+      if (attendeesError) throw attendeesError;
+      setGuests(attendeesData || []);
+
+      // Fetch stats
+      await fetchStats();
+    } catch (error: any) {
+      console.error("Error fetching event data:", error);
+      toast.error("Failed to load event data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRemoveGuest = () => {
+  const fetchStats = async () => {
+    try {
+      // Count total guests
+      const { count: guestsCount } = await supabase
+        .from("event_attendees")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId || "");
+
+      // Count total likes (right swipes)
+      const { count: likesCount } = await supabase
+        .from("swipes")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId || "")
+        .eq("direction", "right");
+
+      // Count matches
+      const { count: matchesCount } = await supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId || "");
+
+      // Get most active users by swipe count
+      const { data: swipesData } = await supabase
+        .from("swipes")
+        .select(`
+          user_id,
+          profiles:user_id (name)
+        `)
+        .eq("event_id", eventId || "");
+
+      // Aggregate swipes by user
+      const swipesByUser: Record<string, { name: string; count: number }> = {};
+      swipesData?.forEach((swipe: any) => {
+        const userId = swipe.user_id;
+        const name = swipe.profiles?.name || "Unknown";
+        if (!swipesByUser[userId]) {
+          swipesByUser[userId] = { name, count: 0 };
+        }
+        swipesByUser[userId].count++;
+      });
+
+      const topActive = Object.values(swipesByUser)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+        .map((user) => ({ name: user.name, swipes: user.count }));
+
+      setStats({
+        totalGuests: guestsCount || 0,
+        totalLikes: likesCount || 0,
+        matchesCreated: matchesCount || 0,
+        topActive,
+      });
+    } catch (error: any) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const handleRemoveGuest = async () => {
     if (!removalReason) {
       toast.error("Please select a reason");
       return;
     }
-    toast.success(`${selectedGuest.name} has been removed`);
-    setRemoveDialogOpen(false);
-    setSelectedGuest(null);
-    setRemovalReason("");
+
+    try {
+      const { error } = await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("event_id", eventId || "")
+        .eq("user_id", selectedGuest.user_id);
+
+      if (error) throw error;
+
+      toast.success(`${selectedGuest.profiles?.name} has been removed`);
+      setRemoveDialogOpen(false);
+      setSelectedGuest(null);
+      setRemovalReason("");
+      fetchEventData(); // Refresh data
+    } catch (error: any) {
+      console.error("Error removing guest:", error);
+      toast.error("Failed to remove guest");
+    }
   };
 
-  const eventCode = "ABC123"; // Will come from event data
+  const handleChatWithGuest = (guestUserId: string) => {
+    navigate(`/chat/${guestUserId}`);
+  };
+
+  const handleSaveEvent = async () => {
+    try {
+      // Calculate new close_date if date changed
+      let closeDate = editedEvent.close_date;
+      if (editedEvent.date !== event.date) {
+        closeDate = format(addDays(new Date(editedEvent.date), 3), "yyyy-MM-dd");
+      }
+
+      const { error } = await supabase
+        .from("events")
+        .update({
+          name: editedEvent.name,
+          description: editedEvent.description,
+          date: editedEvent.date,
+          close_date: closeDate,
+        })
+        .eq("id", eventId || "");
+
+      if (error) throw error;
+
+      toast.success("Event updated successfully!");
+      setIsEditing(false);
+      fetchEventData(); // Refresh data
+    } catch (error: any) {
+      console.error("Error updating event:", error);
+      toast.error("Failed to update event");
+    }
+  };
+
+  const handleCloseEvent = async () => {
+    try {
+      const { error } = await supabase
+        .from("events")
+        .update({ status: "closed" })
+        .eq("id", eventId || "");
+
+      if (error) throw error;
+
+      toast.success("Event closed successfully");
+      setCloseEventDialogOpen(false);
+      navigate("/");
+    } catch (error: any) {
+      console.error("Error closing event:", error);
+      toast.error("Failed to close event");
+    }
+  };
+
+  const eventCode = event?.invite_code || "";
   const eventLink = `${window.location.origin}/join/${eventCode}`;
 
   const handleShareLink = () => {
@@ -92,6 +267,25 @@ const EventDashboard = () => {
     navigator.clipboard.writeText(eventCode);
     toast.success("Event code copied!");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading event data...</p>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Event not found</p>
+          <Button onClick={() => navigate("/")}>Go Home</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -108,7 +302,7 @@ const EventDashboard = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Sarah & James</h1>
+              <h1 className="text-2xl font-bold">{event.name}</h1>
               <p className="text-white/90 text-sm">Event Dashboard</p>
             </div>
           </div>
@@ -167,28 +361,32 @@ const EventDashboard = () => {
               <Card key={guest.id} className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden gradient-sunset flex-shrink-0">
-                    <img src={guest.avatar} alt={guest.name} className="w-full h-full object-cover" />
+                    {guest.profiles?.photos?.[0] ? (
+                      <img 
+                        src={guest.profiles.photos[0]} 
+                        alt={guest.profiles?.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+                        {guest.profiles?.name?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold truncate">{guest.name}</h3>
-                      {guest.active && (
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                      )}
+                      <h3 className="font-semibold truncate">{guest.profiles?.name || "Guest"}</h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {guest.side}'s side
-                      </Badge>
-                      {guest.profileComplete ? (
-                        <span className="text-xs text-green-600">✓ Complete</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Incomplete</span>
-                      )}
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Joined {format(new Date(guest.joined_at), "MMM d, yyyy")}
+                    </p>
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => handleChatWithGuest(guest.user_id)}
+                    >
                       <MessageCircle className="w-4 h-4" />
                     </Button>
                     <Button
@@ -218,16 +416,16 @@ const EventDashboard = () => {
                   <p className="text-sm text-muted-foreground">Total Guests</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-primary">{stats.profileCompleted}%</p>
-                  <p className="text-sm text-muted-foreground">Profiles Complete</p>
+                  <p className="text-2xl font-bold text-primary">{stats.matchesCreated}</p>
+                  <p className="text-sm text-muted-foreground">Matches Created</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-primary">{stats.totalLikes}</p>
                   <p className="text-sm text-muted-foreground">Total Likes</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-primary">{stats.matchesCreated}</p>
-                  <p className="text-sm text-muted-foreground">Matches Created</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalLikes}</p>
+                  <p className="text-sm text-muted-foreground">Total Likes</p>
                 </div>
               </div>
             </Card>
@@ -235,12 +433,16 @@ const EventDashboard = () => {
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Most Active Guests</h3>
               <div className="space-y-3">
-                {stats.topActive.map((guest, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <span className="text-sm">{guest.name}</span>
-                    <Badge variant="secondary">{guest.swipes} swipes</Badge>
-                  </div>
-                ))}
+                {stats.topActive.length > 0 ? (
+                  stats.topActive.map((guest, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <span className="text-sm">{guest.name}</span>
+                      <Badge variant="secondary">{guest.swipes} swipes</Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No activity yet</p>
+                )}
               </div>
             </Card>
           </div>
@@ -249,29 +451,107 @@ const EventDashboard = () => {
         {activeTab === "settings" && (
           <div className="space-y-4 pb-6">
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Event Settings</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Event Settings</h3>
+                {!isEditing ? (
+                  <Button size="sm" onClick={() => setIsEditing(true)}>
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditedEvent({
+                          name: event.name,
+                          description: event.description || "",
+                          date: event.date,
+                          close_date: event.close_date,
+                        });
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveEvent}>
+                      Save
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium mb-2">Event Theme</p>
-                  <div className="h-16 rounded-lg gradient-sunset" />
+                  <Label>Event Name</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedEvent.name}
+                      onChange={(e) => setEditedEvent({ ...editedEvent, name: e.target.value })}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">{event.name}</p>
+                  )}
                 </div>
+                
                 <div>
-                  <p className="text-sm font-medium mb-1">Event Date</p>
-                  <p className="text-sm text-muted-foreground">November 15, 2025</p>
+                  <Label>Description</Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={editedEvent.description}
+                      onChange={(e) => setEditedEvent({ ...editedEvent, description: e.target.value })}
+                      className="mt-1"
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">{event.description || "No description"}</p>
+                  )}
                 </div>
+                
                 <div>
-                  <p className="text-sm font-medium mb-1">Close Date</p>
-                  <p className="text-sm text-muted-foreground">November 18, 2025</p>
+                  <Label>Event Date</Label>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={editedEvent.date}
+                      onChange={(e) => setEditedEvent({ ...editedEvent, date: e.target.value })}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {format(new Date(event.date), "MMMM d, yyyy")}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label>Close Date</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isEditing && editedEvent.date !== event.date
+                      ? format(addDays(new Date(editedEvent.date), 3), "MMMM d, yyyy")
+                      : format(new Date(event.close_date), "MMMM d, yyyy")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Automatically set to 3 days after event date
+                  </p>
                 </div>
               </div>
             </Card>
 
             <Card className="p-6 border-destructive/50">
               <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-2">
                 Close the event early. Matches and chats will remain.
               </p>
-              <Button variant="destructive" className="w-full">
+              <p className="text-xs text-destructive/80 mb-4">
+                ⚠️ This action cannot be undone. No reimbursements will be provided after closing.
+              </p>
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                onClick={() => setCloseEventDialogOpen(true)}
+              >
                 Close Event Now
               </Button>
             </Card>
@@ -325,6 +605,31 @@ const EventDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Close Event Confirmation Dialog */}
+      <AlertDialog open={closeEventDialogOpen} onOpenChange={setCloseEventDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close Event Now?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The event will be permanently closed and no further matchmaking will be possible.
+              <br /><br />
+              <strong>Important:</strong> No reimbursements will be provided after closing the event.
+              <br /><br />
+              Existing matches and chats will remain accessible to guests.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCloseEvent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Close Event
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

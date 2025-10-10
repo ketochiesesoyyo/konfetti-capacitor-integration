@@ -143,10 +143,10 @@ const Home = () => {
                       >
                         Open Event
                       </Button>
-                      <Button
+                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => navigate("/event-dashboard")}
+                        onClick={() => navigate(`/event-dashboard/${event.id}`)}
                       >
                         <Settings className="w-4 h-4" />
                       </Button>
@@ -186,7 +186,7 @@ const Home = () => {
                     <Button 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => navigate("/event-dashboard")}
+                      onClick={() => navigate(`/event-dashboard/${event.id}`)}
                     >
                       Manage Event
                     </Button>

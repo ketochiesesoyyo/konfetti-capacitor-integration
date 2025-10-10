@@ -53,6 +53,7 @@ export type Database = {
           id: string
           invite_code: string
           name: string
+          status: string
           updated_at: string
         }
         Insert: {
@@ -64,6 +65,7 @@ export type Database = {
           id?: string
           invite_code: string
           name: string
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -75,9 +77,42 @@ export type Database = {
           id?: string
           invite_code?: string
           name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      matches: {
+        Row: {
+          event_id: string
+          id: string
+          matched_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          matched_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          matched_at?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -120,6 +155,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      swipes: {
+        Row: {
+          created_at: string
+          direction: string
+          event_id: string
+          id: string
+          swiped_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          event_id: string
+          id?: string
+          swiped_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          event_id?: string
+          id?: string
+          swiped_user_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
