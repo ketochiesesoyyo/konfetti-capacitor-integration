@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X, Heart, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,16 +25,24 @@ type Profile = {
   user_id: string;
 };
 
+type Event = {
+  id: string;
+  name: string;
+  date: string;
+  profileCount?: number;
+};
+
 const Matchmaking = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [eventId, setEventId] = useState<string | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProfiles = async () => {
+    const loadEvents = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
@@ -35,36 +50,102 @@ const Matchmaking = () => {
       }
       setUserId(session.user.id);
 
-      // Get the user's event
-      const { data: attendeeData } = await supabase
+      // Fetch all events user is attending
+      const { data: attendeeData, error: attendeeError } = await supabase
         .from("event_attendees")
-        .select("event_id")
+        .select("event_id, events(id, name, date)")
         .eq("user_id", session.user.id)
-        .limit(1)
-        .maybeSingle();
+        .order("events(date)", { ascending: true });
 
-      if (attendeeData) {
-        setEventId(attendeeData.event_id);
+      if (attendeeError) {
+        console.error("Error loading events:", attendeeError);
+        toast.error("Failed to load events");
+        setLoading(false);
+        return;
       }
 
-      // Fetch profiles of users in same events
-      // The RLS policy will automatically filter to only show same-event users
+      const userEvents = attendeeData?.map((a: any) => a.events).filter(Boolean) || [];
+      setEvents(userEvents);
+
+      // Select the nearest upcoming event or first event
+      const savedEventId = localStorage.getItem("matchmaking_selected_event");
+      let defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
+      
+      if (!defaultEventId && userEvents.length > 0) {
+        const today = new Date();
+        const upcomingEvent = userEvents.find((e: Event) => new Date(e.date) >= today);
+        defaultEventId = upcomingEvent?.id || userEvents[0].id;
+      }
+
+      if (defaultEventId) {
+        setSelectedEventId(defaultEventId);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!selectedEventId || !userId) return;
+
+    const loadProfiles = async () => {
+      setLoading(true);
+      setCurrentIndex(0);
+
+      // Fetch profiles of users in the selected event only
+      const { data: eventAttendees, error: attendeesError } = await supabase
+        .from("event_attendees")
+        .select("user_id")
+        .eq("event_id", selectedEventId)
+        .neq("user_id", userId);
+
+      if (attendeesError) {
+        console.error("Error loading attendees:", attendeesError);
+        toast.error("Failed to load profiles");
+        setLoading(false);
+        return;
+      }
+
+      const attendeeIds = eventAttendees?.map(a => a.user_id) || [];
+
+      if (attendeeIds.length === 0) {
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles for these attendees
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .neq("user_id", session.user.id); // Don't show own profile
+        .in("user_id", attendeeIds);
 
       if (error) {
         toast.error("Failed to load profiles");
         console.error(error);
+        setProfiles([]);
       } else {
-        setProfiles(data || []);
+        // Filter out profiles user has already swiped on
+        const { data: existingSwipes } = await supabase
+          .from("swipes")
+          .select("swiped_user_id")
+          .eq("user_id", userId)
+          .eq("event_id", selectedEventId);
+
+        const swipedUserIds = new Set(existingSwipes?.map(s => s.swiped_user_id) || []);
+        const unswipedProfiles = (data || []).filter(p => !swipedUserIds.has(p.user_id));
+        setProfiles(unswipedProfiles);
       }
       setLoading(false);
+      
+      // Save selection
+      localStorage.setItem("matchmaking_selected_event", selectedEventId);
     };
 
     loadProfiles();
-  }, [navigate]);
+  }, [selectedEventId, userId, navigate]);
 
   const currentProfile = profiles[currentIndex];
   const hasMoreProfiles = currentIndex < profiles.length - 1;
@@ -85,7 +166,7 @@ const Matchmaking = () => {
   }
 
   const handleSwipe = async (liked: boolean) => {
-    if (!userId || !eventId || !currentProfile) return;
+    if (!userId || !selectedEventId || !currentProfile) return;
 
     // Save the swipe
     const { error: swipeError } = await supabase
@@ -93,7 +174,7 @@ const Matchmaking = () => {
       .insert({
         user_id: userId,
         swiped_user_id: currentProfile.user_id,
-        event_id: eventId,
+        event_id: selectedEventId,
         direction: liked ? "right" : "left",
       });
 
@@ -112,7 +193,7 @@ const Matchmaking = () => {
         .select("*")
         .eq("user_id", currentProfile.user_id)
         .eq("swiped_user_id", userId)
-        .eq("event_id", eventId)
+        .eq("event_id", selectedEventId)
         .eq("direction", "right")
         .maybeSingle();
 
@@ -121,7 +202,7 @@ const Matchmaking = () => {
         const { data: existingMatch } = await supabase
           .from("matches")
           .select("id")
-          .eq("event_id", eventId)
+          .eq("event_id", selectedEventId)
           .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
           .or(`user1_id.eq.${currentProfile.user_id},user2_id.eq.${currentProfile.user_id}`)
           .maybeSingle();
@@ -133,7 +214,7 @@ const Matchmaking = () => {
             .insert({
               user1_id: userId,
               user2_id: currentProfile.user_id,
-              event_id: eventId,
+              event_id: selectedEventId,
             })
             .select()
             .single();
@@ -161,33 +242,79 @@ const Matchmaking = () => {
       setCurrentIndex((prev) => prev + 1);
     } else {
       toast("You've seen everyone! Check back later.", {
-        description: "New guests may join the wedding soon.",
+        description: "New guests may join this event soon.",
       });
     }
   };
 
   if (!currentProfile || profiles.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-2">No profiles available</h2>
-          <p className="text-muted-foreground mb-4">
-            There are no other guests from your events yet. Check back later when more guests join!
-          </p>
-          <Button onClick={() => navigate("/")}>Go Home</Button>
-        </Card>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header with Event Selector */}
+        <div className="gradient-sunset text-white p-4">
+          <div className="max-w-lg mx-auto">
+            <h1 className="text-2xl font-bold mb-3">Matchmaking</h1>
+            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+                <SelectValue placeholder="Select an event" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                {events.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.name} - {new Date(event.date).toLocaleDateString()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="p-8 text-center max-w-md">
+            <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
+            <p className="text-muted-foreground mb-4">
+              You've seen everyone at this event. Check back later when more guests join!
+            </p>
+            <Button onClick={() => navigate("/")}>Go Home</Button>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  const selectedEvent = events.find(e => e.id === selectedEventId);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
+      {/* Header with Event Selector */}
       <div className="gradient-sunset text-white p-4">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Matchmaking</h1>
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-bold mb-3">Matchmaking</h1>
+          
+          {/* Event Selector Dropdown */}
+          <div className="mb-2">
+            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <SelectValue placeholder="Select an event" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                {events.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{event.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(event.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Profile count badge */}
           <Badge variant="secondary" className="bg-white/20 text-white border-0">
-            {profiles.length - currentIndex} left
+            {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? 's' : ''} left
           </Badge>
         </div>
       </div>
