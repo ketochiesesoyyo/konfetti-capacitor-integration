@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,9 @@ const EditProfile = () => {
 
   const [newInterest, setNewInterest] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
+  const [tempImageFile, setTempImageFile] = useState<File | null>(null);
 
   const availablePrompts = [
     "The most trouble I could get into tonight is…",
@@ -232,14 +236,26 @@ const EditProfile = () => {
       return;
     }
 
+    // Create a temporary URL for the cropper
+    const imageUrl = URL.createObjectURL(file);
+    setTempImageUrl(imageUrl);
+    setTempImageFile(file);
+    setCropDialogOpen(true);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!userId || !tempImageFile) return;
+
     setUploadingPhoto(true);
+    setCropDialogOpen(false);
+    
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = tempImageFile.name.split('.').pop();
       const fileName = `${userId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
-        .upload(fileName, file);
+        .upload(fileName, croppedBlob);
 
       if (uploadError) throw uploadError;
 
@@ -258,6 +274,10 @@ const EditProfile = () => {
       toast.error("Failed to upload photo");
     } finally {
       setUploadingPhoto(false);
+      // Clean up temp URL
+      URL.revokeObjectURL(tempImageUrl);
+      setTempImageUrl("");
+      setTempImageFile(null);
     }
   };
 
@@ -620,6 +640,18 @@ const EditProfile = () => {
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      <ImageCropDialog
+        open={cropDialogOpen}
+        imageUrl={tempImageUrl}
+        onClose={() => {
+          setCropDialogOpen(false);
+          URL.revokeObjectURL(tempImageUrl);
+          setTempImageUrl("");
+          setTempImageFile(null);
+        }}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };
