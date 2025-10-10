@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Edit, LogOut } from "lucide-react";
+import { Camera, Edit, LogOut, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -144,6 +146,15 @@ const Profile = () => {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20"
+              onClick={() => setShowPreview(true)}
+              title="Preview your profile"
+            >
+              <Eye className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
               onClick={() => navigate("/edit-profile")}
             >
               <Edit className="w-5 h-5" />
@@ -266,6 +277,68 @@ const Profile = () => {
           )}
         </Card>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+          {/* Matchmaking-style Preview */}
+          <div className="relative h-[450px] gradient-sunset">
+            <img
+              src={user?.photos?.[0] || "/placeholder.svg"}
+              alt={user?.name || "User"}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+              <h2 className="text-3xl font-bold mb-1">
+                {user?.name || "User"}, {user?.age || "?"}
+              </h2>
+              <p className="text-sm text-white/80">Preview Mode</p>
+            </div>
+          </div>
+
+          {/* Scrollable Info Section */}
+          <div className="p-6 max-h-[250px] overflow-y-auto space-y-4 bg-background">
+            {/* Bio */}
+            {user?.bio && (
+              <div>
+                <h3 className="font-semibold mb-1">About</h3>
+                <p className="text-foreground">{user.bio}</p>
+              </div>
+            )}
+
+            {/* Prompts */}
+            {user?.prompts && user.prompts.length > 0 && user.prompts.map((prompt: any, idx: number) => (
+              <div key={idx}>
+                <h3 className="font-semibold text-sm text-muted-foreground mb-1">
+                  {prompt.question}
+                </h3>
+                <p className="text-foreground">{prompt.answer}</p>
+              </div>
+            ))}
+
+            {/* Interests */}
+            {user?.interests && user.interests.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Interests</h3>
+                <div className="flex flex-wrap gap-2">
+                  {user.interests.map((interest: string, idx: number) => (
+                    <Badge key={idx} variant="secondary">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!user?.bio && (!user?.prompts || user.prompts.length === 0) && (!user?.interests || user.interests.length === 0) && (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                Add more details to your profile to show here!
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
