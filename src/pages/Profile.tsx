@@ -280,24 +280,26 @@ const Profile = () => {
 
       {/* Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
-          {/* Matchmaking-style Preview */}
-          <div className="relative h-[450px] gradient-sunset">
-            <img
-              src={user?.photos?.[0] || "/placeholder.svg"}
-              alt={user?.name || "User"}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
-              <h2 className="text-3xl font-bold mb-1">
-                {user?.name || "User"}, {user?.age || "?"}
-              </h2>
-              <p className="text-sm text-white/80">Preview Mode</p>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
+          {/* Fully Scrollable Preview */}
+          <div className="overflow-y-auto max-h-[90vh]">
+            {/* First Photo with Name Overlay */}
+            <div className="relative h-[450px]">
+              <img
+                src={user?.photos?.[0] || "/placeholder.svg"}
+                alt={user?.name || "User"}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+                <h2 className="text-3xl font-bold mb-1">
+                  {user?.name || "User"}, {user?.age || "?"}
+                </h2>
+                <p className="text-sm text-white/80">Preview Mode</p>
+              </div>
             </div>
-          </div>
 
-          {/* Scrollable Info Section */}
-          <div className="p-6 max-h-[250px] overflow-y-auto space-y-4 bg-background">
+            {/* Profile Content */}
+            <div className="p-6 space-y-4 bg-background">
             {/* Bio */}
             {user?.bio && (
               <div>
@@ -358,6 +360,7 @@ const Profile = () => {
                 Add more details to your profile to show here!
               </p>
             )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
