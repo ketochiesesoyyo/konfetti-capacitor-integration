@@ -37,6 +37,8 @@ const CreateEvent = () => {
     eventDate: "",
     theme: "sunset",
     agreedToTerms: false,
+    selectedPlan: "",
+    expectedGuests: 0,
   });
 
   useEffect(() => {
@@ -57,6 +59,55 @@ const CreateEvent = () => {
     { id: "golden", name: "Golden Hour", gradient: "gradient-golden" },
     { id: "emerald", name: "Emerald Fizz", gradient: "gradient-emerald" },
     { id: "midnight", name: "Midnight Rose", gradient: "gradient-midnight" },
+  ];
+
+  const pricingPlans = [
+    {
+      id: "free",
+      name: "Free Plan",
+      price: 0,
+      minGuests: 1,
+      maxGuests: 10,
+      description: "Perfect for intimate gatherings",
+      features: ["Up to 10 guests", "3 days active", "Basic matchmaking"],
+    },
+    {
+      id: "fun",
+      name: "Fun Plan",
+      price: 49.99,
+      minGuests: 11,
+      maxGuests: 50,
+      description: "Great for small parties",
+      features: ["11-50 guests", "3 days active", "Full matchmaking", "Guest management"],
+      popular: true,
+    },
+    {
+      id: "party-hard",
+      name: "Party Hard Plan",
+      price: 149.99,
+      minGuests: 51,
+      maxGuests: 200,
+      description: "For bigger celebrations",
+      features: ["51-200 guests", "3 days active", "Full matchmaking", "Priority support"],
+    },
+    {
+      id: "extreme",
+      name: "Extreme Party Plan",
+      price: 549.99,
+      minGuests: 201,
+      maxGuests: 500,
+      description: "Large-scale events",
+      features: ["201-500 guests", "3 days active", "Full matchmaking", "Dedicated support"],
+    },
+    {
+      id: "masses",
+      name: "Fun for the Masses",
+      price: 1049.99,
+      minGuests: 501,
+      maxGuests: null,
+      description: "Massive celebrations",
+      features: ["501+ guests", "3 days active", "Full matchmaking", "VIP support"],
+    },
   ];
 
   const handlePayment = () => {
@@ -123,60 +174,78 @@ const CreateEvent = () => {
     }
   };
 
+  const selectedPlanDetails = pricingPlans.find(p => p.id === eventData.selectedPlan);
+
   if (showPaywall && !isPaid) {
     return (
       <Dialog open={showPaywall} onOpenChange={(open) => !open && navigate("/")}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Create Your Event</DialogTitle>
+            <DialogTitle className="text-2xl">Choose Your Event Plan</DialogTitle>
             <DialogDescription>
-              Unlock private matchmaking for your wedding guests
+              Select a plan based on your expected number of guests
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="gradient-sunset rounded-lg p-6 text-white">
-              <p className="text-3xl font-bold mb-2">$14.99</p>
-              <p className="text-sm opacity-90">One-time payment per event</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Unlimited Guests</p>
-                  <p className="text-sm text-muted-foreground">
-                    Share your event link with all wedding attendees
-                  </p>
+          <div className="space-y-4 py-4">
+            {pricingPlans.map((plan) => (
+              <Card
+                key={plan.id}
+                className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+                  eventData.selectedPlan === plan.id
+                    ? "ring-2 ring-primary shadow-md"
+                    : ""
+                } ${plan.popular ? "relative" : ""}`}
+                onClick={() => setEventData({ ...eventData, selectedPlan: plan.id })}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="gradient-sunset text-white text-xs font-bold px-3 py-1 rounded-full">
+                      MOST POPULAR
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg">{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {plan.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {plan.features.map((feature, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1 text-xs text-muted-foreground"
+                        >
+                          <Check className="w-3 h-3 text-primary" />
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {plan.minGuests}-{plan.maxGuests || "unlimited"} guests
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">
+                      {plan.price === 0 ? "Free" : `$${plan.price.toFixed(2)}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">one-time</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">3 Days Active</p>
-                  <p className="text-sm text-muted-foreground">
-                    Event stays active up to 3 days after your wedding
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Guest Management</p>
-                  <p className="text-sm text-muted-foreground">
-                    Full control over who joins your event
-                  </p>
-                </div>
-              </div>
-            </div>
+              </Card>
+            ))}
 
             <Button
               variant="gradient"
-              className="w-full"
+              className="w-full mt-4"
               size="lg"
               onClick={handlePayment}
+              disabled={!eventData.selectedPlan}
             >
-              Purchase & Continue
+              {selectedPlanDetails?.price === 0
+                ? "Continue with Free Plan"
+                : `Purchase ${selectedPlanDetails?.name || "Plan"} - $${selectedPlanDetails?.price.toFixed(2)}`}
             </Button>
             <Button
               variant="ghost"
@@ -206,7 +275,9 @@ const CreateEvent = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Create Event</h1>
-            <p className="text-white/90 text-sm">Step {step} of 2</p>
+            <p className="text-white/90 text-sm">
+              Step {step} of 2 • {selectedPlanDetails?.name || "No plan selected"}
+            </p>
           </div>
         </div>
       </div>
