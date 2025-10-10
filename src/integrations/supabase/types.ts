@@ -45,6 +45,7 @@ export type Database = {
       }
       events: {
         Row: {
+          close_date: string
           created_at: string
           created_by: string
           date: string
@@ -55,6 +56,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          close_date?: string
           created_at?: string
           created_by: string
           date: string
@@ -65,6 +67,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          close_date?: string
           created_at?: string
           created_by?: string
           date?: string

@@ -35,7 +35,6 @@ const CreateEvent = () => {
     coupleName1: "",
     coupleName2: "",
     eventDate: "",
-    closeDate: "",
     theme: "sunset",
     agreedToTerms: false,
   });
@@ -80,12 +79,18 @@ const CreateEvent = () => {
       const inviteCode = generateInviteCode();
       const eventName = `${eventData.coupleName1} & ${eventData.coupleName2}`;
       
+      // Calculate close date (3 days after event date)
+      const eventDate = new Date(eventData.eventDate);
+      const closeDate = new Date(eventDate);
+      closeDate.setDate(closeDate.getDate() + 3);
+      
       // Create event
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
           name: eventName,
           date: eventData.eventDate,
+          close_date: closeDate.toISOString().split('T')[0],
           description: `Wedding celebration for ${eventName}`,
           invite_code: inviteCode,
           created_by: userId,
@@ -246,18 +251,9 @@ const CreateEvent = () => {
                 />
                 <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="closeDate">Close Date (Max 3 days after event)</Label>
-              <Input
-                id="closeDate"
-                type="date"
-                value={eventData.closeDate}
-                onChange={(e) =>
-                  setEventData({ ...eventData, closeDate: e.target.value })
-                }
-              />
+              <p className="text-sm text-muted-foreground">
+                Matchmaking will remain active for 3 days after your event to allow guests to finish conversations and complete their matches.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -306,7 +302,6 @@ const CreateEvent = () => {
                 !eventData.coupleName1 ||
                 !eventData.coupleName2 ||
                 !eventData.eventDate ||
-                !eventData.closeDate ||
                 !eventData.agreedToTerms
               }
             >
@@ -331,9 +326,12 @@ const CreateEvent = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Close Date</p>
+                <p className="text-sm text-muted-foreground">Matchmaking Active Until</p>
                 <p className="font-medium">
-                  {new Date(eventData.closeDate).toLocaleDateString()}
+                  {new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  (3 days after event)
                 </p>
               </div>
               <div>
