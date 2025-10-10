@@ -42,13 +42,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "event_attendees_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_secure"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "event_attendees_user_id_profiles_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -124,13 +117,6 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_secure"
             referencedColumns: ["id"]
           },
           {
@@ -274,13 +260,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "swipes_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events_secure"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "swipes_swiped_user_id_fkey"
             columns: ["swiped_user_id"]
             isOneToOne: false
@@ -305,45 +284,7 @@ export type Database = {
       }
     }
     Views: {
-      events_secure: {
-        Row: {
-          close_date: string | null
-          created_at: string | null
-          created_by: string | null
-          date: string | null
-          description: string | null
-          id: string | null
-          invite_code: string | null
-          name: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          close_date?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          date?: string | null
-          description?: string | null
-          id?: string | null
-          invite_code?: never
-          name?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          close_date?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          date?: string | null
-          description?: string | null
-          id?: string | null
-          invite_code?: never
-          name?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       user_is_event_attendee: {

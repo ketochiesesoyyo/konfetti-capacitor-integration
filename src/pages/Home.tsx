@@ -38,15 +38,19 @@ const Home = () => {
         setHostingEvents(hosting || []);
 
         // Fetch events user is attending (joined via event_attendees)
-        // Use secure view to prevent invite code leakage
+        // Query events directly - invite codes will be masked in UI for non-creators
         const { data: attending, error: attendingError } = await supabase
           .from("event_attendees")
-          .select("event_id, events_secure(*)")
+          .select("event_id, events(*)")
           .eq("user_id", session.user.id);
 
         if (attendingError) throw attendingError;
         
-        const attendingEventsData = attending?.map((a: any) => a.events_secure) || [];
+        // Mask invite codes for events not created by this user
+        const attendingEventsData = (attending || []).map((a: any) => ({
+          ...a.events,
+          invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
+        }));
         setAttendingEvents(attendingEventsData);
         
       } catch (error: any) {
