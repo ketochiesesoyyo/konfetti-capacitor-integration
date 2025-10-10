@@ -99,7 +99,7 @@ const EventDashboard = () => {
         .from("event_attendees")
         .select(`
           *,
-          profiles:user_id (
+          profiles (
             id,
             user_id,
             name,
@@ -147,7 +147,7 @@ const EventDashboard = () => {
         .from("swipes")
         .select(`
           user_id,
-          profiles:user_id (name)
+          profiles (name)
         `)
         .eq("event_id", eventId || "");
 
