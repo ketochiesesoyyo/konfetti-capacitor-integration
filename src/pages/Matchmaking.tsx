@@ -95,12 +95,21 @@ const Matchmaking = () => {
       setLoading(true);
       setCurrentIndex(0);
 
-      // Fetch profiles of users in the selected event only
+      // Get event host to exclude them
+      const { data: eventData } = await supabase
+        .from("events")
+        .select("created_by")
+        .eq("id", selectedEventId)
+        .single();
+
+      const hostId = eventData?.created_by;
+
+      // Fetch profiles of users in the selected event only (excluding host)
       const { data: eventAttendees, error: attendeesError } = await supabase
         .from("event_attendees")
         .select("user_id")
         .eq("event_id", selectedEventId)
-        .neq("user_id", userId);
+        .neq("user_id", userId)
 
       if (attendeesError) {
         console.error("Error loading attendees:", attendeesError);
@@ -109,7 +118,10 @@ const Matchmaking = () => {
         return;
       }
 
-      const attendeeIds = eventAttendees?.map(a => a.user_id) || [];
+      // Filter out the host from attendees
+      const attendeeIds = eventAttendees
+        ?.map(a => a.user_id)
+        .filter(id => id !== hostId) || [];
 
       if (attendeeIds.length === 0) {
         setProfiles([]);
