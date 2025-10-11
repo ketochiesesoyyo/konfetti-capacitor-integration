@@ -350,6 +350,13 @@ export type Database = {
         Args: { user_a: string; user_b: string }
         Returns: boolean
       }
+      validate_invite_code: {
+        Args: { code: string }
+        Returns: {
+          event_id: string
+          event_name: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

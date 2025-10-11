@@ -42,19 +42,18 @@ const JoinEvent = () => {
     // Normalize the code the same way it's generated: remove all spaces and special chars
     const normalizedCode = eventCode.toUpperCase().trim().replace(/\s+/g, '').replace(/&/g, '');
     
-    // Check if event exists
-    const { data: event, error } = await supabase
-      .from("events")
-      .select("id")
-      .eq("invite_code", normalizedCode)
-      .single();
+    // Check if event exists using secure RPC function
+    const { data, error } = await supabase
+      .rpc('validate_invite_code', { code: normalizedCode });
 
-    if (error || !event) {
+    if (error || !data || data.length === 0) {
       toast.error("Invalid event code");
       return;
     }
+
+    const event = data[0];
     
-    // Redirect to the link-based join flow with the validated code
+    // Redirect to the link-based join flow with the validated event
     navigate(`/join/${normalizedCode}`);
   };
 
