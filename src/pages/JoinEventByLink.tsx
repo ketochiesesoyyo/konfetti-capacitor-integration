@@ -57,11 +57,21 @@ const JoinEventByLink = () => {
         return;
       }
       
-      // Fetch event by invite code
+      // Validate invite code using secure RPC function
+      const { data: validationData, error: validationError } = await supabase
+        .rpc('validate_invite_code', { code: code?.toUpperCase() || '' });
+
+      if (validationError || !validationData || validationData.length === 0) {
+        setEvent({ isValid: false });
+        setLoading(false);
+        return;
+      }
+
+      // Fetch full event details using the validated event_id
       const { data: eventData, error } = await supabase
         .from("events")
         .select("*, event_attendees(count)")
-        .eq("invite_code", code?.toUpperCase())
+        .eq("id", validationData[0].event_id)
         .single();
 
       if (error || !eventData) {
