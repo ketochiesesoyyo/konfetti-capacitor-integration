@@ -128,16 +128,58 @@ const Matchmaking = () => {
         console.error(error);
         setProfiles([]);
       } else {
-        // Filter out profiles user has already swiped on
+        // Filter profiles based on swipe history with second chance logic
         const { data: existingSwipes } = await supabase
           .from("swipes")
-          .select("swiped_user_id")
+          .select("swiped_user_id, direction, created_at")
           .eq("user_id", userId)
-          .eq("event_id", selectedEventId);
+          .eq("event_id", selectedEventId)
+          .order("created_at", { ascending: false });
 
-        const swipedUserIds = new Set(existingSwipes?.map(s => s.swiped_user_id) || []);
-        const unswipedProfiles = (data || []).filter(p => !swipedUserIds.has(p.user_id));
-        setProfiles(unswipedProfiles);
+        // Group swipes by user
+        const swipesByUser = new Map<string, Array<{ direction: string; created_at: string }>>();
+        existingSwipes?.forEach(swipe => {
+          if (!swipesByUser.has(swipe.swiped_user_id)) {
+            swipesByUser.set(swipe.swiped_user_id, []);
+          }
+          swipesByUser.get(swipe.swiped_user_id)!.push({
+            direction: swipe.direction,
+            created_at: swipe.created_at
+          });
+        });
+
+        // Filter profiles with second chance logic
+        const filteredProfiles = (data || []).filter(profile => {
+          const userSwipes = swipesByUser.get(profile.user_id);
+          
+          // Never swiped = show
+          if (!userSwipes || userSwipes.length === 0) {
+            return true;
+          }
+          
+          // Hit 3 swipes limit = don't show
+          if (userSwipes.length >= 3) {
+            return false;
+          }
+          
+          const mostRecentSwipe = userSwipes[0];
+          
+          // Already liked = don't show again
+          if (mostRecentSwipe.direction === 'right') {
+            return false;
+          }
+          
+          // Recently passed (< 24h) = don't show yet
+          const hoursSinceSwipe = (Date.now() - new Date(mostRecentSwipe.created_at).getTime()) / (1000 * 60 * 60);
+          if (hoursSinceSwipe < 24) {
+            return false;
+          }
+          
+          // Passed but 24h+ elapsed = show for second chance
+          return true;
+        });
+
+        setProfiles(filteredProfiles);
       }
       setLoading(false);
       
