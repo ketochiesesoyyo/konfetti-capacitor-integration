@@ -353,8 +353,13 @@ export type Database = {
       validate_invite_code: {
         Args: { code: string }
         Returns: {
+          event_date: string
+          event_description: string
           event_id: string
           event_name: string
+          event_status: string
+          event_theme: string
+          guest_count: number
         }[]
       }
     }

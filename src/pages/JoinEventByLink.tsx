@@ -57,7 +57,7 @@ const JoinEventByLink = () => {
         return;
       }
       
-      // Validate invite code using secure RPC function
+      // Validate invite code and get all event details using secure RPC function
       const { data: validationData, error: validationError } = await supabase
         .rpc('validate_invite_code', { code: code?.toUpperCase() || '' });
 
@@ -67,24 +67,20 @@ const JoinEventByLink = () => {
         return;
       }
 
-      // Fetch full event details using the validated event_id
-      const { data: eventData, error } = await supabase
-        .from("events")
-        .select("*, event_attendees(count)")
-        .eq("id", validationData[0].event_id)
-        .single();
-
-      if (error || !eventData) {
-        setEvent({ isValid: false });
-      } else {
-        setEvent({
-          ...eventData,
-          coupleName: eventData.name,
-          eventDate: eventData.date,
-          guestCount: eventData.event_attendees?.[0]?.count || 0,
-          isValid: true,
-        });
-      }
+      // Use the data from RPC directly (no need for another query)
+      const eventData = validationData[0];
+      setEvent({
+        id: eventData.event_id,
+        name: eventData.event_name,
+        date: eventData.event_date,
+        description: eventData.event_description,
+        status: eventData.event_status,
+        theme: eventData.event_theme,
+        coupleName: eventData.event_name,
+        eventDate: eventData.event_date,
+        guestCount: Number(eventData.guest_count) || 0,
+        isValid: true,
+      });
       setLoading(false);
     };
     checkAuthAndLoadEvent();
