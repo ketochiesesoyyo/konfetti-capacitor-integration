@@ -303,6 +303,8 @@ const Matchmaking = () => {
       if (hasMoreProfiles) {
         setCurrentIndex((prev) => prev + 1);
       } else {
+        // Move to next index to trigger the empty state
+        setCurrentIndex((prev) => prev + 1);
         toast("You've seen everyone! Check back later.", {
           description: "New guests may join this event soon.",
         });
@@ -390,8 +392,8 @@ const Matchmaking = () => {
               ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
               : 'animate-slide-up'
           }`}>
-            {/* Photo Section */}
-            <div className="relative h-[450px] gradient-sunset">
+            {/* Photo Section - Fixed with card */}
+            <div className="relative h-[450px] gradient-sunset overflow-hidden">
               <img
                 src={currentProfile.photos?.[0] || "/placeholder.svg"}
                 alt={currentProfile.name}

@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type ProfileWithEvent = {
   id: string;
+  user_id: string;
   name: string;
   age: number | null;
   photo: string;
@@ -45,7 +46,7 @@ const LikedYou = () => {
           user_id,
           event_id,
           direction,
-          profiles!swipes_user_id_fkey(id, name, age, photos, bio, interests),
+          profiles!swipes_user_id_fkey(id, user_id, name, age, photos, bio, interests),
           events(id, name)
         `)
         .eq("swiped_user_id", session.user.id)
@@ -70,6 +71,7 @@ const LikedYou = () => {
 
       const formattedLikes = incomingSwipes?.map((swipe: any) => ({
         id: swipe.profiles.id,
+        user_id: swipe.profiles.user_id,
         name: swipe.profiles.name,
         age: swipe.profiles.age,
         photo: swipe.profiles.photos?.[0] || "/placeholder.svg",
@@ -99,7 +101,7 @@ const LikedYou = () => {
         .from("swipes")
         .insert({
           user_id: userId,
-          swiped_user_id: profile.id,
+          swiped_user_id: profile.user_id,
           event_id: profile.eventId,
           direction: "right",
         });
@@ -112,16 +114,26 @@ const LikedYou = () => {
         .select("*")
         .eq("event_id", profile.eventId)
         .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-        .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
+        .or(`user1_id.eq.${profile.user_id},user2_id.eq.${profile.user_id}`)
         .maybeSingle();
 
       if (!match) {
         // Create match
-        await supabase.from("matches").insert({
-          user1_id: userId,
-          user2_id: profile.id,
-          event_id: profile.eventId,
-        });
+        const { data: newMatch } = await supabase
+          .from("matches")
+          .insert({
+            user1_id: userId,
+            user2_id: profile.user_id,
+            event_id: profile.eventId,
+          })
+          .select()
+          .single();
+
+        if (newMatch) {
+          setTimeout(() => {
+            navigate(`/chat/${newMatch.id}`);
+          }, 1000);
+        }
       }
 
       toast("It's a Match! 🎉", {
@@ -142,7 +154,7 @@ const LikedYou = () => {
     try {
       await supabase.from("swipes").insert({
         user_id: userId,
-        swiped_user_id: profile.id,
+        swiped_user_id: profile.user_id,
         event_id: profile.eventId,
         direction: "left",
       });
