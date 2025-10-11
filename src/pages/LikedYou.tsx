@@ -38,15 +38,13 @@ const LikedYou = () => {
       }
       setUserId(session.user.id);
 
-      // Fetch people who liked current user
+      // Fetch people who liked current user (get swipe data and event info first)
       const { data: incomingSwipes, error } = await supabase
         .from("swipes")
         .select(`
           id,
           user_id,
           event_id,
-          direction,
-          profiles!swipes_user_id_fkey(id, user_id, name, age, photos, bio, interests),
           events(id, name)
         `)
         .eq("swiped_user_id", session.user.id)
@@ -59,6 +57,30 @@ const LikedYou = () => {
         return;
       }
 
+      if (!incomingSwipes || incomingSwipes.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs who liked current user
+      const likerUserIds = [...new Set(incomingSwipes.map((s: any) => s.user_id))];
+
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, user_id, name, age, photos, bio, interests")
+        .in("user_id", likerUserIds);
+
+      if (profilesError) {
+        console.error("Error loading profiles:", profilesError);
+        toast.error("Failed to load profiles");
+        setLoading(false);
+        return;
+      }
+
+      // Create a map for quick profile lookup
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
       // Check if current user has responded to these swipes
       const { data: userSwipes } = await supabase
         .from("swipes")
@@ -69,19 +91,27 @@ const LikedYou = () => {
         userSwipes?.map(s => [s.swiped_user_id, s.direction]) || []
       );
 
-      const formattedLikes = incomingSwipes?.map((swipe: any) => ({
-        id: swipe.profiles.id,
-        user_id: swipe.profiles.user_id,
-        name: swipe.profiles.name,
-        age: swipe.profiles.age,
-        photo: swipe.profiles.photos?.[0] || "/placeholder.svg",
-        bio: swipe.profiles.bio,
-        interests: swipe.profiles.interests,
-        eventName: swipe.events.name,
-        eventId: swipe.event_id,
-        swipeId: swipe.id,
-        userResponse: userSwipeMap.get(swipe.user_id),
-      })) || [];
+      // Combine swipe data with profile data
+      const formattedLikes = incomingSwipes
+        ?.map((swipe: any) => {
+          const profile = profileMap.get(swipe.user_id);
+          if (!profile) return null; // Skip if profile not found
+          
+          return {
+            id: profile.id,
+            user_id: profile.user_id,
+            name: profile.name,
+            age: profile.age,
+            photo: profile.photos?.[0] || "/placeholder.svg",
+            bio: profile.bio,
+            interests: profile.interests,
+            eventName: swipe.events.name,
+            eventId: swipe.event_id,
+            swipeId: swipe.id,
+            userResponse: userSwipeMap.get(swipe.user_id),
+          };
+        })
+        .filter(Boolean) || [];
 
       // Separate into new likes (no response) and passed
       setNewLikes(formattedLikes.filter((like: any) => !like.userResponse));
