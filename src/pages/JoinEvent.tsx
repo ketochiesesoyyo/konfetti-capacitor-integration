@@ -39,7 +39,8 @@ const JoinEvent = () => {
       return;
     }
 
-    const normalizedCode = eventCode.toUpperCase().trim();
+    // Normalize the code the same way it's generated: remove all spaces and special chars
+    const normalizedCode = eventCode.toUpperCase().trim().replace(/\s+/g, '').replace(/&/g, '');
     
     // Check if event exists
     const { data: event, error } = await supabase
