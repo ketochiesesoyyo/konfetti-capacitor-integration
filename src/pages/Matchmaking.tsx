@@ -40,6 +40,7 @@ const Matchmaking = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -168,6 +169,9 @@ const Matchmaking = () => {
   const handleSwipe = async (liked: boolean) => {
     if (!userId || !selectedEventId || !currentProfile) return;
 
+    // Trigger exit animation
+    setIsExiting(true);
+
     // Save the swipe
     const { error: swipeError } = await supabase
       .from("swipes")
@@ -181,6 +185,7 @@ const Matchmaking = () => {
     if (swipeError) {
       console.error("Error saving swipe:", swipeError);
       toast.error("Failed to save swipe");
+      setIsExiting(false);
       return;
     }
 
@@ -238,13 +243,17 @@ const Matchmaking = () => {
       toast("Passed");
     }
 
-    if (hasMoreProfiles) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      toast("You've seen everyone! Check back later.", {
-        description: "New guests may join this event soon.",
-      });
-    }
+    // Wait for animation to complete before moving to next profile
+    setTimeout(() => {
+      setIsExiting(false);
+      if (hasMoreProfiles) {
+        setCurrentIndex((prev) => prev + 1);
+      } else {
+        toast("You've seen everyone! Check back later.", {
+          description: "New guests may join this event soon.",
+        });
+      }
+    }, 300);
   };
 
   if (!currentProfile || profiles.length === 0) {
@@ -322,7 +331,11 @@ const Matchmaking = () => {
       {/* Profile Card */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg">
-          <Card className="overflow-hidden shadow-xl animate-slide-up">
+          <Card className={`overflow-hidden shadow-xl transition-all duration-300 ${
+            isExiting 
+              ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
+              : 'animate-slide-up'
+          }`}>
             {/* Photo Section */}
             <div className="relative h-[450px] gradient-sunset">
               <img
