@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 const JoinEvent = () => {
   const navigate = useNavigate();
   const [eventCode, setEventCode] = useState("");
-  const [side, setSide] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,8 +33,8 @@ const JoinEvent = () => {
   }, [navigate]);
 
   const handleJoin = async () => {
-    if (!eventCode || !side || !userId) {
-      toast.error("Please enter event code and select a side");
+    if (!eventCode || !userId) {
+      toast.error("Please enter event code");
       return;
     }
 
@@ -101,19 +100,6 @@ const JoinEvent = () => {
                 className="text-center text-lg tracking-wider font-mono"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label>Which side are you on?</Label>
-              <Select value={side} onValueChange={setSide}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select side" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bride">Bride's Side</SelectItem>
-                  <SelectItem value="groom">Groom's Side</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="bg-muted/50 p-4 rounded-lg">
@@ -127,7 +113,7 @@ const JoinEvent = () => {
             className="w-full"
             size="lg"
             onClick={handleJoin}
-            disabled={!eventCode || !side}
+            disabled={!eventCode}
           >
             Join Wedding
           </Button>
