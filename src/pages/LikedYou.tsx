@@ -68,7 +68,7 @@ const LikedYou = () => {
       // Fetch profiles for these users
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, user_id, name, age, photos, bio, interests")
+        .select("id, user_id, name, age, photos, bio, interests, gender, interested_in")
         .in("user_id", likerUserIds);
 
       if (profilesError) {
@@ -80,6 +80,21 @@ const LikedYou = () => {
 
       // Create a map for quick profile lookup
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Fetch current user's profile for gender preferences
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("gender, interested_in")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
+        // User needs to complete profile
+        setNewLikes([]);
+        setPassedLikes([]);
+        setLoading(false);
+        return;
+      }
 
       // Check if current user has responded to these swipes
       const { data: userSwipes } = await supabase
@@ -109,13 +124,37 @@ const LikedYou = () => {
             eventId: swipe.event_id,
             swipeId: swipe.id,
             userResponse: userSwipeMap.get(swipe.user_id),
+            gender: profile.gender,
+            interested_in: profile.interested_in,
           };
         })
         .filter(Boolean) || [];
 
+      // Filter for gender compatibility
+      const genderCompatibleLikes = formattedLikes.filter((like: any) => {
+        const profile = like;
+        
+        if (!profile.gender || !profile.interested_in) {
+          return false;
+        }
+        
+        // Same bidirectional check as matchmaking
+        const userInterestedInProfile = 
+          currentUserProfile.interested_in === 'both' ||
+          (currentUserProfile.interested_in === 'men' && profile.gender === 'man') ||
+          (currentUserProfile.interested_in === 'women' && profile.gender === 'woman');
+        
+        const profileInterestedInUser =
+          profile.interested_in === 'both' ||
+          (profile.interested_in === 'men' && currentUserProfile.gender === 'man') ||
+          (profile.interested_in === 'women' && currentUserProfile.gender === 'woman');
+        
+        return userInterestedInProfile && profileInterestedInUser;
+      });
+
       // Separate into new likes (no response) and passed
-      setNewLikes(formattedLikes.filter((like: any) => !like.userResponse));
-      setPassedLikes(formattedLikes.filter((like: any) => like.userResponse === "left"));
+      setNewLikes(genderCompatibleLikes.filter((like: any) => !like.userResponse));
+      setPassedLikes(genderCompatibleLikes.filter((like: any) => like.userResponse === "left"));
       setLoading(false);
     };
 

@@ -45,6 +45,7 @@ const EditProfile = () => {
     name: "",
     age: "",
     gender: "",
+    interested_in: "",
     bio: "",
     interests: [] as string[],
     photos: [] as string[],
@@ -133,12 +134,16 @@ const EditProfile = () => {
       }
 
       if (!profileData) {
-        // Create profile if it doesn't exist
+        // Create profile if it doesn't exist - use upsert to avoid type issues
         const { error: insertError } = await supabase
           .from("profiles")
-          .insert({
+          .upsert({
             user_id: session.user.id,
             name: session.user.email?.split('@')[0] || 'User',
+            gender: 'man',
+            interested_in: 'both',
+          }, {
+            onConflict: 'user_id'
           });
         
         if (insertError) {
@@ -152,6 +157,7 @@ const EditProfile = () => {
           name: session.user.email?.split('@')[0] || 'User',
           age: "",
           gender: "",
+          interested_in: "",
           bio: "",
           interests: [],
           photos: [],
@@ -174,6 +180,7 @@ const EditProfile = () => {
           name: profileData.name || "",
           age: profileData.age?.toString() || "",
           gender: profileData.gender || "",
+          interested_in: profileData.interested_in || "",
           bio: profileData.bio || "",
           interests: profileData.interests || [],
           photos: profileData.photos || [],
@@ -194,8 +201,8 @@ const EditProfile = () => {
     // Validate required fields
     const isNewUser = location.state?.isNewUser;
     if (isNewUser) {
-      if (!profile.name || !profile.age || profile.photos.length === 0) {
-        toast.error("Please complete all required fields: Name, Age, and at least one photo");
+      if (!profile.name || !profile.age || !profile.gender || !profile.interested_in || profile.photos.length === 0) {
+        toast.error("Please complete all required fields: Name, Age, Gender, Interested In, and at least one photo");
         return;
       }
     }
@@ -221,6 +228,7 @@ const EditProfile = () => {
           name: profile.name,
           age: profile.age ? parseInt(profile.age) : null,
           gender: profile.gender,
+          interested_in: profile.interested_in,
           bio: profile.bio,
           interests: profile.interests,
           photos: profile.photos,
@@ -547,6 +555,37 @@ const EditProfile = () => {
                 value={profile.age}
                 onChange={(e) => setProfile({ ...profile, age: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>I am a *</Label>
+              <Select
+                value={profile.gender}
+                onValueChange={(value) => setProfile({ ...profile, gender: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="man">Man</SelectItem>
+                  <SelectItem value="woman">Woman</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Interested in *</Label>
+              <Select
+                value={profile.interested_in}
+                onValueChange={(value) => setProfile({ ...profile, interested_in: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Who are you interested in?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="men">Men</SelectItem>
+                  <SelectItem value="women">Women</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>

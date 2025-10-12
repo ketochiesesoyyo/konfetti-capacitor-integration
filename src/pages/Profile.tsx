@@ -62,12 +62,16 @@ const Profile = () => {
       }
 
       if (!profile) {
-        // Create profile if it doesn't exist
+        // Create profile if it doesn't exist - use upsert to avoid type issues
         const { error: insertError } = await supabase
           .from("profiles")
-          .insert({
+          .upsert({
             user_id: session.user.id,
             name: session.user.email?.split('@')[0] || 'User',
+            gender: 'man',
+            interested_in: 'both',
+          }, {
+            onConflict: 'user_id'
           });
         
         if (insertError) {

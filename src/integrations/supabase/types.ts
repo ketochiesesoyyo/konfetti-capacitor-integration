@@ -236,8 +236,9 @@ export type Database = {
           age: number | null
           bio: string | null
           created_at: string
-          gender: string | null
+          gender: string
           id: string
+          interested_in: string
           interests: string[] | null
           name: string
           photos: string[] | null
@@ -249,8 +250,9 @@ export type Database = {
           age?: number | null
           bio?: string | null
           created_at?: string
-          gender?: string | null
+          gender: string
           id?: string
+          interested_in: string
           interests?: string[] | null
           name: string
           photos?: string[] | null
@@ -262,8 +264,9 @@ export type Database = {
           age?: number | null
           bio?: string | null
           created_at?: string
-          gender?: string | null
+          gender?: string
           id?: string
+          interested_in?: string
           interests?: string[] | null
           name?: string
           photos?: string[] | null

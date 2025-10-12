@@ -140,6 +140,20 @@ const Matchmaking = () => {
         console.error(error);
         setProfiles([]);
       } else {
+        // Fetch current user's profile to get their gender preferences
+        const { data: currentUserProfile } = await supabase
+          .from("profiles")
+          .select("gender, interested_in")
+          .eq("user_id", userId)
+          .single();
+
+        if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
+          toast.error("Please complete your profile with gender preferences");
+          navigate("/edit-profile");
+          setLoading(false);
+          return;
+        }
+
         // Filter profiles based on swipe history with second chance logic
         const { data: existingSwipes } = await supabase
           .from("swipes")
@@ -160,8 +174,31 @@ const Matchmaking = () => {
           });
         });
 
+        // Filter profiles based on gender compatibility first
+        const genderCompatibleProfiles = (data || []).filter(profile => {
+          // Skip profiles without gender info
+          if (!profile.gender || !profile.interested_in) {
+            return false;
+          }
+          
+          // Check if current user is interested in this profile's gender
+          const userInterestedInProfile = 
+            currentUserProfile.interested_in === 'both' ||
+            (currentUserProfile.interested_in === 'men' && profile.gender === 'man') ||
+            (currentUserProfile.interested_in === 'women' && profile.gender === 'woman');
+          
+          // Check if profile is interested in current user's gender (bidirectional)
+          const profileInterestedInUser =
+            profile.interested_in === 'both' ||
+            (profile.interested_in === 'men' && currentUserProfile.gender === 'man') ||
+            (profile.interested_in === 'women' && currentUserProfile.gender === 'woman');
+          
+          // Both must be compatible
+          return userInterestedInProfile && profileInterestedInUser;
+        });
+
         // Filter profiles with second chance logic
-        const filteredProfiles = (data || []).filter(profile => {
+        const filteredProfiles = genderCompatibleProfiles.filter(profile => {
           const userSwipes = swipesByUser.get(profile.user_id);
           
           // Never swiped = show
