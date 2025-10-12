@@ -277,9 +277,7 @@ const EventDashboard = () => {
   };
 
   const eventCode = event?.invite_code || "";
-  // Use production URL if available, otherwise fall back to current origin
-  const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-  const eventLink = `${baseUrl}/join/${eventCode}`;
+  const eventLink = `https://plus-one-v2.lovable.app/join/${eventCode}`;
 
   const handleShareLink = () => {
     navigator.clipboard.writeText(eventLink);
