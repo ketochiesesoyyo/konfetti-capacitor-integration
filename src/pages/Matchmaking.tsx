@@ -42,6 +42,9 @@ const Matchmaking = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
+  const [swipeX, setSwipeX] = useState(0);
+  const [swipeStartX, setSwipeStartX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -354,6 +357,47 @@ const Matchmaking = () => {
     }, 300);
   };
 
+  // Swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setSwipeStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - swipeStartX;
+    setSwipeX(diff);
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+    const threshold = 100; // pixels to trigger swipe
+    
+    if (Math.abs(swipeX) > threshold) {
+      // Trigger swipe action
+      if (swipeX > 0) {
+        handleSwipe(true); // Swiped right = like
+      } else {
+        handleSwipe(false); // Swiped left = pass
+      }
+    }
+    
+    // Reset swipe position
+    setSwipeX(0);
+    setSwipeStartX(0);
+  };
+
+  // Calculate rotation based on swipe distance
+  const getCardTransform = () => {
+    const rotation = swipeX / 20; // Subtle rotation effect
+    return `translateX(${swipeX}px) rotate(${rotation}deg)`;
+  };
+
+  const getSwipeOpacity = () => {
+    return Math.min(Math.abs(swipeX) / 100, 1);
+  };
+
   if (!currentProfile || profiles.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -428,12 +472,40 @@ const Matchmaking = () => {
 
       {/* Profile Card */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg">
-          <Card className={`overflow-hidden shadow-xl transition-all duration-300 ${
-            isExiting 
-              ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
-              : 'animate-slide-up'
-          }`}>
+        <div className="w-full max-w-lg relative">
+          <Card 
+            className={`overflow-hidden shadow-xl ${
+              isExiting 
+                ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
+                : 'animate-slide-up'
+            } ${isSwiping ? '' : 'transition-transform duration-200'}`}
+            style={isSwiping ? { transform: getCardTransform() } : undefined}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Swipe Indicators */}
+            {isSwiping && swipeX > 20 && (
+              <div 
+                className="absolute top-8 left-8 z-10 pointer-events-none"
+                style={{ opacity: getSwipeOpacity() }}
+              >
+                <div className="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[-20deg] shadow-lg border-4 border-white">
+                  LIKE
+                </div>
+              </div>
+            )}
+            {isSwiping && swipeX < -20 && (
+              <div 
+                className="absolute top-8 right-8 z-10 pointer-events-none"
+                style={{ opacity: getSwipeOpacity() }}
+              >
+                <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[20deg] shadow-lg border-4 border-white">
+                  PASS
+                </div>
+              </div>
+            )}
+            
             {/* Photo Section - Fixed with card */}
             <div className="relative h-[450px] gradient-sunset overflow-hidden">
               <img
