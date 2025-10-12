@@ -376,13 +376,14 @@ const LikedYou = () => {
       {/* Header */}
       <div className="gradient-sunset text-white p-6">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl font-bold mb-1">Liked You</h1>
-          <p className="text-white/90 text-sm">People who are interested in you</p>
+          <h1 className="text-3xl font-bold mb-1">Your Likes</h1>
+          <p className="text-white/90 text-sm">People you've shown interest in</p>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
-        {/* Tab Selector */}
+        {/* Tab Selector - Hidden but keeping logic */}
+        {/* 
         <Card className="p-1 mb-6">
           <div className="grid grid-cols-3 gap-1">
             <button
@@ -420,36 +421,14 @@ const LikedYou = () => {
             </button>
           </div>
         </Card>
+        */}
 
-        {/* Likes List */}
-        <div className="space-y-4 pb-6">
+        {/* Likes List - Always show All Likes */}
+        <div className="space-y-4 pb-6 pt-6">
           {loading ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Loading likes...</p>
+              <p className="text-muted-foreground">Loading your likes...</p>
             </Card>
-          ) : activeTab === "new" ? (
-            newLikes.length > 0 ? (
-              newLikes.map((profile) => (
-                <ProfileCard key={profile.swipeId} profile={profile} />
-              ))
-            ) : (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No new likes yet</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Keep swiping to find your matches!
-                </p>
-              </Card>
-            )
-          ) : activeTab === "passed" ? (
-            passedLikes.length > 0 ? (
-              passedLikes.map((profile) => (
-                <ProfileCard key={profile.swipeId} profile={profile} isPassed />
-              ))
-            ) : (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No passed profiles</p>
-              </Card>
-            )
           ) : allLikes.length > 0 ? (
             allLikes.map((profile) => (
               <ProfileCard key={profile.swipeId} profile={profile} showActions={false} />
