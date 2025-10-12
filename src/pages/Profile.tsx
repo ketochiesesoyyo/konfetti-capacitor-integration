@@ -159,14 +159,6 @@ const Profile = () => {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20"
-              onClick={() => navigate("/edit-profile")}
-            >
-              <Edit className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/20"
               onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
