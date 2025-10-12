@@ -799,7 +799,7 @@ const EditProfile = () => {
       </div>
 
       {/* Fixed Save Button - Always visible above navigation */}
-      <div className="fixed bottom-24 left-0 right-0 flex items-center justify-center z-50 pointer-events-none px-4">
+      <div className="fixed left-0 right-0 flex items-center justify-center z-50 pointer-events-none px-4" style={{ bottom: '30px' }}>
         <div className="pointer-events-auto w-full max-w-lg">
           <Button 
             variant={hasChanges() ? "default" : "gradient"}
