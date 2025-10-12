@@ -210,8 +210,17 @@ const EventDashboard = () => {
     }
   };
 
-  const handleChatWithGuest = (guestUserId: string) => {
-    navigate(`/chat/${guestUserId}`);
+  const handleChatWithGuest = (guest: any) => {
+    navigate(`/chat/${guest.user_id}`, {
+      state: {
+        userId: guest.user_id,
+        name: guest.profiles?.name || "Guest",
+        photo: guest.profiles?.photos?.[0] || "/placeholder.svg",
+        eventName: event.name,
+        eventId: eventId,
+        isDirectChat: true,
+      }
+    });
   };
 
   const handleSaveEvent = async () => {
@@ -391,7 +400,7 @@ const EventDashboard = () => {
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      onClick={() => handleChatWithGuest(guest.user_id)}
+                      onClick={() => handleChatWithGuest(guest)}
                     >
                       <MessageCircle className="w-4 h-4" />
                     </Button>
