@@ -61,13 +61,12 @@ const Home = () => {
 
         if (attendingError) throw attendingError;
         
-        // Mask invite codes for events not created by this user and filter out closed events
-        const attendingEventsData = (attending || [])
-          .filter((a: any) => a.events?.status !== 'closed')
-          .map((a: any) => ({
-            ...a.events,
-            invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
-          }));
+        // Mask invite codes for events not created by this user
+        // Keep closed events so users can still access chats
+        const attendingEventsData = (attending || []).map((a: any) => ({
+          ...a.events,
+          invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
+        }));
         setAttendingEvents(attendingEventsData);
         
       } catch (error: any) {
