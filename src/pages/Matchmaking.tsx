@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ type Event = {
 
 const Matchmaking = () => {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,9 +69,13 @@ const Matchmaking = () => {
       const userEvents = attendeeData?.map((a: any) => a.events).filter(Boolean) || [];
       setEvents(userEvents);
 
-      // Select the nearest upcoming event or first event
-      const savedEventId = localStorage.getItem("matchmaking_selected_event");
-      let defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
+      // Prioritize URL eventId, then saved eventId, then nearest upcoming event
+      let defaultEventId = eventId && userEvents.find((e: Event) => e.id === eventId)?.id;
+      
+      if (!defaultEventId) {
+        const savedEventId = localStorage.getItem("matchmaking_selected_event");
+        defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
+      }
       
       if (!defaultEventId && userEvents.length > 0) {
         const today = new Date();
@@ -86,7 +91,7 @@ const Matchmaking = () => {
     };
 
     loadEvents();
-  }, [navigate]);
+  }, [navigate, eventId]);
 
   useEffect(() => {
     if (!selectedEventId || !userId) return;

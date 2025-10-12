@@ -196,7 +196,7 @@ const Home = () => {
                     <div className="flex gap-2 mt-4">
                       <Button
                         className="flex-1"
-                        onClick={() => navigate("/matchmaking")}
+                        onClick={() => navigate(`/matchmaking/${event.id}`)}
                       >
                         Open Event
                       </Button>
