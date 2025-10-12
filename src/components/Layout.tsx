@@ -12,7 +12,7 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
 
   const tabs = [
-    { path: "/", icon: Home, label: "Home" },
+    { path: "/", icon: Home, label: "Events" },
     { path: "/profile", icon: User, label: "Profile" },
     { path: "/matchmaking", icon: Sparkles, label: "Match" },
     { path: "/liked", icon: Heart, label: "Liked" },
