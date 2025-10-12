@@ -803,7 +803,8 @@ const EditProfile = () => {
         <div className="pointer-events-auto w-full max-w-lg">
           <Button 
             variant={hasChanges() ? "default" : "gradient"}
-            className={hasChanges() ? "w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse shadow-lg" : "w-full shadow-lg"}
+            className={hasChanges() ? "w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : "w-full"}
+            style={{ boxShadow: '0 0 12px rgba(0, 0, 0, 0.25)' }}
             size="lg" 
             onClick={handleSave}
             disabled={saving || !profile.name || profile.prompts.length === 0}
