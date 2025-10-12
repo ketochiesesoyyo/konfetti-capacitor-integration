@@ -69,6 +69,12 @@ const EventDashboard = () => {
     fetchEventData();
   }, [eventId]);
 
+  useEffect(() => {
+    if (activeTab === "stats") {
+      fetchStats();
+    }
+  }, [activeTab]);
+
   const fetchEventData = async () => {
     try {
       setLoading(true);
@@ -410,7 +416,7 @@ const EventDashboard = () => {
           <div className="space-y-4 pb-6">
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Overview</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-2xl font-bold text-primary">{stats.totalGuests}</p>
                   <p className="text-sm text-muted-foreground">Total Guests</p>
@@ -418,10 +424,6 @@ const EventDashboard = () => {
                 <div>
                   <p className="text-2xl font-bold text-primary">{stats.matchesCreated}</p>
                   <p className="text-sm text-muted-foreground">Matches Created</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{stats.totalLikes}</p>
-                  <p className="text-sm text-muted-foreground">Total Likes</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-primary">{stats.totalLikes}</p>
