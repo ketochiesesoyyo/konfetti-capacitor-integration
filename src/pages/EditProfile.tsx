@@ -701,9 +701,9 @@ const EditProfile = () => {
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-w-[calc(100vw-2rem)] w-full">
                           {availableQuestions.map((q) => (
-                            <SelectItem key={q} value={q}>
+                            <SelectItem key={q} value={q} className="text-sm break-words whitespace-normal">
                               {q}
                             </SelectItem>
                           ))}
