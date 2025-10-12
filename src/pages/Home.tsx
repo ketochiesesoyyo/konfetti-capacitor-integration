@@ -228,7 +228,6 @@ const Home = () => {
             attendingEvents.length > 0 ? (
               attendingEvents.map((event) => (
                 <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className={cn("h-24 gradient-sunset")} />
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -315,7 +314,6 @@ const Home = () => {
               {displayedHostingEvents.length > 0 ? (
                 displayedHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className={cn("h-24 gradient-sunset")} />
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
