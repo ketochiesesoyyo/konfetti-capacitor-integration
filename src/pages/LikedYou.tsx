@@ -23,11 +23,12 @@ type ProfileWithEvent = {
 
 const LikedYou = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"new" | "passed">("new");
+  const [activeTab, setActiveTab] = useState<"new" | "passed" | "all-likes">("new");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [newLikes, setNewLikes] = useState<ProfileWithEvent[]>([]);
   const [passedLikes, setPassedLikes] = useState<ProfileWithEvent[]>([]);
+  const [allLikes, setAllLikes] = useState<ProfileWithEvent[]>([]);
 
   useEffect(() => {
     const loadLikes = async () => {
@@ -155,6 +156,52 @@ const LikedYou = () => {
       // Separate into new likes (no response) and passed
       setNewLikes(genderCompatibleLikes.filter((like: any) => !like.userResponse));
       setPassedLikes(genderCompatibleLikes.filter((like: any) => like.userResponse === "left"));
+
+      // Fetch all likes - people current user has liked
+      const { data: outgoingSwipes } = await supabase
+        .from("swipes")
+        .select(`
+          id,
+          swiped_user_id,
+          event_id,
+          events(id, name)
+        `)
+        .eq("user_id", session.user.id)
+        .eq("direction", "right");
+
+      if (outgoingSwipes && outgoingSwipes.length > 0) {
+        const likedUserIds = [...new Set(outgoingSwipes.map((s: any) => s.swiped_user_id))];
+        
+        const { data: likedProfiles } = await supabase
+          .from("profiles")
+          .select("id, user_id, name, age, photos, bio, interests")
+          .in("user_id", likedUserIds);
+
+        const likedProfileMap = new Map(likedProfiles?.map(p => [p.user_id, p]) || []);
+
+        const formattedAllLikes = outgoingSwipes
+          ?.map((swipe: any) => {
+            const profile = likedProfileMap.get(swipe.swiped_user_id);
+            if (!profile) return null;
+            
+            return {
+              id: profile.id,
+              user_id: profile.user_id,
+              name: profile.name,
+              age: profile.age,
+              photo: profile.photos?.[0] || "/placeholder.svg",
+              bio: profile.bio,
+              interests: profile.interests,
+              eventName: swipe.events.name,
+              eventId: swipe.event_id,
+              swipeId: swipe.id,
+            };
+          })
+          .filter(Boolean) || [];
+
+        setAllLikes(formattedAllLikes);
+      }
+
       setLoading(false);
     };
 
@@ -330,28 +377,39 @@ const LikedYou = () => {
       <div className="max-w-lg mx-auto px-4 -mt-4">
         {/* Tab Selector */}
         <Card className="p-1 mb-6">
-          <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-3 gap-1">
             <button
               onClick={() => setActiveTab("new")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
                 activeTab === "new"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              New Likes ({newLikes.length})
+              New ({newLikes.length})
             </button>
             <button
               onClick={() => setActiveTab("passed")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
                 activeTab === "passed"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               Passed ({passedLikes.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("all-likes")}
+              className={cn(
+                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
+                activeTab === "all-likes"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Likes ({allLikes.length})
             </button>
           </div>
         </Card>
@@ -375,13 +433,26 @@ const LikedYou = () => {
                 </p>
               </Card>
             )
-          ) : passedLikes.length > 0 ? (
-            passedLikes.map((profile) => (
-              <ProfileCard key={profile.swipeId} profile={profile} isPassed />
+          ) : activeTab === "passed" ? (
+            passedLikes.length > 0 ? (
+              passedLikes.map((profile) => (
+                <ProfileCard key={profile.swipeId} profile={profile} isPassed />
+              ))
+            ) : (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">No passed profiles</p>
+              </Card>
+            )
+          ) : allLikes.length > 0 ? (
+            allLikes.map((profile) => (
+              <ProfileCard key={profile.swipeId} profile={profile} />
             ))
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No passed profiles</p>
+              <p className="text-muted-foreground">No likes yet</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Start swiping to build your list!
+              </p>
             </Card>
           )}
         </div>
