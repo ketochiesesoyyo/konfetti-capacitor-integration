@@ -29,6 +29,8 @@ type Event = {
   id: string;
   name: string;
   date: string;
+  status?: string;
+  close_date?: string;
   profileCount?: number;
 };
 
@@ -41,6 +43,8 @@ const Matchmaking = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventStatus, setSelectedEventStatus] = useState<string | null>(null);
+  const [selectedEventCloseDate, setSelectedEventCloseDate] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [swipeX, setSwipeX] = useState(0);
   const [swipeStartX, setSwipeStartX] = useState(0);
@@ -103,14 +107,27 @@ const Matchmaking = () => {
       setLoading(true);
       setCurrentIndex(0);
 
-      // Get event host to exclude them
+      // Get event details including status
       const { data: eventData } = await supabase
         .from("events")
-        .select("created_by")
+        .select("created_by, status, close_date")
         .eq("id", selectedEventId)
         .single();
 
       const hostId = eventData?.created_by;
+      const eventStatus = eventData?.status;
+      const closeDate = eventData?.close_date;
+
+      // Store event status
+      setSelectedEventStatus(eventStatus || null);
+      setSelectedEventCloseDate(closeDate || null);
+
+      // If event is closed, show message and don't load profiles
+      if (eventStatus === 'closed') {
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
 
       // Fetch profiles of users in the selected event only (excluding host)
       const { data: eventAttendees, error: attendeesError } = await supabase
@@ -422,11 +439,23 @@ const Matchmaking = () => {
 
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="p-8 text-center max-w-md">
-            <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
-            <p className="text-muted-foreground mb-4">
-              You've seen everyone at this event. Check back later when more guests join!
-            </p>
-            <Button onClick={() => navigate("/")}>Go Home</Button>
+            {selectedEventStatus === 'closed' ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">Event Closed</h2>
+                <p className="text-muted-foreground mb-4">
+                  This event is now closed and no new matches will appear here. However, your chats remain active until {selectedEventCloseDate ? new Date(selectedEventCloseDate).toLocaleDateString() : '3 days after the event was closed'}.
+                </p>
+                <Button onClick={() => navigate("/chats")}>View Chats</Button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
+                <p className="text-muted-foreground mb-4">
+                  You've seen everyone at this event. Check back later when more guests join!
+                </p>
+                <Button onClick={() => navigate("/")}>Go Home</Button>
+              </>
+            )}
           </Card>
         </div>
       </div>

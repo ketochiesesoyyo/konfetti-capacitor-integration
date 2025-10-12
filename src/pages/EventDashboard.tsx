@@ -254,9 +254,15 @@ const EventDashboard = () => {
 
   const handleCloseEvent = async () => {
     try {
+      // Calculate new close date: 3 days from now
+      const newCloseDate = format(addDays(new Date(), 3), "yyyy-MM-dd");
+      
       const { error } = await supabase
         .from("events")
-        .update({ status: "closed" })
+        .update({ 
+          status: "closed",
+          close_date: newCloseDate
+        })
         .eq("id", eventId || "");
 
       if (error) throw error;

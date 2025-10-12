@@ -61,11 +61,13 @@ const Home = () => {
 
         if (attendingError) throw attendingError;
         
-        // Mask invite codes for events not created by this user
-        const attendingEventsData = (attending || []).map((a: any) => ({
-          ...a.events,
-          invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
-        }));
+        // Mask invite codes for events not created by this user and filter out closed events
+        const attendingEventsData = (attending || [])
+          .filter((a: any) => a.events?.status !== 'closed')
+          .map((a: any) => ({
+            ...a.events,
+            invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
+          }));
         setAttendingEvents(attendingEventsData);
         
       } catch (error: any) {
@@ -191,7 +193,12 @@ const Home = () => {
                           <span>{new Date(event.date).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <Badge variant="default">Active</Badge>
+                      <Badge 
+                        variant={event.status === 'closed' ? 'secondary' : 'default'}
+                        className={event.status === 'closed' ? 'bg-yellow-500 text-yellow-950' : ''}
+                      >
+                        {event.status === 'closed' ? 'Closed' : 'Active'}
+                      </Badge>
                     </div>
                     <div className="flex gap-2 mt-4">
                       <Button
@@ -237,7 +244,12 @@ const Home = () => {
                         <span>{new Date(event.date).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <Badge variant="default">Active</Badge>
+                    <Badge 
+                      variant={event.status === 'closed' ? 'secondary' : 'default'}
+                      className={event.status === 'closed' ? 'bg-yellow-500 text-yellow-950' : ''}
+                    >
+                      {event.status === 'closed' ? 'Closed' : 'Active'}
+                    </Badge>
                   </div>
                   <div className="text-sm text-muted-foreground mb-4">
                     Invite code: <span className="font-mono font-semibold">{event.invite_code}</span>
