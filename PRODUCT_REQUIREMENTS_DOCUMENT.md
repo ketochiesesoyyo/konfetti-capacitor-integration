@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 ## Event-Based Matchmaking Platform
 
-**Last Updated:** 2025-10-10  
-**Version:** 2.0 - Security Hardened  
+**Last Updated:** 2025-10-12  
+**Version:** 2.1 - UI/UX Optimized  
 **Status:** Pre-Launch Ready
 
 ---
@@ -45,6 +45,7 @@ An event-based matchmaking platform that enables hosts to create exclusive datin
 
 #### Authentication
 - **Email/Password Authentication** with auto-confirmation
+- **Social Authentication:** Google OAuth (single sign-on option)
 - **18+ Age Attestation** (required at signup)
 - **Age Verification:** Optional DOB with 18+ validation
 
@@ -1340,7 +1341,7 @@ graph TD
 ### Frontend Stack
 - **Framework:** React 18.3.1
 - **Build Tool:** Vite
-- **Styling:** Tailwind CSS + shadcn/ui components
+- **Styling:** Tailwind CSS + shadcn/ui components with semantic design tokens
 - **Routing:** React Router DOM v6
 - **State Management:** React Query (@tanstack/react-query)
 - **Forms:** React Hook Form + Zod validation
@@ -1348,6 +1349,7 @@ graph TD
 - **Drag & Drop:** dnd-kit for photo reordering
 - **Image Handling:** react-easy-crop for profile photos
 - **Theming:** next-themes for dark/light mode
+- **Design System:** Gradient-based theme with semantic color tokens (HSL)
 
 ### Backend Stack (Lovable Cloud / Supabase)
 - **Database:** PostgreSQL with ENUMs for data integrity
@@ -1375,18 +1377,18 @@ src/
 │   ├── ImageCropDialog.tsx    # Profile photo cropping
 │   └── SortablePhoto.tsx      # Drag-drop photo ordering
 ├── pages/
-│   ├── Auth.tsx               # Login/Signup with 18+ attestation
+│   ├── Auth.tsx               # Login/Signup with Google OAuth + 18+ attestation
 │   ├── Home.tsx               # Landing page
 │   ├── EditProfile.tsx        # Profile editor
 │   ├── CreateEvent.tsx        # Event creation with pricing + 18+ attestation
 │   ├── JoinEvent.tsx          # Join via code
 │   ├── JoinEventByLink.tsx    # Join via link
-│   ├── EventDashboard.tsx     # Host dashboard
-│   ├── Matchmaking.tsx        # Swipe interface (blocks filtered)
+│   ├── EventDashboard.tsx     # Host dashboard with close event functionality
+│   ├── Matchmaking.tsx        # Swipe interface with floating action buttons
 │   ├── LikedYou.tsx           # Users who liked you (blocks filtered)
 │   ├── Chats.tsx              # Match list
 │   ├── ChatThread.tsx         # Message thread
-│   └── Profile.tsx            # Profile viewer
+│   └── Profile.tsx            # Profile viewer (read-only for others)
 ├── integrations/supabase/
 │   ├── client.ts              # Supabase client (auto-generated)
 │   └── types.ts               # DB types (auto-generated)
@@ -1400,19 +1402,85 @@ src/
 
 ### Routing Structure
 ```
-/ ..................... Landing page
-/auth ................. Login/Signup + 18+ attestation
+/ ..................... Landing page with gradient hero
+/auth ................. Login/Signup (Google OAuth) + 18+ attestation
 /profile/edit ......... Edit own profile
-/profile/:userId ...... View user profile (event-scoped)
+/profile/:userId ...... View user profile (read-only, event-scoped)
 /create-event ......... Create new event (pricing + 18+ attestation)
 /join-event ........... Join via code
 /join/:inviteCode ..... Join via link
-/event/:eventId ....... Event dashboard
-/matchmaking/:eventId . Swipe interface (active events only, blocks filtered)
+/event/:eventId ....... Event dashboard with close event button
+/matchmaking/:eventId . Swipe interface with floating action buttons (active events only)
 /liked-you/:eventId ... Liked you page (blocks filtered)
 /chats ................ Match list
 /chat/:matchId ........ Message thread
 ```
+
+---
+
+## UI/UX Design Enhancements
+
+### Design System
+- **Gradient Theme:** Custom gradient-sunset background using semantic HSL color tokens
+- **Semantic Tokens:** All colors defined in `index.css` using CSS custom properties
+- **Component Variants:** Extended shadcn/ui components with custom variants (e.g., `gradient` button variant)
+- **Responsive Design:** Mobile-first approach with Tailwind breakpoints
+- **Dark Mode Support:** Built-in theme switching via next-themes
+
+### Authentication Page (`/auth`)
+**Recent Updates:**
+- **Simplified Social Login:** Removed Facebook and Apple OAuth, keeping only Google for streamlined authentication
+- **Centered Layout:** Google sign-in button centered with maximum width constraint for better visual balance
+- **Icon Spacing:** Added proper margin to Google icon for improved button aesthetics
+- **Email/Password Primary:** Email/password remains the primary auth method with social login as alternative
+
+**Design Elements:**
+- Gradient sunset background
+- Animated card entrance (slide-up animation)
+- Heart + Sparkles logo combination
+- Gradient text for branding
+- Clear visual separation between email and social auth options
+
+### Matchmaking Page (`/matchmaking/:eventId`)
+**Recent Updates:**
+- **Floating Action Buttons:** Like/Pass buttons now positioned above bottom navigation
+  - Fixed positioning with `bottom-24`, always visible and accessible
+  - High z-index (`z-50`) to layer above all other elements including nav bar
+  - Enhanced shadows (`shadow-xl`, `shadow-2xl`) for depth and visibility
+  - Background color with pointer-events optimization for better interaction
+  
+**Layout Structure:**
+- Profile cards with full-screen display
+- Action buttons float above content and navigation
+- Swipe gestures supported on mobile
+- Block filtering applied to card deck
+
+### Profile Page (`/profile/:userId`)
+**Recent Updates:**
+- **Removed Edit Button:** Simplified header by removing edit functionality from profile view
+  - Edit access only through dedicated `/profile/edit` route
+  - Cleaner, less cluttered profile view interface
+  
+**Features:**
+- Preview and logout buttons remain in header
+- Photo carousel with navigation
+- Bio, interests, and prompts display
+- Event-scoped privacy (only visible to users in shared events)
+
+### Event Dashboard (`/event/:eventId`)
+**Features:**
+- Host controls for event management
+- Close Event button (destructive styling)
+- Attendee list with management options
+- Intro request review section
+- Event statistics and overview
+
+### Common UI Patterns
+- **Toast Notifications:** Sonner for user feedback
+- **Loading States:** Skeleton loaders for async operations
+- **Empty States:** Informative messages when no data exists
+- **Error Handling:** User-friendly error messages with retry options
+- **Confirmation Dialogs:** For destructive actions (delete, remove, etc.)
 
 ---
 
