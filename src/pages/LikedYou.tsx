@@ -140,13 +140,12 @@ const LikedYou = () => {
 
       if (swipeError) throw swipeError;
 
-      // Check if there's a match
+      // Check if there's a match (both users in either order)
       const { data: match } = await supabase
         .from("matches")
         .select("*")
         .eq("event_id", profile.eventId)
-        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-        .or(`user1_id.eq.${profile.user_id},user2_id.eq.${profile.user_id}`)
+        .or(`and(user1_id.eq.${userId},user2_id.eq.${profile.user_id}),and(user1_id.eq.${profile.user_id},user2_id.eq.${userId})`)
         .maybeSingle();
 
       if (!match) {
@@ -162,18 +161,28 @@ const LikedYou = () => {
           .single();
 
         if (newMatch) {
+          toast("It's a Match! 🎉", {
+            description: `You and ${profile.name} liked each other!`,
+          });
+          
           setTimeout(() => {
             navigate(`/chat/${newMatch.id}`);
           }, 1000);
         }
+      } else {
+        // Match already exists, just navigate to it
+        toast("It's a Match! 🎉", {
+          description: `You and ${profile.name} liked each other!`,
+        });
+        
+        setTimeout(() => {
+          navigate(`/chat/${match.id}`);
+        }, 1000);
       }
 
-      toast("It's a Match! 🎉", {
-        description: `You and ${profile.name} liked each other!`,
-      });
-
-      // Remove from new likes
+      // Remove from both lists
       setNewLikes(prev => prev.filter(p => p.id !== profile.id));
+      setPassedLikes(prev => prev.filter(p => p.id !== profile.id));
     } catch (error) {
       console.error("Error creating match:", error);
       toast.error("Failed to create match");
