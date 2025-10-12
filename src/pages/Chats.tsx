@@ -18,12 +18,24 @@ type MatchChat = {
   eventName: string;
 };
 
+type HostChat = {
+  eventId: string;
+  hostId: string;
+  hostName: string;
+  hostPhoto: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+  eventName: string;
+};
+
 const Chats = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"matches" | "hosts">("matches");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [matchChats, setMatchChats] = useState<MatchChat[]>([]);
+  const [hostChats, setHostChats] = useState<HostChat[]>([]);
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -98,7 +110,73 @@ const Chats = () => {
       );
 
       setMatchChats(chatsWithMessages);
+      
+      // Fetch direct messages from hosts
+      await loadHostChats(session.user.id);
+      
       setLoading(false);
+    };
+
+    const loadHostChats = async (currentUserId: string) => {
+      // Get all events where the user is a guest
+      const { data: attendeeEvents } = await supabase
+        .from("event_attendees")
+        .select("event_id, events(id, name, created_by)")
+        .eq("user_id", currentUserId);
+
+      if (!attendeeEvents) return;
+
+      // For each event, check for direct messages from the host
+      const hostChatsData = await Promise.all(
+        attendeeEvents
+          .filter((ae: any) => ae.events.created_by !== currentUserId) // Exclude own events
+          .map(async (ae: any) => {
+            const eventId = ae.events.id;
+            const hostId = ae.events.created_by;
+
+            // Get last message from host
+            const { data: lastMsg } = await supabase
+              .from("messages")
+              .select("content, created_at, sender_id")
+              .eq("event_id", eventId)
+              .or(`and(sender_id.eq.${hostId},recipient_id.eq.${currentUserId}),and(sender_id.eq.${currentUserId},recipient_id.eq.${hostId})`)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (!lastMsg) return null; // No messages yet
+
+            // Count unread messages from host
+            const { count: unreadCount } = await supabase
+              .from("messages")
+              .select("*", { count: 'exact', head: true })
+              .eq("event_id", eventId)
+              .eq("sender_id", hostId)
+              .eq("recipient_id", currentUserId)
+              .is("read_at", null);
+
+            // Get host profile
+            const { data: hostProfile } = await supabase
+              .from("profiles")
+              .select("name, photos")
+              .eq("user_id", hostId)
+              .single();
+
+            return {
+              eventId,
+              hostId,
+              hostName: hostProfile?.name || "Host",
+              hostPhoto: hostProfile?.photos?.[0] || "/placeholder.svg",
+              lastMessage: lastMsg.content,
+              timestamp: getTimeAgo(new Date(lastMsg.created_at)),
+              unread: unreadCount || 0,
+              eventName: ae.events.name,
+            };
+          })
+      );
+
+      // Filter out null values
+      setHostChats(hostChatsData.filter((chat): chat is HostChat => chat !== null));
     };
 
     loadMatches();
@@ -177,6 +255,48 @@ const Chats = () => {
     </Card>
   );
 
+  const HostChatItem = ({ chat }: { chat: HostChat }) => (
+    <Card 
+      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => navigate(`/chat/${chat.hostId}`, { 
+        state: { 
+          userId: chat.hostId, 
+          name: chat.hostName, 
+          photo: chat.hostPhoto, 
+          eventName: chat.eventName,
+          eventId: chat.eventId,
+          isDirectChat: true,
+        } 
+      })}
+    >
+      <div className="flex gap-3">
+        <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 gradient-sunset">
+          <img src={chat.hostPhoto} alt={chat.hostName} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-1">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold truncate">{chat.hostName}</h3>
+              <p className="text-xs text-muted-foreground truncate">{chat.eventName}</p>
+            </div>
+            <div className="flex flex-col items-end gap-1 ml-2">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {chat.timestamp}
+              </span>
+              {chat.unread > 0 && (
+                <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5">
+                  {chat.unread}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground line-clamp-2">{chat.lastMessage}</p>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -211,7 +331,7 @@ const Chats = () => {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Hosts (0)
+              Hosts ({hostChats.length})
             </button>
           </div>
         </Card>
@@ -235,9 +355,17 @@ const Chats = () => {
               </Card>
             )
           ) : (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Host conversations coming soon!</p>
-            </Card>
+            hostChats.length > 0 ? (
+              hostChats.map((chat) => <HostChatItem key={`${chat.eventId}-${chat.hostId}`} chat={chat} />)
+            ) : (
+              <Card className="p-8 text-center">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground mb-2">No host messages yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Event hosts can send you messages directly
+                </p>
+              </Card>
+            )
           )}
         </div>
       </div>
