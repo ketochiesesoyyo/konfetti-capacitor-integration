@@ -397,6 +397,11 @@ const EventDashboard = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold truncate">{guest.profiles?.name || "Guest"}</h3>
+                      {guest.user_id === event?.created_by ? (
+                        <Badge variant="default" className="text-xs">Host</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">Guest</Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Joined {format(new Date(guest.joined_at), "MMM d, yyyy")}
