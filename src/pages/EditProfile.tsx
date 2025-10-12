@@ -604,7 +604,7 @@ const EditProfile = () => {
           <h2 className="text-lg font-semibold mb-4">Age Range</h2>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              I'm interested in people aged {profile.age_min} to {profile.age_max}
+              I'm interested in people aged {profile.age_min} to {profile.age_max >= 65 ? '65+' : profile.age_max}
             </p>
             <Slider
               value={[profile.age_min, profile.age_max]}
@@ -616,7 +616,7 @@ const EditProfile = () => {
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>18</span>
-              <span>99</span>
+              <span>65+</span>
             </div>
           </div>
         </Card>

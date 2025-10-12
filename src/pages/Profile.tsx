@@ -226,7 +226,7 @@ const Profile = () => {
           </div>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Interested in ages {user.age_min || 18} - {user.age_max || 99}
+              Interested in ages {user.age_min || 18} - {(user.age_max || 99) >= 65 ? '65+' : (user.age_max || 99)}
             </p>
             <Slider
               value={[user.age_min || 18, user.age_max || 99]}
@@ -236,6 +236,10 @@ const Profile = () => {
               disabled
               className="w-full"
             />
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <span>18</span>
+              <span>65+</span>
+            </div>
           </div>
         </Card>
 
