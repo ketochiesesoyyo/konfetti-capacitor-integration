@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, User, Heart, MessageCircle, Sparkles } from "lucide-react";
+import { Home, User, Heart, MessageCircle, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -14,7 +14,7 @@ const Layout = ({ children }: LayoutProps) => {
   const tabs = [
     { path: "/", icon: Home, label: "Events" },
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/matchmaking", icon: Sparkles, label: "Match" },
+    { path: "/matchmaking", icon: PartyPopper, label: "Match" },
     { path: "/liked", icon: Heart, label: "Liked" },
     { path: "/chats", icon: MessageCircle, label: "Chats" },
   ];
