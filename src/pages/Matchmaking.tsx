@@ -168,7 +168,7 @@ const Matchmaking = () => {
         // Fetch current user's profile to get their gender preferences
         const { data: currentUserProfile } = await supabase
           .from("profiles")
-          .select("gender, interested_in")
+          .select("gender, interested_in, age, age_min, age_max")
           .eq("user_id", userId)
           .single();
 
@@ -222,8 +222,34 @@ const Matchmaking = () => {
           return userInterestedInProfile && profileInterestedInUser;
         });
 
+        // Apply age range filters (bidirectional)
+        const ageCompatibleProfiles = genderCompatibleProfiles.filter(profile => {
+          // Skip profiles without age info
+          if (!profile.age || !currentUserProfile.age) {
+            return false;
+          }
+
+          const profileAge = profile.age;
+          const currentUserAge = currentUserProfile.age;
+          
+          // Get age preferences with defaults
+          const userAgeMin = currentUserProfile.age_min || 18;
+          const userAgeMax = currentUserProfile.age_max || 99;
+          const profileAgeMin = profile.age_min || 18;
+          const profileAgeMax = profile.age_max || 99;
+          
+          // Check if profile's age is within current user's preference range
+          const profileInUserRange = profileAge >= userAgeMin && profileAge <= userAgeMax;
+          
+          // Check if current user's age is within profile's preference range
+          const userInProfileRange = currentUserAge >= profileAgeMin && currentUserAge <= profileAgeMax;
+          
+          // Both must be in each other's range
+          return profileInUserRange && userInProfileRange;
+        });
+
         // Filter profiles with second chance logic
-        const filteredProfiles = genderCompatibleProfiles.filter(profile => {
+        const filteredProfiles = ageCompatibleProfiles.filter(profile => {
           const userSwipes = swipesByUser.get(profile.user_id);
           
           // Never swiped = show

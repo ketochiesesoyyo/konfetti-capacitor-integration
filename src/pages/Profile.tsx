@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { Camera, Edit, LogOut, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -211,6 +212,30 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">Gender</p>
               <p className="font-medium">{user.gender}</p>
             </div>
+          </div>
+        </Card>
+
+        {/* Age Range Preference Card */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Age Range</h2>
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Interested in ages {user.age_min || 18} - {user.age_max || 99}
+            </p>
+            <Slider
+              value={[user.age_min || 18, user.age_max || 99]}
+              min={18}
+              max={99}
+              step={1}
+              disabled
+              className="w-full"
+            />
           </div>
         </Card>
 

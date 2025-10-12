@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Camera, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,8 @@ const EditProfile = () => {
     interests: [] as string[],
     photos: [] as string[],
     prompts: [] as Array<{ question: string; answer: string }>,
+    age_min: 18,
+    age_max: 99,
   });
 
   const [newInterest, setNewInterest] = useState("");
@@ -162,6 +165,8 @@ const EditProfile = () => {
           interests: [],
           photos: [],
           prompts: [],
+          age_min: 18,
+          age_max: 99,
         });
       } else {
         // Parse prompts safely
@@ -185,6 +190,8 @@ const EditProfile = () => {
           interests: profileData.interests || [],
           photos: profileData.photos || [],
           prompts: parsedPrompts,
+          age_min: profileData.age_min || 18,
+          age_max: profileData.age_max || 99,
         });
       }
     } catch (error) {
@@ -233,6 +240,8 @@ const EditProfile = () => {
           interests: profile.interests,
           photos: profile.photos,
           prompts: profile.prompts,
+          age_min: profile.age_min,
+          age_max: profile.age_max,
         })
         .eq("user_id", userId);
 
@@ -586,6 +595,28 @@ const EditProfile = () => {
                   <SelectItem value="both">Both</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Age Range Preference */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Age Range</h2>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              I'm interested in people aged {profile.age_min} to {profile.age_max}
+            </p>
+            <Slider
+              value={[profile.age_min, profile.age_max]}
+              onValueChange={(values) => setProfile({ ...profile, age_min: values[0], age_max: values[1] })}
+              min={18}
+              max={99}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>18</span>
+              <span>99</span>
             </div>
           </div>
         </Card>
