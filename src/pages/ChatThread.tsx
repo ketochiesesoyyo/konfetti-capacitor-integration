@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 
 type Message = {
   id: string;
@@ -21,6 +22,7 @@ const ChatThread = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get chat details from navigation state or default
@@ -152,7 +154,12 @@ const ChatThread = () => {
             <img src={chatDetails.photo} alt={chatDetails.name} className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold truncate">{chatDetails.name}</h2>
+            <h2 
+              className="font-semibold truncate cursor-pointer hover:underline" 
+              onClick={() => setShowProfileDialog(true)}
+            >
+              {chatDetails.name}
+            </h2>
             <p className="text-xs text-white/80 truncate">{chatDetails.eventName}</p>
           </div>
         </div>
@@ -216,6 +223,14 @@ const ChatThread = () => {
           </Button>
         </div>
       </div>
+
+      {/* Profile View Dialog */}
+      <ProfileViewDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        userId={chatDetails.userId}
+        eventName={chatDetails.eventName}
+      />
     </div>
   );
 };
