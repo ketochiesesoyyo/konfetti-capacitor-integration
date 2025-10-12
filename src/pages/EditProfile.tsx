@@ -502,7 +502,7 @@ const EditProfile = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-32 space-y-4">
         {/* New User Warning */}
         {location.state?.isNewUser && (
           <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
@@ -796,16 +796,21 @@ const EditProfile = () => {
             </div>
           )}
         </Card>
+      </div>
 
-        <Button 
-          variant={hasChanges() ? "default" : "gradient"}
-          className={hasChanges() ? "w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : "w-full"}
-          size="lg" 
-          onClick={handleSave}
-          disabled={saving || !profile.name || profile.prompts.length === 0}
-        >
-          {saving ? "Saving..." : hasChanges() ? "Save Changes ●" : "Save Changes"}
-        </Button>
+      {/* Fixed Save Button - Always visible above navigation */}
+      <div className="fixed bottom-24 left-0 right-0 flex items-center justify-center z-50 pointer-events-none px-4">
+        <div className="pointer-events-auto w-full max-w-lg">
+          <Button 
+            variant={hasChanges() ? "default" : "gradient"}
+            className={hasChanges() ? "w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse shadow-lg" : "w-full shadow-lg"}
+            size="lg" 
+            onClick={handleSave}
+            disabled={saving || !profile.name || profile.prompts.length === 0}
+          >
+            {saving ? "Saving..." : hasChanges() ? "Save Changes ●" : "Save Changes"}
+          </Button>
+        </div>
       </div>
 
       <ImageCropDialog
