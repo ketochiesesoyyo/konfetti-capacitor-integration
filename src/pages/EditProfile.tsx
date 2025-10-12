@@ -55,6 +55,19 @@ const EditProfile = () => {
     age_max: 99,
   });
 
+  const [originalProfile, setOriginalProfile] = useState({
+    name: "",
+    age: "",
+    gender: "",
+    interested_in: "",
+    bio: "",
+    interests: [] as string[],
+    photos: [] as string[],
+    prompts: [] as Array<{ question: string; answer: string }>,
+    age_min: 18,
+    age_max: 99,
+  });
+
   const [newInterest, setNewInterest] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
@@ -156,7 +169,7 @@ const EditProfile = () => {
         }
         
         // Set default values for new profile
-        setProfile({
+        const newProfileData = {
           name: session.user.email?.split('@')[0] || 'User',
           age: "",
           gender: "",
@@ -167,7 +180,9 @@ const EditProfile = () => {
           prompts: [],
           age_min: 18,
           age_max: 99,
-        });
+        };
+        setProfile(newProfileData);
+        setOriginalProfile(newProfileData);
       } else {
         // Parse prompts safely
         let parsedPrompts: Array<{ question: string; answer: string }> = [];
@@ -181,7 +196,7 @@ const EditProfile = () => {
           }
         }
 
-        setProfile({
+        const loadedProfile = {
           name: profileData.name || "",
           age: profileData.age?.toString() || "",
           gender: profileData.gender || "",
@@ -192,7 +207,9 @@ const EditProfile = () => {
           prompts: parsedPrompts,
           age_min: profileData.age_min || 18,
           age_max: profileData.age_max || 99,
-        });
+        };
+        setProfile(loadedProfile);
+        setOriginalProfile(loadedProfile);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -252,6 +269,9 @@ const EditProfile = () => {
       }
 
       toast.success("Profile updated successfully!");
+      
+      // Update original profile to match saved state
+      setOriginalProfile(profile);
       
       // Check if there's a pending invite
       const pendingInvite = localStorage.getItem("pendingInvite") || location.state?.pendingInvite;
@@ -379,6 +399,21 @@ const EditProfile = () => {
       
       toast.success("Photo order updated");
     }
+  };
+
+  const hasChanges = () => {
+    return (
+      profile.name !== originalProfile.name ||
+      profile.age !== originalProfile.age ||
+      profile.gender !== originalProfile.gender ||
+      profile.interested_in !== originalProfile.interested_in ||
+      profile.bio !== originalProfile.bio ||
+      profile.age_min !== originalProfile.age_min ||
+      profile.age_max !== originalProfile.age_max ||
+      JSON.stringify(profile.interests) !== JSON.stringify(originalProfile.interests) ||
+      JSON.stringify(profile.photos) !== JSON.stringify(originalProfile.photos) ||
+      JSON.stringify(profile.prompts) !== JSON.stringify(originalProfile.prompts)
+    );
   };
 
   const handlePromptAdd = () => {
@@ -763,13 +798,13 @@ const EditProfile = () => {
         </Card>
 
         <Button 
-          variant="gradient" 
-          className="w-full" 
+          variant={hasChanges() ? "default" : "gradient"}
+          className={hasChanges() ? "w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : "w-full"}
           size="lg" 
           onClick={handleSave}
           disabled={saving || !profile.name || profile.prompts.length === 0}
         >
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? "Saving..." : hasChanges() ? "Save Changes ●" : "Save Changes"}
         </Button>
       </div>
 
