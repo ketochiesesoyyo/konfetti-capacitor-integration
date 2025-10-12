@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 import { ReportDialog } from "@/components/ReportDialog";
+import { z } from "zod";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -203,29 +204,44 @@ const ChatThread = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const messageSchema = z.object({
+    content: z.string()
+      .trim()
+      .min(1, "Message cannot be empty")
+      .max(2000, "Message too long (max 2000 characters)")
+  });
+
   const handleSend = async () => {
-    if (!message.trim() || !userId) return;
+    if (!userId) return;
 
-    const messageData = isDirectChat ? {
-      event_id: eventId,
-      recipient_id: recipientId,
-      sender_id: userId,
-      content: message.trim(),
-    } : {
-      match_id: matchId,
-      sender_id: userId,
-      content: message.trim(),
-    };
+    try {
+      const validated = messageSchema.parse({ content: message });
 
-    const { error } = await supabase
-      .from("messages")
-      .insert(messageData);
+      const messageData = isDirectChat ? {
+        event_id: eventId,
+        recipient_id: recipientId,
+        sender_id: userId,
+        content: validated.content,
+      } : {
+        match_id: matchId,
+        sender_id: userId,
+        content: validated.content,
+      };
 
-    if (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
-    } else {
-      setMessage("");
+      const { error } = await supabase
+        .from("messages")
+        .insert(messageData);
+
+      if (error) {
+        console.error("Error sending message:", error);
+        toast.error("Failed to send message");
+      } else {
+        setMessage("");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      }
     }
   };
 
