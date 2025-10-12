@@ -3,10 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +37,8 @@ const Home = () => {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [selectedEventToLeave, setSelectedEventToLeave] = useState<any>(null);
   const [leaveReason, setLeaveReason] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "closed">("all");
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -61,12 +70,21 @@ const Home = () => {
 
         if (attendingError) throw attendingError;
         
-        // Mask invite codes for events not created by this user
-        // Keep closed events so users can still access chats
-        const attendingEventsData = (attending || []).map((a: any) => ({
-          ...a.events,
-          invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
-        }));
+        // Mask invite codes and filter out events where close_date has passed
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const attendingEventsData = (attending || [])
+          .filter((a: any) => {
+            if (!a.events?.close_date) return true;
+            const closeDate = new Date(a.events.close_date);
+            closeDate.setHours(0, 0, 0, 0);
+            return closeDate >= today;
+          })
+          .map((a: any) => ({
+            ...a.events,
+            invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
+          }));
         setAttendingEvents(attendingEventsData);
         
       } catch (error: any) {
@@ -132,6 +150,34 @@ const Home = () => {
       toast.error("Failed to leave event");
     }
   };
+
+  // Sort and filter hosting events
+  const getSortedAndFilteredHostingEvents = () => {
+    let filtered = hostingEvents;
+
+    // Apply status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(event => event.status === filterStatus);
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "date":
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case "status":
+          return (a.status || "active").localeCompare(b.status || "active");
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  };
+
+  const displayedHostingEvents = getSortedAndFilteredHostingEvents();
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,7 +277,43 @@ const Home = () => {
               </Card>
             )
           ) : hostingEvents.length > 0 ? (
-            hostingEvents.map((event) => (
+            <>
+              {/* Sort and Filter Controls */}
+              <div className="flex gap-2 mb-4">
+                <div className="flex-1">
+                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <SelectTrigger className="w-full">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="w-4 h-4" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Sort by Date</SelectItem>
+                      <SelectItem value="name">Sort by Name</SelectItem>
+                      <SelectItem value="status">Sort by Status</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                    <SelectTrigger className="w-full">
+                      <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Events</SelectItem>
+                      <SelectItem value="active">Active Only</SelectItem>
+                      <SelectItem value="closed">Closed Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {displayedHostingEvents.length > 0 ? (
+                displayedHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className={cn("h-24 gradient-sunset")} />
                 <div className="p-4">
@@ -275,7 +357,15 @@ const Home = () => {
                   </div>
                 </div>
               </Card>
-            ))
+                ))
+              ) : (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">
+                    No {filterStatus === "all" ? "" : filterStatus} events found
+                  </p>
+                </Card>
+              )}
+            </>
           ) : (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground mb-4">
