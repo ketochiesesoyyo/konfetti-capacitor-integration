@@ -642,10 +642,10 @@ const EditProfile = () => {
               I'm interested in people aged {profile.age_min} to {profile.age_max >= 65 ? '65+' : profile.age_max}
             </p>
             <Slider
-              value={[profile.age_min, profile.age_max]}
-              onValueChange={(values) => setProfile({ ...profile, age_min: values[0], age_max: values[1] })}
+              value={[profile.age_min, Math.min(profile.age_max, 65)]}
+              onValueChange={(values) => setProfile({ ...profile, age_min: values[0], age_max: values[1] === 65 ? 99 : values[1] })}
               min={18}
-              max={99}
+              max={65}
               step={1}
               className="w-full"
             />

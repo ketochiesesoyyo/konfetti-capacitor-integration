@@ -229,9 +229,9 @@ const Profile = () => {
               Interested in ages {user.age_min || 18} - {(user.age_max || 99) >= 65 ? '65+' : (user.age_max || 99)}
             </p>
             <Slider
-              value={[user.age_min || 18, user.age_max || 99]}
+              value={[user.age_min || 18, Math.min(user.age_max || 99, 65)]}
               min={18}
-              max={99}
+              max={65}
               step={1}
               disabled
               className="w-full"
