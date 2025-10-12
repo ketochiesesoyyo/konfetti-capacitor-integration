@@ -445,7 +445,7 @@ const Matchmaking = () => {
                 <p className="text-muted-foreground mb-4">
                   Join an event to start matching with other guests.
                 </p>
-                <Button onClick={() => navigate("/join")}>Join Event</Button>
+                <Button onClick={() => navigate("/join-event")}>Join Event</Button>
               </>
             ) : selectedEventStatus === 'closed' ? (
               <>
