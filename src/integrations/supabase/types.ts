@@ -273,6 +273,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          custom_reason: string | null
+          event_id: string
+          id: string
+          match_id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_reason?: string | null
+          event_id: string
+          id?: string
+          match_id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_reason?: string | null
+          event_id?: string
+          id?: string
+          match_id?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+        }
+        Relationships: []
+      }
       swipes: {
         Row: {
           created_at: string

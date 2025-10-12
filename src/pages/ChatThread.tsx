@@ -2,10 +2,28 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, UserX, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
+import { ReportDialog } from "@/components/ReportDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Message = {
   id: string;
@@ -23,6 +41,9 @@ const ChatThread = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showUnmatchDialog, setShowUnmatchDialog] = useState(false);
+  const [eventId, setEventId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get chat details from navigation state or default
@@ -46,6 +67,17 @@ const ChatThread = () => {
         toast.error("Invalid chat");
         navigate("/chats");
         return;
+      }
+
+      // Fetch match to get event_id
+      const { data: matchData } = await supabase
+        .from("matches")
+        .select("event_id")
+        .eq("id", matchId)
+        .single();
+      
+      if (matchData) {
+        setEventId(matchData.event_id);
       }
 
       // Fetch messages
@@ -137,6 +169,30 @@ const ChatThread = () => {
     });
   };
 
+  const handleUnmatch = async () => {
+    if (!matchId) return;
+
+    try {
+      const { error } = await supabase
+        .from("matches")
+        .delete()
+        .eq("id", matchId);
+
+      if (error) throw error;
+
+      toast.success("Unmatched successfully");
+      navigate("/chats");
+    } catch (error) {
+      console.error("Error unmatching:", error);
+      toast.error("Failed to unmatch");
+    }
+  };
+
+  const handleReportSubmit = () => {
+    // After report is submitted, also unmatch
+    handleUnmatch();
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -162,6 +218,32 @@ const ChatThread = () => {
             </h2>
             <p className="text-xs text-white/80 truncate">{chatDetails.eventName}</p>
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowUnmatchDialog(true)}>
+                <UserX className="w-4 h-4 mr-2" />
+                Unmatch
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setShowReportDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Report & Unmatch
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -231,6 +313,35 @@ const ChatThread = () => {
         userId={chatDetails.userId}
         eventName={chatDetails.eventName}
       />
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        reportedUserId={chatDetails.userId}
+        reportedUserName={chatDetails.name}
+        matchId={matchId || ""}
+        eventId={eventId}
+        onReportSubmit={handleReportSubmit}
+      />
+
+      {/* Unmatch Confirmation Dialog */}
+      <AlertDialog open={showUnmatchDialog} onOpenChange={setShowUnmatchDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unmatch {chatDetails.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove your match with {chatDetails.name}. You won't be able to message each other anymore. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUnmatch} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Unmatch
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
