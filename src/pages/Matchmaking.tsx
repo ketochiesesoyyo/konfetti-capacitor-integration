@@ -559,24 +559,28 @@ const Matchmaking = () => {
             </div>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 mt-6">
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full w-16 h-16 border-2 hover:border-destructive hover:bg-destructive/10"
-              onClick={() => handleSwipe(false)}
-            >
-              <X className="w-8 h-8 text-destructive" />
-            </Button>
-            <Button
-              size="lg"
-              variant="gradient"
-              className="rounded-full w-20 h-20 shadow-xl"
-              onClick={() => handleSwipe(true)}
-            >
-              <Heart className="w-10 h-10" />
-            </Button>
+          {/* Action Buttons - Fixed position above nav bar */}
+          <div className="fixed bottom-24 left-0 right-0 flex items-center justify-center gap-6 z-50 pointer-events-none">
+            <div className="pointer-events-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full w-16 h-16 border-2 hover:border-destructive hover:bg-destructive/10 bg-background shadow-xl"
+                onClick={() => handleSwipe(false)}
+              >
+                <X className="w-8 h-8 text-destructive" />
+              </Button>
+            </div>
+            <div className="pointer-events-auto">
+              <Button
+                size="lg"
+                variant="gradient"
+                className="rounded-full w-20 h-20 shadow-2xl"
+                onClick={() => handleSwipe(true)}
+              >
+                <Heart className="w-10 h-10" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
