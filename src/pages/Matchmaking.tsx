@@ -472,9 +472,9 @@ const Matchmaking = () => {
 
       {/* Profile Card */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg relative">
+        <div className="w-full max-w-lg relative h-[calc(100vh-200px)]">
           <Card 
-            className={`overflow-hidden shadow-xl ${
+            className={`overflow-hidden shadow-xl h-full flex flex-col ${
               isExiting 
                 ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
                 : 'animate-slide-up'
@@ -484,44 +484,46 @@ const Matchmaking = () => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Swipe Indicators */}
-            {isSwiping && swipeX > 20 && (
-              <div 
-                className="absolute top-8 left-8 z-10 pointer-events-none"
-                style={{ opacity: getSwipeOpacity() }}
-              >
-                <div className="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[-20deg] shadow-lg border-4 border-white">
-                  LIKE
+            {/* Entire card content is now scrollable */}
+            <div className="overflow-y-auto flex-1">
+              {/* Swipe Indicators */}
+              {isSwiping && swipeX > 20 && (
+                <div 
+                  className="absolute top-8 left-8 z-10 pointer-events-none"
+                  style={{ opacity: getSwipeOpacity() }}
+                >
+                  <div className="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[-20deg] shadow-lg border-4 border-white">
+                    LIKE
+                  </div>
+                </div>
+              )}
+              {isSwiping && swipeX < -20 && (
+                <div 
+                  className="absolute top-8 right-8 z-10 pointer-events-none"
+                  style={{ opacity: getSwipeOpacity() }}
+                >
+                  <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[20deg] shadow-lg border-4 border-white">
+                    PASS
+                  </div>
+                </div>
+              )}
+              
+              {/* Photo Section */}
+              <div className="relative h-[450px] gradient-sunset overflow-hidden">
+                <img
+                  src={currentProfile.photos?.[0] || "/placeholder.svg"}
+                  alt={currentProfile.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
+                  <h2 className="text-3xl font-bold mb-1">
+                    {currentProfile.name}, {currentProfile.age || "?"}
+                  </h2>
                 </div>
               </div>
-            )}
-            {isSwiping && swipeX < -20 && (
-              <div 
-                className="absolute top-8 right-8 z-10 pointer-events-none"
-                style={{ opacity: getSwipeOpacity() }}
-              >
-                <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[20deg] shadow-lg border-4 border-white">
-                  PASS
-                </div>
-              </div>
-            )}
-            
-            {/* Photo Section - Fixed with card */}
-            <div className="relative h-[450px] gradient-sunset overflow-hidden">
-              <img
-                src={currentProfile.photos?.[0] || "/placeholder.svg"}
-                alt={currentProfile.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
-                <h2 className="text-3xl font-bold mb-1">
-                  {currentProfile.name}, {currentProfile.age || "?"}
-                </h2>
-              </div>
-            </div>
 
-            {/* Info Section - Scrollable */}
-            <div className="p-6 max-h-[250px] overflow-y-auto space-y-4">
+              {/* Info Section - Now part of unified scroll */}
+              <div className="p-6 space-y-4">
               {/* Bio */}
               {currentProfile.bio && (
                 <div>
@@ -553,6 +555,7 @@ const Matchmaking = () => {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           </Card>
 
