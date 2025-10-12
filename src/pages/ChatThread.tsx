@@ -30,6 +30,9 @@ type Message = {
   sender_id: string;
   content: string;
   created_at: string;
+  match_id?: string;
+  event_id?: string;
+  recipient_id?: string;
 };
 
 const ChatThread = () => {
@@ -44,6 +47,8 @@ const ChatThread = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showUnmatchDialog, setShowUnmatchDialog] = useState(false);
   const [eventId, setEventId] = useState<string>("");
+  const [recipientId, setRecipientId] = useState<string>("");
+  const [isDirectChat, setIsDirectChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get chat details from navigation state or default
@@ -52,6 +57,8 @@ const ChatThread = () => {
     photo: "/placeholder.svg",
     eventName: "Event",
     userId: "",
+    eventId: "",
+    isDirectChat: false,
   };
 
   useEffect(() => {
@@ -63,43 +70,87 @@ const ChatThread = () => {
       }
       setUserId(session.user.id);
 
-      if (!matchId) {
-        toast.error("Invalid chat");
-        navigate("/chats");
-        return;
-      }
+      // Check if this is a direct chat or match-based chat
+      const directChat = chatDetails.isDirectChat || location.state?.isDirectChat;
+      setIsDirectChat(directChat);
 
-      // Fetch match to get event_id
-      const { data: matchData } = await supabase
-        .from("matches")
-        .select("event_id")
-        .eq("id", matchId)
-        .single();
-      
-      if (matchData) {
-        setEventId(matchData.event_id);
-      }
-
-      // Fetch messages
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("match_id", matchId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Error loading messages:", error);
-        toast.error("Failed to load messages");
-      } else {
-        setMessages(data || []);
+      if (directChat) {
+        // Direct messaging: use event_id and recipient_id
+        const eventIdFromState = chatDetails.eventId || location.state?.eventId;
+        const recipientIdFromState = chatDetails.userId || location.state?.userId;
         
-        // Mark unread messages as read
-        await supabase
+        if (!eventIdFromState || !recipientIdFromState) {
+          toast.error("Invalid chat");
+          navigate("/chats");
+          return;
+        }
+
+        setEventId(eventIdFromState);
+        setRecipientId(recipientIdFromState);
+
+        // Fetch direct messages
+        const { data, error } = await supabase
           .from("messages")
-          .update({ read_at: new Date().toISOString() })
+          .select("*")
+          .eq("event_id", eventIdFromState)
+          .or(`and(sender_id.eq.${session.user.id},recipient_id.eq.${recipientIdFromState}),and(sender_id.eq.${recipientIdFromState},recipient_id.eq.${session.user.id})`)
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          console.error("Error loading messages:", error);
+          toast.error("Failed to load messages");
+        } else {
+          setMessages(data || []);
+          
+          // Mark unread messages as read
+          await supabase
+            .from("messages")
+            .update({ read_at: new Date().toISOString() })
+            .eq("event_id", eventIdFromState)
+            .eq("sender_id", recipientIdFromState)
+            .eq("recipient_id", session.user.id)
+            .is("read_at", null);
+        }
+      } else {
+        // Match-based messaging
+        if (!matchId) {
+          toast.error("Invalid chat");
+          navigate("/chats");
+          return;
+        }
+
+        // Fetch match to get event_id
+        const { data: matchData } = await supabase
+          .from("matches")
+          .select("event_id")
+          .eq("id", matchId)
+          .single();
+        
+        if (matchData) {
+          setEventId(matchData.event_id);
+        }
+
+        // Fetch messages
+        const { data, error } = await supabase
+          .from("messages")
+          .select("*")
           .eq("match_id", matchId)
-          .neq("sender_id", session.user.id)
-          .is("read_at", null);
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          console.error("Error loading messages:", error);
+          toast.error("Failed to load messages");
+        } else {
+          setMessages(data || []);
+          
+          // Mark unread messages as read
+          await supabase
+            .from("messages")
+            .update({ read_at: new Date().toISOString() })
+            .eq("match_id", matchId)
+            .neq("sender_id", session.user.id)
+            .is("read_at", null);
+        }
       }
       setLoading(false);
     };
@@ -107,25 +158,35 @@ const ChatThread = () => {
     loadMessages();
 
     // Subscribe to realtime messages
+    const channelName = isDirectChat ? `direct-${eventId}-${recipientId}` : `messages-${matchId}`;
     const channel = supabase
-      .channel(`messages-${matchId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `match_id=eq.${matchId}`
+          filter: isDirectChat ? `event_id=eq.${eventId}` : `match_id=eq.${matchId}`
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          // Only add message if it's relevant to this conversation
+          const newMsg = payload.new as Message;
+          if (isDirectChat) {
+            if ((newMsg.sender_id === userId && newMsg.recipient_id === recipientId) ||
+                (newMsg.sender_id === recipientId && newMsg.recipient_id === userId)) {
+              setMessages((prev) => [...prev, newMsg]);
+            }
+          } else {
+            setMessages((prev) => [...prev, newMsg]);
+          }
           
           // Mark as read if not sent by current user
-          if (payload.new.sender_id !== userId) {
+          if (newMsg.sender_id !== userId) {
             supabase
               .from("messages")
               .update({ read_at: new Date().toISOString() })
-              .eq("id", payload.new.id)
+              .eq("id", newMsg.id)
               .then(() => {});
           }
         }
@@ -135,7 +196,7 @@ const ChatThread = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId, navigate, userId]);
+  }, [matchId, navigate, userId, isDirectChat, eventId, recipientId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -143,15 +204,22 @@ const ChatThread = () => {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!message.trim() || !userId || !matchId) return;
+    if (!message.trim() || !userId) return;
+
+    const messageData = isDirectChat ? {
+      event_id: eventId,
+      recipient_id: recipientId,
+      sender_id: userId,
+      content: message.trim(),
+    } : {
+      match_id: matchId,
+      sender_id: userId,
+      content: message.trim(),
+    };
 
     const { error } = await supabase
       .from("messages")
-      .insert({
-        match_id: matchId,
-        sender_id: userId,
-        content: message.trim(),
-      });
+      .insert(messageData);
 
     if (error) {
       console.error("Error sending message:", error);
