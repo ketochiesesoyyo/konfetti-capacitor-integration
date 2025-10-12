@@ -439,7 +439,15 @@ const Matchmaking = () => {
 
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="p-8 text-center max-w-md">
-            {selectedEventStatus === 'closed' ? (
+            {!selectedEventId || events.length === 0 ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">Enter event code</h2>
+                <p className="text-muted-foreground mb-4">
+                  Join an event to start matching with other guests.
+                </p>
+                <Button onClick={() => navigate("/join")}>Join Event</Button>
+              </>
+            ) : selectedEventStatus === 'closed' ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">Event Closed</h2>
                 <p className="text-muted-foreground mb-4">
