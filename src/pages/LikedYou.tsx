@@ -126,14 +126,16 @@ const LikedYou = () => {
     if (!userId) return;
 
     try {
-      // Create a swipe record
+      // Upsert swipe record (update if exists, insert if new)
       const { error: swipeError } = await supabase
         .from("swipes")
-        .insert({
+        .upsert({
           user_id: userId,
           swiped_user_id: profile.user_id,
           event_id: profile.eventId,
           direction: "right",
+        }, {
+          onConflict: "user_id,swiped_user_id,event_id"
         });
 
       if (swipeError) throw swipeError;
