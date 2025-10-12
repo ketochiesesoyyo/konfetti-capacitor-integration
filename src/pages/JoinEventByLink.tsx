@@ -180,7 +180,7 @@ const JoinEventByLink = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-8">
+      <div className="max-w-lg mx-auto px-4 pt-4">
         <Card className="p-6 space-y-6 shadow-xl">
           {/* Event Details */}
           <div className="space-y-4">

@@ -29,11 +29,14 @@ const Layout = ({ children }: LayoutProps) => {
   const hideNav = location.pathname.includes("/auth");
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <main className="flex-1 overflow-y-auto pb-20">{children}</main>
       
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50">
+        <nav 
+          className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
           <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;

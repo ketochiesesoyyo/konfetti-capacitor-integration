@@ -354,7 +354,7 @@ const EventDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4">
+      <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector */}
         <Card className="p-1 mb-6">
           <div className="grid grid-cols-3 gap-1">

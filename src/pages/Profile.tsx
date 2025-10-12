@@ -168,7 +168,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-4">
+      <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
         {/* Photos Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">

@@ -381,7 +381,7 @@ const LikedYou = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4">
+      <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector - Hidden but keeping logic */}
         {/* 
         <Card className="p-1 mb-6">
