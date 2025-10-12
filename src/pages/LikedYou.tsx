@@ -7,6 +7,7 @@ import { Heart, X, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 
 type ProfileWithEvent = {
   id: string;
@@ -29,6 +30,7 @@ const LikedYou = () => {
   const [newLikes, setNewLikes] = useState<ProfileWithEvent[]>([]);
   const [passedLikes, setPassedLikes] = useState<ProfileWithEvent[]>([]);
   const [allLikes, setAllLikes] = useState<ProfileWithEvent[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<ProfileWithEvent | null>(null);
 
   useEffect(() => {
     const loadLikes = async () => {
@@ -295,7 +297,7 @@ const LikedYou = () => {
     }
   };
 
-  const ProfileCard = ({ profile, isPassed = false }: { profile: ProfileWithEvent; isPassed?: boolean }) => (
+  const ProfileCard = ({ profile, isPassed = false, showActions = true }: { profile: ProfileWithEvent; isPassed?: boolean; showActions?: boolean }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex gap-4 p-4">
         <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0 gradient-sunset">
@@ -304,7 +306,10 @@ const LikedYou = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h3 className="font-semibold text-lg">
+              <h3 
+                className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setSelectedProfile(profile)}
+              >
                 {profile.name}, {profile.age || "?"}
               </h3>
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
@@ -325,28 +330,9 @@ const LikedYou = () => {
               ))}
             </div>
           )}
-          <div className="flex gap-2">
-            {isPassed ? (
-              <Button
-                size="sm"
-                variant="gradient"
-                className="flex-1"
-                onClick={() => handleLike(profile)}
-              >
-                <Heart className="w-4 h-4 mr-2" />
-                Like
-              </Button>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handlePass(profile)}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Pass
-                </Button>
+          {showActions && (
+            <div className="flex gap-2">
+              {isPassed ? (
                 <Button
                   size="sm"
                   variant="gradient"
@@ -356,9 +342,30 @@ const LikedYou = () => {
                   <Heart className="w-4 h-4 mr-2" />
                   Like
                 </Button>
-              </>
-            )}
-          </div>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handlePass(profile)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Pass
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="gradient"
+                    className="flex-1"
+                    onClick={() => handleLike(profile)}
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    Like
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -445,7 +452,7 @@ const LikedYou = () => {
             )
           ) : allLikes.length > 0 ? (
             allLikes.map((profile) => (
-              <ProfileCard key={profile.swipeId} profile={profile} />
+              <ProfileCard key={profile.swipeId} profile={profile} showActions={false} />
             ))
           ) : (
             <Card className="p-8 text-center">
@@ -457,6 +464,16 @@ const LikedYou = () => {
           )}
         </div>
       </div>
+
+      {/* Profile View Dialog */}
+      {selectedProfile && (
+        <ProfileViewDialog
+          userId={selectedProfile.user_id}
+          eventName={selectedProfile.eventName}
+          open={!!selectedProfile}
+          onOpenChange={(open) => !open && setSelectedProfile(null)}
+        />
+      )}
     </div>
   );
 };
