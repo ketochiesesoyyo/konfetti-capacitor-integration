@@ -50,6 +50,30 @@ export type Database = {
           },
         ]
       }
+      event_departures: {
+        Row: {
+          event_id: string
+          id: string
+          left_at: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          left_at?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          left_at?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           allow_intro_requests: boolean

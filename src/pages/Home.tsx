@@ -3,10 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,6 +27,9 @@ const Home = () => {
   const [attendingEvents, setAttendingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [selectedEventToLeave, setSelectedEventToLeave] = useState<any>(null);
+  const [leaveReason, setLeaveReason] = useState("");
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -78,6 +93,43 @@ const Home = () => {
   const handleCreateEvent = () => {
     // Show paywall modal - will be implemented with real payment flow
     navigate("/create-event");
+  };
+
+  const handleLeaveEvent = async () => {
+    if (!selectedEventToLeave || !userId) return;
+
+    try {
+      // Log the departure with reason
+      const { error: logError } = await supabase
+        .from("event_departures")
+        .insert({
+          user_id: userId,
+          event_id: selectedEventToLeave.id,
+          reason: leaveReason || null,
+        });
+
+      if (logError) throw logError;
+
+      // Remove user from event attendees
+      const { error: deleteError } = await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("user_id", userId)
+        .eq("event_id", selectedEventToLeave.id);
+
+      if (deleteError) throw deleteError;
+
+      toast.success("You've left the event");
+      
+      // Refresh the events list
+      setAttendingEvents(prev => prev.filter(e => e.id !== selectedEventToLeave.id));
+      setLeaveDialogOpen(false);
+      setSelectedEventToLeave(null);
+      setLeaveReason("");
+    } catch (error: any) {
+      console.error("Error leaving event:", error);
+      toast.error("Failed to leave event");
+    }
   };
 
   return (
@@ -147,6 +199,16 @@ const Home = () => {
                         onClick={() => navigate("/matchmaking")}
                       >
                         Open Event
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedEventToLeave(event);
+                          setLeaveDialogOpen(true);
+                        }}
+                      >
+                        <LogOut className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -236,6 +298,50 @@ const Home = () => {
           </Button>
         </div>
       </div>
+
+      {/* Leave Event Dialog */}
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Event?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                <strong className="text-foreground">Warning:</strong> If you leave this event, all your chats and matches from this event will be removed from your view.
+              </p>
+              <p className="text-xs">
+                For security and safety reasons, a copy of your chats and matches will be retained by the platform.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-2 py-4">
+            <Label htmlFor="leave-reason">Why are you leaving? (Optional)</Label>
+            <Textarea
+              id="leave-reason"
+              placeholder="Let us know your reason..."
+              value={leaveReason}
+              onChange={(e) => setLeaveReason(e.target.value)}
+              className="resize-none"
+              rows={3}
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setLeaveReason("");
+              setSelectedEventToLeave(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLeaveEvent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Leave Event
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
