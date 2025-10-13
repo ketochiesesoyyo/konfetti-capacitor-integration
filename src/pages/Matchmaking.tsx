@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Heart, Info } from "lucide-react";
+import { X, Heart, Info, Undo } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
@@ -57,6 +57,10 @@ const Matchmaking = () => {
     photo_url?: string;
   } | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
+  const [lastSwipedProfile, setLastSwipedProfile] = useState<Profile | null>(null);
+  const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
+  const [showUndo, setShowUndo] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -322,15 +326,17 @@ const Matchmaking = () => {
     // Trigger exit animation
     setIsExiting(true);
 
-    // Save the swipe
-    const { error: swipeError } = await supabase
+    // Save the swipe and capture the ID
+    const { data: swipeData, error: swipeError } = await supabase
       .from("swipes")
       .insert({
         user_id: userId,
         swiped_user_id: currentProfile.user_id,
         event_id: selectedEventId,
         direction: liked ? "right" : "left",
-      });
+      })
+      .select()
+      .single();
 
     if (swipeError) {
       console.error("Error saving swipe:", swipeError);
@@ -338,6 +344,20 @@ const Matchmaking = () => {
       setIsExiting(false);
       return;
     }
+
+    // Store last swipe info for undo
+    setLastSwipedProfile(currentProfile);
+    setLastSwipeDirection(liked ? "right" : "left");
+    setLastSwipeId(swipeData.id);
+    setShowUndo(true);
+
+    // Hide undo button after 5 seconds
+    setTimeout(() => {
+      setShowUndo(false);
+      setLastSwipedProfile(null);
+      setLastSwipeDirection(null);
+      setLastSwipeId(null);
+    }, 5000);
 
     if (liked) {
       toast.success("Liked! 💕");
@@ -405,6 +425,51 @@ const Matchmaking = () => {
         });
       }
     }, 300);
+  };
+
+  const handleUndo = async () => {
+    if (!lastSwipeId || !lastSwipedProfile || !userId) return;
+
+    // Delete the swipe from database
+    const { error: deleteError } = await supabase
+      .from("swipes")
+      .delete()
+      .eq("id", lastSwipeId);
+
+    if (deleteError) {
+      console.error("Error undoing swipe:", deleteError);
+      toast.error("Failed to undo");
+      return;
+    }
+
+    // If it was a like that created a match, delete the match
+    if (lastSwipeDirection === "right") {
+      await supabase
+        .from("matches")
+        .delete()
+        .eq("event_id", selectedEventId)
+        .eq("user1_id", userId)
+        .eq("user2_id", lastSwipedProfile.user_id);
+    }
+
+    // Move back one profile
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      // Reinsert the profile back into the array
+      setProfiles((prev) => {
+        const newProfiles = [...prev];
+        newProfiles.splice(currentIndex - 1, 0, lastSwipedProfile);
+        return newProfiles;
+      });
+    }
+
+    // Clear undo state
+    setShowUndo(false);
+    setLastSwipedProfile(null);
+    setLastSwipeDirection(null);
+    setLastSwipeId(null);
+
+    toast.success("Swipe undone");
   };
 
   // Swipe gesture handlers
@@ -627,6 +692,23 @@ const Matchmaking = () => {
             </div>
             </div>
           </Card>
+
+          {/* Undo Button - Appears temporarily after swipe */}
+          {showUndo && lastSwipedProfile && (
+            <div className="fixed top-20 left-0 right-0 flex items-center justify-center z-50 pointer-events-none px-4 animate-fade-in">
+              <div className="pointer-events-auto">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full px-4 py-2 shadow-lg bg-background/95 backdrop-blur border-2 border-primary animate-pulse"
+                  onClick={handleUndo}
+                >
+                  <Undo className="w-4 h-4 mr-2" />
+                  Undo {lastSwipeDirection === "right" ? "Like" : "Pass"}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons - Fixed position above nav bar */}
           <div className="fixed bottom-24 left-0 right-0 flex items-center justify-center gap-6 z-50 pointer-events-none">
