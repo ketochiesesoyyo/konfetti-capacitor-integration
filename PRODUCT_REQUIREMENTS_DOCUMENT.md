@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 ## Event-Based Matchmaking Platform
 
-**Last Updated:** 2025-10-12  
-**Version:** 2.1 - UI/UX Optimized  
+**Last Updated:** 2025-10-13  
+**Version:** 2.2 - Undo Feature Added  
 **Status:** Pre-Launch Ready
 
 ---
@@ -87,6 +87,7 @@ An event-based matchmaking platform that enables hosts to create exclusive datin
 #### Swipe Mechanism
 - **Card-based interface** for browsing profiles
 - **Left/Right swiping** (pass/like) with ENUM validation
+- **Undo Last Swipe:** 5-second window to undo last swipe action (deletes swipe record, reverts profile)
 - **Event-scoped:** Only see profiles from your current event
 - **Match Creation:** Automatic match when mutual right swipes occur (orderless pair uniqueness)
 - **Profile Details:** View photos, bio, age, interests, prompts
@@ -893,6 +894,13 @@ WITH CHECK (
 );
 ```
 
+#### DELETE Policy: "Users can delete their own swipes" (NEW - Undo Feature)
+```sql
+CREATE POLICY "Users can delete their own swipes"
+ON swipes FOR DELETE
+USING (auth.uid() = user_id);
+```
+
 ---
 
 ### Table: `matches`
@@ -1219,12 +1227,20 @@ graph TD
     D --> E{User Action}
     E --> |Swipe Left| F[Record Pass]
     E --> |Swipe Right| G[Record Like]
-    F --> H[Next Profile]
-    G --> I{Check for Match}
-    I --> |No Mutual Like| H
-    I --> |Mutual Like| J[Create Match - Orderless Pair]
-    J --> K[Notify Both Users]
-    K --> L[Open Chat Thread]
+    F --> H[5-Second Undo Window]
+    G --> I[5-Second Undo Window]
+    H --> J{Undo Pressed?}
+    I --> K{Undo Pressed?}
+    J --> |Yes| L[Delete Swipe Record]
+    K --> |Yes| M[Delete Swipe & Match if Created]
+    L --> D
+    M --> D
+    J --> |No/Timeout| N[Next Profile]
+    K --> |No/Timeout| O{Check for Match}
+    O --> |No Mutual Like| N
+    O --> |Mutual Like| P[Create Match - Orderless Pair]
+    P --> Q[Notify Both Users]
+    Q --> R[Open Chat Thread]
 ```
 
 **Steps:**
@@ -1234,9 +1250,14 @@ graph TD
 4. User views profile details (photos, bio, interests, prompts)
 5. User swipes left (pass) or right (like)
 6. System records swipe in database (ENUM validation)
-7. If mutual right swipe detected, create match (**orderless uniqueness prevents duplicates**)
-8. Both users notified of match
-9. Chat thread available immediately
+7. **NEW: Undo button appears for 5 seconds**
+   - User can undo the last swipe action
+   - System deletes swipe record from database
+   - If match was created (mutual like), match is also deleted
+   - Profile returns to swipe deck
+8. If mutual right swipe detected, create match (**orderless uniqueness prevents duplicates**)
+9. Both users notified of match
+10. Chat thread available immediately
 
 ---
 
