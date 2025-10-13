@@ -10,13 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const THEMES = [
-  { id: "sunset", name: "Sunset", gradient: "gradient-sunset" },
-  { id: "ocean", name: "Ocean", gradient: "gradient-ocean" },
-  { id: "golden", name: "Golden", gradient: "gradient-golden" },
-  { id: "emerald", name: "Emerald", gradient: "gradient-emerald" },
-  { id: "midnight", name: "Midnight", gradient: "gradient-midnight" },
-] as const;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -141,12 +134,11 @@ const Profile = () => {
   const prompts = user.prompts || [];
   const interests = user.interests || [];
   const photos = user.photos && user.photos.length > 0 ? user.photos : ["/placeholder.svg", "/placeholder.svg"];
-  const currentTheme = THEMES.find(t => t.id === theme) || THEMES[0];
 
   return (
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
-      <div className={`${currentTheme.gradient} text-white p-6`}>
+      <div className="gradient-header text-white p-6">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-1">Profile</h1>

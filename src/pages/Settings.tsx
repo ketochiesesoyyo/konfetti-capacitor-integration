@@ -10,11 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const THEMES = [
-  { id: "sunset", name: "Sunset", gradient: "gradient-sunset" },
-  { id: "ocean", name: "Ocean", gradient: "gradient-ocean" },
-  { id: "golden", name: "Golden", gradient: "gradient-golden" },
-  { id: "emerald", name: "Emerald", gradient: "gradient-emerald" },
-  { id: "midnight", name: "Midnight", gradient: "gradient-midnight" },
+  { id: "sunset", name: "Sunset", preview: "linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%)" },
+  { id: "warmth", name: "Warmth", preview: "linear-gradient(135deg, hsl(25, 85%, 75%) 0%, hsl(15, 95%, 60%) 100%)" },
+  { id: "midnight", name: "Midnight", preview: "hsl(240, 8%, 12%)" },
 ] as const;
 
 const Settings = () => {
@@ -81,7 +79,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className={`${THEMES.find(t => t.id === theme)?.gradient || 'gradient-sunset'} text-white p-6`}>
+      <div className="gradient-header text-white p-6">
         <div className="max-w-lg mx-auto">
           <Button
             variant="ghost"
@@ -103,22 +101,25 @@ const Settings = () => {
             <Palette className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">App Theme</h2>
           </div>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {THEMES.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id as any)}
                 className="relative group"
               >
-                <div className={`${t.gradient} aspect-square rounded-lg transition-transform group-hover:scale-105`} />
+                <div 
+                  className="aspect-square rounded-lg transition-transform group-hover:scale-105"
+                  style={{ background: t.preview }}
+                />
                 {theme === t.id && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white rounded-full p-1">
-                      <Check className="w-4 h-4 text-primary" />
+                    <div className="bg-white rounded-full p-1.5">
+                      <Check className="w-5 h-5 text-primary" />
                     </div>
                   </div>
                 )}
-                <p className="text-xs mt-1 text-center text-muted-foreground">{t.name}</p>
+                <p className="text-sm mt-2 text-center font-medium">{t.name}</p>
               </button>
             ))}
           </div>
