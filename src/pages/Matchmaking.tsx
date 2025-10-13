@@ -456,7 +456,7 @@ const Matchmaking = () => {
           <div className="max-w-lg mx-auto">
             <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
@@ -512,10 +512,9 @@ const Matchmaking = () => {
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
           
-          {/* Event Selector Dropdown */}
           <div className="mb-2">
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
@@ -523,7 +522,7 @@ const Matchmaking = () => {
                   <SelectItem key={event.id} value={event.id}>
                     <div className="flex flex-col">
                       <span className="font-medium">{event.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-white/70">
                         {new Date(event.date).toLocaleDateString()}
                       </span>
                     </div>
