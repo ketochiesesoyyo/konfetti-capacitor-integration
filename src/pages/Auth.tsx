@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { KonfettiLogo } from "@/components/KonfettiLogo";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -152,15 +153,9 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center p-4 gradient-primary">
       <Card className="w-full max-w-md p-8 animate-slide-up">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Heart className="w-8 h-8 text-primary fill-primary" />
-            <Sparkles className="w-6 h-6 text-accent fill-accent" />
-          </div>
-          <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Plus One
-          </h1>
-          <p className="text-sm text-muted-foreground text-center mt-2">
-            Find your perfect match at every wedding
+          <KonfettiLogo className="w-48 h-auto mb-4" />
+          <p className="text-sm text-muted-foreground text-center">
+            The Wedding Matchmaking App
           </p>
         </div>
 
