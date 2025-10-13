@@ -459,7 +459,7 @@ const Matchmaking = () => {
               <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-primary border-primary text-white z-50">
                 {events.map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.name} - {new Date(event.date).toLocaleDateString()}
@@ -518,7 +518,7 @@ const Matchmaking = () => {
               <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-primary border-primary text-white z-50">
                 {events.map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     <div className="flex flex-col">
