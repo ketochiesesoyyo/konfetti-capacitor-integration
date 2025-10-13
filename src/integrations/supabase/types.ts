@@ -428,6 +428,10 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      user_is_event_host: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       users_share_event: {
         Args: { user_a: string; user_b: string }
         Returns: boolean
