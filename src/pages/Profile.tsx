@@ -138,17 +138,16 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
-      <div className="gradient-header text-white p-6">
+      <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Profile</h1>
-            <p className="text-white/90 text-sm">Your dating profile for all weddings</p>
+            <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Profile</h1>
+            <p className="text-sm text-[hsl(var(--subtitle))]">Your dating profile for all weddings</p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20"
               onClick={() => setShowPreview(true)}
               title="Preview your profile"
             >
@@ -157,7 +156,6 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20"
               onClick={() => navigate("/settings")}
               title="Settings"
             >
