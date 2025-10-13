@@ -456,7 +456,7 @@ const Matchmaking = () => {
           <div className="max-w-lg mx-auto">
             <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-primary text-white border-primary">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
@@ -514,7 +514,7 @@ const Matchmaking = () => {
           
           <div className="mb-2">
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-primary text-white border-primary">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
