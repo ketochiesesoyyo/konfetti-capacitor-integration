@@ -149,7 +149,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 gradient-sunset">
+    <div className="min-h-screen flex items-center justify-center p-4 gradient-primary">
       <Card className="w-full max-w-md p-8 animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">

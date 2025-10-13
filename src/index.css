@@ -107,6 +107,20 @@ All colors MUST be HSL.
     background: var(--gradient-header);
   }
 
+  /* Theme-aware gradient for backgrounds and buttons */
+  .theme-sunset .gradient-primary {
+    background: linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%);
+  }
+
+  .theme-midnight .gradient-primary {
+    background: linear-gradient(135deg, hsl(340, 70%, 45%) 0%, hsl(340, 75%, 55%) 100%);
+  }
+
+  /* Backward compatibility - can remove once all uses are updated */
+  .gradient-sunset {
+    background: linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%);
+  }
+
   /* Smooth animations */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in;
