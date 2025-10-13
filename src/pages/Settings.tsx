@@ -78,18 +78,17 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="gradient-header text-white p-6">
+      <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20 mb-4"
             onClick={() => navigate("/profile")}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-white/90 text-sm mt-1">Customize your experience</p>
+          <h1 className="text-3xl font-bold text-[hsl(var(--title))]">Settings</h1>
+          <p className="text-sm mt-1 text-[hsl(var(--subtitle))]">Customize your experience</p>
         </div>
       </div>
 
