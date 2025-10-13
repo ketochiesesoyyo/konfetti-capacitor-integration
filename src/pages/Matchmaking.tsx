@@ -13,6 +13,7 @@ import {
 import { X, Heart, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 
 type Profile = {
   id: string;
@@ -49,6 +50,13 @@ const Matchmaking = () => {
   const [swipeX, setSwipeX] = useState(0);
   const [swipeStartX, setSwipeStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [showMatchDialog, setShowMatchDialog] = useState(false);
+  const [matchedProfile, setMatchedProfile] = useState<{
+    id: string;
+    name: string;
+    photo_url?: string;
+  } | null>(null);
+  const [matchId, setMatchId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -369,15 +377,14 @@ const Matchmaking = () => {
           if (matchError) {
             console.error("Error creating match:", matchError);
           } else {
-            setTimeout(() => {
-              toast("It's a Match! 🎉", {
-                description: `You and ${currentProfile.name} liked each other!`,
-                action: {
-                  label: "Send Message",
-                  onClick: () => navigate(`/chat/${newMatch.id}`),
-                },
-              });
-            }, 500);
+            // Show full-screen match dialog
+            setMatchId(newMatch.id);
+            setMatchedProfile({
+              id: currentProfile.user_id,
+              name: currentProfile.name,
+              photo_url: currentProfile.photos?.[0] || undefined,
+            });
+            setShowMatchDialog(true);
           }
         }
       }
@@ -647,6 +654,23 @@ const Matchmaking = () => {
           </div>
         </div>
       </div>
+
+      {/* Full-Screen Match Dialog */}
+      <FullScreenMatchDialog
+        open={showMatchDialog}
+        matchedProfile={matchedProfile}
+        onStartChat={() => {
+          setShowMatchDialog(false);
+          if (matchId) {
+            navigate(`/chat/${matchId}`);
+          }
+        }}
+        onKeepMatching={() => {
+          setShowMatchDialog(false);
+          setMatchedProfile(null);
+          setMatchId(null);
+        }}
+      />
     </div>
   );
 };
