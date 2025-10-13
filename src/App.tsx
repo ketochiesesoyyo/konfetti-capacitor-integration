@@ -4,10 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Settings from "./pages/Settings";
 import Matchmaking from "./pages/Matchmaking";
 import LikedYou from "./pages/LikedYou";
 import Chats from "./pages/Chats";
@@ -22,33 +24,36 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<Layout><Home /></Layout>} />
-          <Route path="/profile" element={<Layout><Profile /></Layout>} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/matchmaking/:eventId" element={<Layout><Matchmaking /></Layout>} />
-          <Route path="/matchmaking" element={<Layout><Matchmaking /></Layout>} />
-          <Route path="/liked" element={<Layout><LikedYou /></Layout>} />
-          <Route path="/chats" element={<Layout><Chats /></Layout>} />
-          <Route path="/chat/:id" element={<ChatThread />} />
-          <Route path="/create-event" element={<CreateEvent />} />
-          <Route path="/join-event" element={<JoinEvent />} />
-          <Route path="/join/:code" element={<JoinEventByLink />} />
-          <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<Layout><Home /></Layout>} />
+            <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/settings" element={<Layout><Settings /></Layout>} />
+            <Route path="/matchmaking/:eventId" element={<Layout><Matchmaking /></Layout>} />
+            <Route path="/matchmaking" element={<Layout><Matchmaking /></Layout>} />
+            <Route path="/liked" element={<Layout><LikedYou /></Layout>} />
+            <Route path="/chats" element={<Layout><Chats /></Layout>} />
+            <Route path="/chat/:id" element={<ChatThread />} />
+            <Route path="/create-event" element={<CreateEvent />} />
+            <Route path="/join-event" element={<JoinEvent />} />
+            <Route path="/join/:code" element={<JoinEventByLink />} />
+            <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

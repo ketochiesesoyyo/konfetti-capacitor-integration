@@ -3,14 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { Camera, Edit, LogOut, Eye } from "lucide-react";
+import { Camera, Edit, Eye, Settings as SettingsIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useTheme } from "@/contexts/ThemeContext";
+
+const THEMES = [
+  { id: "sunset", name: "Sunset", gradient: "gradient-sunset" },
+  { id: "ocean", name: "Ocean", gradient: "gradient-ocean" },
+  { id: "golden", name: "Golden", gradient: "gradient-golden" },
+  { id: "emerald", name: "Emerald", gradient: "gradient-emerald" },
+  { id: "midnight", name: "Midnight", gradient: "gradient-midnight" },
+] as const;
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -115,11 +125,6 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/auth");
-  };
 
   if (loading) {
     return (
@@ -136,11 +141,12 @@ const Profile = () => {
   const prompts = user.prompts || [];
   const interests = user.interests || [];
   const photos = user.photos && user.photos.length > 0 ? user.photos : ["/placeholder.svg", "/placeholder.svg"];
+  const currentTheme = THEMES.find(t => t.id === theme) || THEMES[0];
 
   return (
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
-      <div className="gradient-sunset text-white p-6">
+      <div className={`${currentTheme.gradient} text-white p-6`}>
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-1">Profile</h1>
@@ -160,9 +166,10 @@ const Profile = () => {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20"
-              onClick={handleLogout}
+              onClick={() => navigate("/settings")}
+              title="Settings"
             >
-              <LogOut className="w-5 h-5" />
+              <SettingsIcon className="w-5 h-5" />
             </Button>
           </div>
         </div>

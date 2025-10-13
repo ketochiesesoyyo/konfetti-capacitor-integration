@@ -282,6 +282,7 @@ export type Database = {
           name: string
           photos: string[] | null
           prompts: Json | null
+          theme_preference: string | null
           updated_at: string
           user_id: string
         }
@@ -298,6 +299,7 @@ export type Database = {
           name: string
           photos?: string[] | null
           prompts?: Json | null
+          theme_preference?: string | null
           updated_at?: string
           user_id: string
         }
@@ -314,6 +316,7 @@ export type Database = {
           name?: string
           photos?: string[] | null
           prompts?: Json | null
+          theme_preference?: string | null
           updated_at?: string
           user_id?: string
         }
