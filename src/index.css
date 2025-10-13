@@ -102,6 +102,12 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-sans antialiased;
   }
 
+  /* Subtitle text styling */
+  .text-subtitle {
+    color: hsl(var(--subtitle));
+    font-weight: 600;
+  }
+
   /* Theme-based gradient header class */
   .gradient-header {
     background: var(--gradient-header);

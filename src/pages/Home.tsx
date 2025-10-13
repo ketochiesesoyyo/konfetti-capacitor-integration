@@ -185,7 +185,7 @@ const Home = () => {
       <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">My Weddings</h1>
-          <p className="text-sm text-[hsl(var(--subtitle))]">Find your perfect match at every celebration</p>
+          <p className="text-sm text-subtitle">Find your perfect match at every celebration</p>
         </div>
       </div>
 

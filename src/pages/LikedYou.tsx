@@ -377,7 +377,7 @@ const LikedYou = () => {
       <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Your Likes</h1>
-          <p className="text-sm text-[hsl(var(--subtitle))]">People you've shown interest in</p>
+          <p className="text-sm text-subtitle">People you've shown interest in</p>
         </div>
       </div>
 

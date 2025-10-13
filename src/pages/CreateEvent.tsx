@@ -274,7 +274,7 @@ const CreateEvent = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
-            <p className="text-sm text-[hsl(var(--subtitle))]">
+            <p className="text-sm text-subtitle">
               Step {step} of 2 • {selectedPlanDetails?.name || "No plan selected"}
             </p>
           </div>

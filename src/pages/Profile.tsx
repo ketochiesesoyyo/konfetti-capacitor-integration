@@ -142,7 +142,7 @@ const Profile = () => {
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Profile</h1>
-            <p className="text-sm text-[hsl(var(--subtitle))]">Your dating profile for all weddings</p>
+            <p className="text-sm text-subtitle">Your dating profile for all weddings</p>
           </div>
           <div className="flex gap-2">
             <Button

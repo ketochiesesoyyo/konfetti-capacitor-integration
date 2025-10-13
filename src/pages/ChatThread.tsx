@@ -299,7 +299,7 @@ const ChatThread = () => {
             >
               {chatDetails.name}
             </h2>
-            <p className="text-xs truncate text-[hsl(var(--subtitle))]">{chatDetails.eventName}</p>
+            <p className="text-xs truncate text-subtitle">{chatDetails.eventName}</p>
           </div>
           
           <DropdownMenu>

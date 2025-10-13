@@ -496,7 +496,7 @@ const EditProfile = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Edit Profile</h1>
-            <p className="text-sm text-[hsl(var(--subtitle))]">Update your information</p>
+            <p className="text-sm text-subtitle">Update your information</p>
           </div>
         </div>
       </div>

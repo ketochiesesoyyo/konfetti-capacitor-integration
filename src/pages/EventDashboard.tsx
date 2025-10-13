@@ -323,7 +323,7 @@ const EventDashboard = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-[hsl(var(--title))]">{event.name}</h1>
-              <p className="text-sm text-[hsl(var(--subtitle))]">Event Dashboard</p>
+              <p className="text-sm text-subtitle">Event Dashboard</p>
             </div>
           </div>
           <div className="space-y-2">

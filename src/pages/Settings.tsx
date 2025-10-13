@@ -88,7 +88,7 @@ const Settings = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-3xl font-bold text-[hsl(var(--title))]">Settings</h1>
-          <p className="text-sm mt-1 text-[hsl(var(--subtitle))]">Customize your experience</p>
+          <p className="text-sm mt-1 text-subtitle">Customize your experience</p>
         </div>
       </div>
 

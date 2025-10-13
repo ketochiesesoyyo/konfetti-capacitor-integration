@@ -70,7 +70,7 @@ const JoinEvent = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Join Event</h1>
-            <p className="text-sm text-[hsl(var(--subtitle))]">Enter your wedding invite code</p>
+            <p className="text-sm text-subtitle">Enter your wedding invite code</p>
           </div>
         </div>
       </div>

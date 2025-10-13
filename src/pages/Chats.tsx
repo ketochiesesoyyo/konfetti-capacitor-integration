@@ -303,7 +303,7 @@ const Chats = () => {
       <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Chats</h1>
-          <p className="text-sm text-[hsl(var(--subtitle))]">Your conversations and connections</p>
+          <p className="text-sm text-subtitle">Your conversations and connections</p>
         </div>
       </div>
 
