@@ -300,10 +300,10 @@ const Chats = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="gradient-sunset text-white p-6">
+      <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl font-bold mb-1">Chats</h1>
-          <p className="text-white/90 text-sm">Your conversations and connections</p>
+          <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Chats</h1>
+          <p className="text-sm text-[hsl(var(--subtitle))]">Your conversations and connections</p>
         </div>
       </div>
 

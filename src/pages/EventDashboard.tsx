@@ -311,20 +311,19 @@ const EventDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="gradient-sunset text-white p-6">
+      <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20"
               onClick={() => navigate("/")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">{event.name}</h1>
-              <p className="text-white/90 text-sm">Event Dashboard</p>
+              <h1 className="text-2xl font-bold text-[hsl(var(--title))]">{event.name}</h1>
+              <p className="text-sm text-[hsl(var(--subtitle))]">Event Dashboard</p>
             </div>
           </div>
           <div className="space-y-2">

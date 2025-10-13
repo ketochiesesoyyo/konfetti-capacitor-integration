@@ -11,7 +11,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const THEMES = [
   { id: "sunset", name: "Sunset", preview: "linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%)" },
-  { id: "warmth", name: "Warmth", preview: "linear-gradient(135deg, hsl(25, 85%, 75%) 0%, hsl(15, 95%, 60%) 100%)" },
   { id: "midnight", name: "Midnight", preview: "hsl(240, 8%, 12%)" },
 ] as const;
 
@@ -101,7 +100,7 @@ const Settings = () => {
             <Palette className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">App Theme</h2>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {THEMES.map((t) => (
               <button
                 key={t.id}

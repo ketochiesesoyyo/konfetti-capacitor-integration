@@ -452,9 +452,9 @@ const Matchmaking = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header with Event Selector */}
-        <div className="gradient-sunset text-white p-4">
+        <div className="bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
-            <h1 className="text-2xl font-bold mb-3">Matchmaking</h1>
+            <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder="Select an event" />
@@ -508,9 +508,9 @@ const Matchmaking = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header with Event Selector */}
-      <div className="gradient-sunset text-white p-4">
+      <div className="bg-background p-4 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold mb-3">Matchmaking</h1>
+          <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
           
           {/* Event Selector Dropdown */}
           <div className="mb-2">

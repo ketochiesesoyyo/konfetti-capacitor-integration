@@ -280,12 +280,11 @@ const ChatThread = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="gradient-sunset text-white p-4 flex-shrink-0">
+      <div className="bg-background p-4 flex-shrink-0 border-b">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20"
             onClick={() => navigate("/chats")}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -295,12 +294,12 @@ const ChatThread = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h2 
-              className="font-semibold truncate cursor-pointer hover:underline" 
+              className="font-semibold truncate cursor-pointer hover:underline text-[hsl(var(--title))]" 
               onClick={() => setShowProfileDialog(true)}
             >
               {chatDetails.name}
             </h2>
-            <p className="text-xs text-white/80 truncate">{chatDetails.eventName}</p>
+            <p className="text-xs truncate text-[hsl(var(--subtitle))]">{chatDetails.eventName}</p>
           </div>
           
           <DropdownMenu>

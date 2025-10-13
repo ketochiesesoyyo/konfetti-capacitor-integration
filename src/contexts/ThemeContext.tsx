@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Theme = "sunset" | "warmth" | "midnight";
+type Theme = "sunset" | "midnight";
 
 interface ThemeContextType {
   theme: Theme;
@@ -34,7 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Apply theme class to document root
-    document.documentElement.classList.remove("theme-sunset", "theme-warmth", "theme-midnight");
+    document.documentElement.classList.remove("theme-sunset", "theme-midnight");
     document.documentElement.classList.add(`theme-${theme}`);
   }, [theme]);
 

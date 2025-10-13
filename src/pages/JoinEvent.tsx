@@ -59,19 +59,18 @@ const JoinEvent = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="gradient-sunset text-white p-6">
+      <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20"
             onClick={() => navigate("/")}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Join Event</h1>
-            <p className="text-white/90 text-sm">Enter your wedding invite code</p>
+            <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Join Event</h1>
+            <p className="text-sm text-[hsl(var(--subtitle))]">Enter your wedding invite code</p>
           </div>
         </div>
       </div>
