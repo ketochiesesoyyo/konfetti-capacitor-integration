@@ -141,7 +141,7 @@ const Profile = () => {
       <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Profile</h1>
+            <h1 className="text-2xl font-bold mb-1 text-[hsl(var(--title))]">{user.name}'s Profile</h1>
             <p className="text-sm text-subtitle">Your dating profile for all weddings</p>
           </div>
           <div className="flex gap-2">
@@ -169,7 +169,7 @@ const Profile = () => {
         {/* Photos Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Photos</h2>
+            <h2 className="text-base font-semibold">Photos</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -194,7 +194,7 @@ const Profile = () => {
         {/* Basic Info Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Basic Info</h2>
+            <h2 className="text-base font-semibold">Basic Info</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -215,7 +215,7 @@ const Profile = () => {
         {/* Age Range Preference Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Age Range</h2>
+            <h2 className="text-base font-semibold">Age Range</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -243,7 +243,7 @@ const Profile = () => {
         {/* Bio Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">About Me</h2>
+            <h2 className="text-base font-semibold">About Me</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -255,7 +255,7 @@ const Profile = () => {
         {/* Prompts Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Prompts</h2>
+            <h2 className="text-base font-semibold">Prompts</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -280,7 +280,7 @@ const Profile = () => {
         {/* Interests Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Interests</h2>
+            <h2 className="text-base font-semibold">Interests</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
