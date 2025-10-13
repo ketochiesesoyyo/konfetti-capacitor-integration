@@ -233,7 +233,7 @@ const Auth = () => {
 
           <Button
             type="submit"
-            variant="gradient"
+            variant="default"
             className="w-full"
             disabled={isLoading}
           >
