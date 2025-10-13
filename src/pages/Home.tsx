@@ -379,9 +379,8 @@ const Home = () => {
         {/* Floating Action Buttons */}
         <div className="fixed bottom-20 right-4 flex flex-col gap-3">
           <Button
-            variant="gradient"
             size="lg"
-            className="shadow-xl"
+            className="shadow-xl bg-primary text-white border-primary"
             onClick={handleCreateEvent}
           >
             <Plus className="w-5 h-5" />
