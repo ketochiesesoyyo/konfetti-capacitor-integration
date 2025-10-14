@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ArrowLeft, Check } from "lucide-react";
+import { Calendar, ArrowLeft, Check, Camera, X } from "lucide-react";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 
 const CreateEvent = () => {
@@ -32,6 +33,9 @@ const CreateEvent = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [eventImage, setEventImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
+  const [tempImageFile, setTempImageFile] = useState<File | null>(null);
   
   const [eventData, setEventData] = useState({
     coupleName1: "",
@@ -124,16 +128,70 @@ const CreateEvent = () => {
     return `${name1}-${name2}-${year}`;
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setEventImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5242880) {
+      toast.error("Photo must be less than 5MB");
+      return;
     }
+
+    // Validate file type
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
+      toast.error("Please upload a JPG, PNG, or WEBP image");
+      return;
+    }
+
+    // Create a temporary URL for the cropper
+    const imageUrl = URL.createObjectURL(file);
+    setTempImageUrl(imageUrl);
+    setTempImageFile(file);
+    setCropDialogOpen(true);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!tempImageFile) return;
+
+    setCropDialogOpen(false);
+    
+    // Convert blob to file and set as event image
+    const file = new File([croppedBlob], tempImageFile.name, { type: croppedBlob.type });
+    setEventImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Clean up temp URL
+    URL.revokeObjectURL(tempImageUrl);
+    setTempImageUrl("");
+    setTempImageFile(null);
+    
+    toast.success("Photo ready!");
+  };
+
+  const handleTakePhoto = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files[0]) {
+        handleImageChange({ target } as any);
+      }
+    };
+    input.click();
+  };
+
+  const handleRemovePhoto = () => {
+    setEventImage(null);
+    setImagePreview("");
   };
 
   const handleCreateEvent = async () => {
@@ -355,23 +413,44 @@ const CreateEvent = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="eventImage">Event Image *</Label>
-              <Input
-                id="eventImage"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              <p className="text-sm text-muted-foreground">
+              <Label>Event Image *</Label>
+              <p className="text-sm text-muted-foreground mb-3">
                 A picture of the hosts or logo of the event can be a great option
               </p>
-              {imagePreview && (
-                <div className="mt-2">
+              {imagePreview ? (
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
                   <img
                     src={imagePreview}
                     alt="Event preview"
-                    className="w-full h-48 object-cover rounded-lg"
+                    className="w-full h-full object-cover"
                   />
+                  <button
+                    onClick={handleRemovePhoto}
+                    className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 hover:bg-destructive/90 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/jpg"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                    <Camera className="w-6 h-6 mb-1" />
+                    <span className="text-xs text-center px-2">Upload Photo</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleTakePhoto}
+                    className="aspect-[3/4] rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                  >
+                    <Camera className="w-6 h-6 mb-1" />
+                    <span className="text-xs text-center px-2">Take Photo</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -493,6 +572,14 @@ const CreateEvent = () => {
           </Card>
         )}
       </div>
+
+      {/* Image Crop Dialog */}
+      <ImageCropDialog
+        open={cropDialogOpen}
+        onClose={() => setCropDialogOpen(false)}
+        imageUrl={tempImageUrl}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };
