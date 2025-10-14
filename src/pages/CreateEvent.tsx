@@ -237,8 +237,7 @@ const CreateEvent = () => {
             ))}
 
             <Button
-              variant="gradient"
-              className="w-full mt-4"
+              className="w-full mt-4 bg-[hsl(345,80%,65%)] hover:bg-[hsl(345,80%,60%)] text-white"
               size="lg"
               onClick={handlePayment}
               disabled={!eventData.selectedPlan}
