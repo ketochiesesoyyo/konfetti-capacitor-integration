@@ -514,10 +514,10 @@ const Matchmaking = () => {
             <p className="text-sm text-subtitle mb-3">It's matchmaking time, baby!</p>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-primary text-white border-primary">
-                <SelectValue placeholder="Select an event" />
+                <SelectValue placeholder="Select Event to find matches" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
-                {events.map((event) => (
+                {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.name} - {new Date(event.date).toLocaleDateString()}
                   </SelectItem>
@@ -575,10 +575,10 @@ const Matchmaking = () => {
           <div className="mb-2">
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-primary text-white border-primary">
-                <SelectValue placeholder="Select an event" />
+                <SelectValue placeholder="Select Event to find matches" />
               </SelectTrigger>
               <SelectContent className="bg-primary border-primary text-white z-50">
-                {events.map((event) => (
+                {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     <div className="flex flex-col">
                       <span className="font-medium">{event.name}</span>
