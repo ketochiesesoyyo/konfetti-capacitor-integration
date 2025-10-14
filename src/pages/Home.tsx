@@ -467,17 +467,19 @@ const Home = () => {
                       </div>
                     )}
                     
-                    {/* Event Image - 3:4 ratio */}
-                    <div className="w-32 shrink-0 bg-muted flex items-center justify-center">
-                      {event.image_url ? (
-                        <img 
-                          src={event.image_url} 
-                          alt={event.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                      )}
+                    {/* Event Image - Circular with margin */}
+                    <div className="w-24 shrink-0 flex items-center justify-center p-3">
+                      <div className="w-18 h-18 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                        {event.image_url ? (
+                          <img 
+                            src={event.image_url} 
+                            alt={event.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                        )}
+                      </div>
                     </div>
                     
                     {/* Event Content */}
@@ -609,81 +611,110 @@ const Home = () => {
               {visibleHostingEvents.length > 0 ? (
                 visibleHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="p-4">
-                  <div className="flex items-start gap-3 mb-2">
-                    {/* Selection Checkbox */}
-                    {selectionMode && (
+                <div className="flex">
+                  {/* Selection Checkbox */}
+                  {selectionMode && (
+                    <div className="flex items-center justify-center px-3">
                       <Checkbox
                         checked={selectedEvents.has(event.id)}
                         onCheckedChange={() => handleToggleEventSelection(event.id)}
-                        className="mt-1"
                       />
-                    )}
-                    <div className="flex-1 flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{event.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                      </div>
                     </div>
-                    <Badge 
-                      variant="outline"
-                      className={
-                        event.status === 'draft'
-                          ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
-                          : event.status === 'closed' 
-                            ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                            : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
-                      }
-                    >
-                      {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
-                    </Badge>
+                  )}
+                  
+                  {/* Event Image - Circular with margin */}
+                  <div className="w-24 shrink-0 flex items-center justify-center p-3">
+                    <div className="w-18 h-18 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                      {event.image_url ? (
+                        <img 
+                          src={event.image_url} 
+                          alt={event.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                      )}
                     </div>
                   </div>
-                  {event.status !== 'draft' && (
-                    <div className="text-sm text-muted-foreground mb-4">
-                      Invite code: <span className="font-mono font-semibold">{event.invite_code}</span>
-                    </div>
-                  )}
-                  {event.status === 'draft' && (
-                    <div className="text-sm text-muted-foreground mb-4">
-                      Complete your event to get an invite code
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    {!selectionMode && (
-                      event.status === 'draft' ? (
-                        <Button 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => navigate(`/create-event?edit=${event.id}`)}
+                  
+                  {/* Event Content */}
+                  <div className="flex-1 p-4 flex flex-col">
+                    <div className="flex items-start justify-between">
+                      <div 
+                        className="flex-1 cursor-pointer" 
+                        onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
+                      >
+                        <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
+                        </div>
+                        {event.status !== 'draft' && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <Badge 
+                          variant="outline"
+                          className={
+                            event.status === 'draft'
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
+                              : event.status === 'closed' 
+                                ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                                : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
+                          }
                         >
-                          Complete Draft
-                        </Button>
-                      ) : (
-                        <>
-                          <Button 
-                            size="sm" 
-                            className="flex-1"
-                            onClick={() => navigate(`/event-dashboard/${event.id}`)}
-                          >
-                            Manage Event
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => {
-                              navigator.clipboard.writeText(event.invite_code);
-                              toast.success("Invite code copied!");
-                            }}
-                          >
-                            Copy Code
-                          </Button>
-                        </>
-                      )
-                    )}
+                          {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
+                        </Badge>
+                        
+                        {!selectionMode && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="w-4 h-4 text-gray-600" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              {event.status === 'draft' ? (
+                                <DropdownMenuItem onClick={() => navigate(`/create-event?edit=${event.id}`)}>
+                                  Complete Draft
+                                </DropdownMenuItem>
+                              ) : (
+                                <>
+                                  <DropdownMenuItem onClick={() => navigate(`/event-dashboard/${event.id}`)}>
+                                    Manage Event
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    navigator.clipboard.writeText(event.invite_code);
+                                    toast.success("Invite code copied!");
+                                  }}>
+                                    Copy Code
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              <DropdownMenuItem onClick={async () => {
+                                if (!userId) return;
+                                try {
+                                  const { error } = await supabase
+                                    .from("hidden_events")
+                                    .insert({ user_id: userId, event_id: event.id });
+                                  if (error) throw error;
+                                  setHiddenEventIds(prev => new Set([...prev, event.id]));
+                                  toast.success("Event hidden");
+                                } catch (error: any) {
+                                  console.error("Error hiding event:", error);
+                                  toast.error("Failed to hide event");
+                                }
+                              }}>
+                                Hide Event
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>
