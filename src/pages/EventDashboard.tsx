@@ -30,11 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, MessageCircle, UserX, Share2, Copy } from "lucide-react";
+import { ArrowLeft, MessageCircle, UserX, Share2, Copy, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 const EventDashboard = () => {
   const navigate = useNavigate();
@@ -64,6 +65,13 @@ const EventDashboard = () => {
     date: "",
     close_date: "",
   });
+  
+  // Image editing
+  const [eventImage, setEventImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
+  const [tempImageFile, setTempImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchEventData();
@@ -99,6 +107,11 @@ const EventDashboard = () => {
         date: eventData.date,
         close_date: eventData.close_date,
       });
+      
+      // Set image preview if exists
+      if (eventData.image_url) {
+        setImagePreview(eventData.image_url);
+      }
 
       // Fetch guests (attendees with their profiles)
       const { data: attendeesData, error: attendeesError } = await supabase
@@ -225,6 +238,32 @@ const EventDashboard = () => {
 
   const handleSaveEvent = async () => {
     try {
+      let imageUrl = imagePreview;
+      
+      // Upload new image if changed
+      if (eventImage && !imagePreview.startsWith('http')) {
+        const fileExt = eventImage.name.split('.').pop();
+        const fileName = `${eventId}-${Date.now()}.${fileExt}`;
+        
+        // Delete old image if exists
+        if (event.image_url) {
+          const oldFileName = event.image_url.split('/').pop();
+          await supabase.storage.from('event-photos').remove([oldFileName]);
+        }
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('event-photos')
+          .upload(fileName, eventImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-photos')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+      
       // Calculate new close_date if date changed
       let closeDate = editedEvent.close_date;
       if (editedEvent.date !== event.date) {
@@ -238,6 +277,7 @@ const EventDashboard = () => {
           description: editedEvent.description,
           date: editedEvent.date,
           close_date: closeDate,
+          image_url: imageUrl,
         })
         .eq("id", eventId || "");
 
@@ -245,11 +285,48 @@ const EventDashboard = () => {
 
       toast.success("Event updated successfully!");
       setIsEditing(false);
+      setEventImage(null);
       fetchEventData(); // Refresh data
     } catch (error: any) {
       console.error("Error updating event:", error);
       toast.error("Failed to update event");
     }
+  };
+  
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Image must be less than 10MB");
+        return;
+      }
+      
+      setTempImageFile(file);
+      const url = URL.createObjectURL(file);
+      setTempImageUrl(url);
+      setCropDialogOpen(true);
+    }
+  };
+
+  const handleCropComplete = (croppedImage: Blob) => {
+    const file = new File([croppedImage], tempImageFile?.name || "event-image.jpg", {
+      type: "image/jpeg",
+    });
+    setEventImage(file);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(croppedImage);
+    
+    setCropDialogOpen(false);
+    URL.revokeObjectURL(tempImageUrl);
+  };
+
+  const handleRemoveImage = () => {
+    setEventImage(null);
+    setImagePreview(event?.image_url || "");
   };
 
   const handleCloseEvent = async () => {
@@ -480,19 +557,21 @@ const EventDashboard = () => {
                   </Button>
                 ) : (
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditedEvent({
-                          name: event.name,
-                          description: event.description || "",
-                          date: event.date,
-                          close_date: event.close_date,
-                        });
-                      }}
-                    >
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditedEvent({
+                        name: event.name,
+                        description: event.description || "",
+                        date: event.date,
+                        close_date: event.close_date,
+                      });
+                      setEventImage(null);
+                      setImagePreview(event.image_url || "");
+                    }}
+                  >
                       Cancel
                     </Button>
                     <Button size="sm" onClick={handleSaveEvent}>
@@ -557,8 +636,85 @@ const EventDashboard = () => {
                     Automatically set to 3 days after event date
                   </p>
                 </div>
+                
+                {/* Event Image */}
+                <div>
+                  <Label>Event Image</Label>
+                  {isEditing ? (
+                    <div className="mt-2 space-y-3">
+                      {imagePreview && (
+                        <div className="relative inline-block">
+                          <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
+                            <img 
+                              src={imagePreview} 
+                              alt="Event preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
+                            onClick={handleRemoveImage}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <div>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          id="event-image-upload"
+                        />
+                        <label htmlFor="event-image-upload">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              document.getElementById('event-image-upload')?.click();
+                            }}
+                          >
+                            <Camera className="w-4 h-4 mr-2" />
+                            {imagePreview ? "Change Image" : "Add Image"}
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2">
+                      {event.image_url ? (
+                        <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
+                          <img 
+                            src={event.image_url} 
+                            alt="Event" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No image set</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
+            
+            {/* Image Crop Dialog */}
+            <ImageCropDialog
+              open={cropDialogOpen}
+              imageUrl={tempImageUrl}
+              onClose={() => {
+                setCropDialogOpen(false);
+                URL.revokeObjectURL(tempImageUrl);
+              }}
+              onCropComplete={handleCropComplete}
+            />
 
             <Card className="p-6 border-destructive/50">
               <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>

@@ -89,11 +89,17 @@ export const ImageCropDialog = ({
             image={imageUrl}
             crop={crop}
             zoom={zoom}
-            aspect={3 / 4}
+            aspect={1}
             onCropChange={onCropChange}
             onCropComplete={onCropCompleteCallback}
             onZoomChange={setZoom}
+            cropShape="round"
+            showGrid={false}
           />
+          {/* Circular preview guide */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="w-64 h-64 rounded-full border-4 border-white shadow-lg opacity-50"></div>
+          </div>
         </div>
 
         <div className="space-y-4">
