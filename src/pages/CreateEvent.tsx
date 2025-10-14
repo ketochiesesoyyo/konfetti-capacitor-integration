@@ -59,13 +59,14 @@ const CreateEvent = () => {
     checkAuth();
   }, [navigate]);
 
-  const themes = [
-    { id: "sunset", name: "Sunset Blush", gradient: "gradient-sunset" },
-    { id: "ocean", name: "Ocean Breeze", gradient: "gradient-ocean" },
-    { id: "golden", name: "Golden Hour", gradient: "gradient-golden" },
-    { id: "emerald", name: "Emerald Fizz", gradient: "gradient-emerald" },
-    { id: "midnight", name: "Midnight Rose", gradient: "gradient-midnight" },
-  ];
+  // Themes feature hidden for future use
+  // const themes = [
+  //   { id: "sunset", name: "Sunset Blush", gradient: "gradient-sunset" },
+  //   { id: "ocean", name: "Ocean Breeze", gradient: "gradient-ocean" },
+  //   { id: "golden", name: "Golden Hour", gradient: "gradient-golden" },
+  //   { id: "emerald", name: "Emerald Fizz", gradient: "gradient-emerald" },
+  //   { id: "midnight", name: "Midnight Rose", gradient: "gradient-midnight" },
+  // ];
 
   const pricingPlans = [
     {
@@ -455,7 +456,8 @@ const CreateEvent = () => {
               )}
             </div>
 
-            <div className="space-y-2">
+            {/* Theme selection hidden for future use */}
+            {/* <div className="space-y-2">
               <Label>Theme</Label>
               <Select
                 value={eventData.theme}
@@ -477,7 +479,7 @@ const CreateEvent = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="flex items-start gap-2">
               <Checkbox
@@ -544,7 +546,8 @@ const CreateEvent = () => {
                   (3 days after event)
                 </p>
               </div>
-              <div>
+              {/* Theme display hidden for future use */}
+              {/* <div>
                 <p className="text-sm text-muted-foreground">Theme</p>
                 <div className="flex items-center gap-2 mt-1">
                   <div
@@ -553,7 +556,7 @@ const CreateEvent = () => {
                     }`}
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex gap-3">
