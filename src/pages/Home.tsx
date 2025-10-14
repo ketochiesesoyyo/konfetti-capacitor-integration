@@ -48,6 +48,8 @@ const Home = () => {
   const [leaveReason, setLeaveReason] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "active" | "closed">("all");
+  const [attendingSortBy, setAttendingSortBy] = useState<"name" | "date" | "status">("date");
+  const [attendingFilterStatus, setAttendingFilterStatus] = useState<"all" | "active" | "closed">("all");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [hiddenEventIds, setHiddenEventIds] = useState<Set<string>>(new Set());
@@ -201,6 +203,34 @@ const Home = () => {
 
   const displayedHostingEvents = getSortedAndFilteredHostingEvents();
 
+  // Sort and filter attending events
+  const getSortedAndFilteredAttendingEvents = () => {
+    let filtered = attendingEvents;
+
+    // Apply status filter (no draft option for attending)
+    if (attendingFilterStatus !== "all") {
+      filtered = filtered.filter(event => event.status === attendingFilterStatus);
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (attendingSortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "date":
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case "status":
+          return (a.status || "active").localeCompare(b.status || "active");
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  };
+
+  const displayedAttendingEvents = getSortedAndFilteredAttendingEvents();
+
   const handleToggleEventSelection = (eventId: string) => {
     setSelectedEvents(prev => {
       const newSet = new Set(prev);
@@ -273,7 +303,7 @@ const Home = () => {
     return events.filter(e => !hiddenEventIds.has(e.id));
   };
 
-  const visibleAttendingEvents = getVisibleEvents(attendingEvents);
+  const visibleAttendingEvents = getVisibleEvents(displayedAttendingEvents);
   const visibleHostingEvents = getVisibleEvents(displayedHostingEvents);
 
   return (
@@ -386,7 +416,44 @@ const Home = () => {
               <p className="text-muted-foreground">Loading events...</p>
             </Card>
           ) : activeTab === "attending" ? (
-            visibleAttendingEvents.length > 0 ? (
+            <>
+              {/* Sort and Filter Controls for Attending */}
+              {!showHidden && visibleAttendingEvents.length > 0 && (
+                <div className="flex gap-2 mb-4">
+                  <div className="flex-1">
+                    <Select value={attendingSortBy} onValueChange={(value: any) => setAttendingSortBy(value)}>
+                      <SelectTrigger className="w-full">
+                        <div className="flex items-center gap-2">
+                          <ArrowUpDown className="w-4 h-4" />
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date">Sort by Date</SelectItem>
+                        <SelectItem value="name">Sort by Name</SelectItem>
+                        <SelectItem value="status">Sort by Status</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Select value={attendingFilterStatus} onValueChange={(value: any) => setAttendingFilterStatus(value)}>
+                      <SelectTrigger className="w-full">
+                        <div className="flex items-center gap-2">
+                          <Filter className="w-4 h-4" />
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Events</SelectItem>
+                        <SelectItem value="active">Active Only</SelectItem>
+                        <SelectItem value="closed">Closed Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {visibleAttendingEvents.length > 0 ? (
               visibleAttendingEvents.map((event) => (
                 <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="flex">
@@ -490,13 +557,18 @@ const Home = () => {
             ) : (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">
-                  Join a wedding using an invite link from your hosts!
+                  {attendingFilterStatus !== "all" 
+                    ? `No ${attendingFilterStatus} events found` 
+                    : "Join a wedding using an invite link from your hosts!"}
                 </p>
-                <Button variant="outline" onClick={() => navigate("/join-event")}>
-                  Enter Event Code
-                </Button>
+                {attendingFilterStatus === "all" && (
+                  <Button variant="outline" onClick={() => navigate("/join-event")}>
+                    Enter Event Code
+                  </Button>
+                )}
               </Card>
-            )
+            )}
+            </>
           ) : visibleHostingEvents.length > 0 || hostingEvents.length > 0 ? (
             <>
               {/* Sort and Filter Controls */}
