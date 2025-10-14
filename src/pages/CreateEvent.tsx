@@ -40,6 +40,9 @@ const CreateEvent = () => {
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
   const [loadingDraft, setLoadingDraft] = useState(false);
+  const [draftEventId, setDraftEventId] = useState<string | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
   
   const [eventData, setEventData] = useState({
     coupleName1: "",
@@ -62,11 +65,98 @@ const CreateEvent = () => {
         // Load draft if editing
         if (editEventId) {
           await loadDraftEvent(editEventId, session.user.id);
+        } else {
+          // Check for existing auto-saved draft
+          await loadExistingDraft(session.user.id);
         }
       }
     };
     checkAuth();
   }, [navigate, editEventId]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!userId || loadingDraft) return;
+
+    // Only auto-save if there's meaningful data
+    const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
+    if (!hasData) return;
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef[0]) {
+      clearTimeout(autoSaveTimeoutRef[0]);
+    }
+
+    // Set new timeout for debounced auto-save
+    const timeout = setTimeout(() => {
+      autoSaveDraft();
+    }, 2000); // Auto-save 2 seconds after last change
+
+    autoSaveTimeoutRef[0] = timeout;
+
+    return () => {
+      if (autoSaveTimeoutRef[0]) {
+        clearTimeout(autoSaveTimeoutRef[0]);
+      }
+    };
+  }, [eventData, imagePreview, userId, loadingDraft]);
+
+  // Save on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Trigger immediate save on unload
+      const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
+      if (hasData && userId && !loadingDraft) {
+        autoSaveDraft(true); // Pass true for synchronous save
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [eventData, imagePreview, userId, loadingDraft]);
+
+  const loadExistingDraft = async (userId: string) => {
+    try {
+      // Look for the most recent draft by this user
+      const { data: drafts, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("created_by", userId)
+        .eq("status", "draft")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (drafts && drafts.length > 0) {
+        const draft = drafts[0];
+        setDraftEventId(draft.id);
+        
+        // Parse event name to extract couple names
+        const nameParts = draft.name.split(" & ");
+        setEventData({
+          coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
+          coupleName2: nameParts[1] || "",
+          eventDate: draft.date || "",
+          theme: "sunset",
+          agreedToTerms: true,
+          selectedPlan: "",
+          expectedGuests: 0,
+        });
+
+        // Set image preview if exists
+        if (draft.image_url) {
+          setImagePreview(draft.image_url);
+        }
+        
+        toast.success("Loaded your draft", {
+          description: "Continue where you left off",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error loading existing draft:", error);
+    }
+  };
 
   const loadDraftEvent = async (eventId: string, userId: string) => {
     setLoadingDraft(true);
@@ -82,10 +172,12 @@ const CreateEvent = () => {
       if (error) throw error;
 
       if (event) {
+        setDraftEventId(event.id);
+        
         // Parse event name to extract couple names
         const nameParts = event.name.split(" & ");
         setEventData({
-          coupleName1: nameParts[0] || "",
+          coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
           coupleName2: nameParts[1] || "",
           eventDate: event.date || "",
           theme: "sunset",
@@ -97,7 +189,6 @@ const CreateEvent = () => {
         // Set image preview if exists
         if (event.image_url) {
           setImagePreview(event.image_url);
-          // Note: We can't set the File object from URL, but preview will work
         }
         
         setShowPaywall(false); // Skip paywall for drafts
@@ -107,6 +198,106 @@ const CreateEvent = () => {
       toast.error("Failed to load draft event");
     } finally {
       setLoadingDraft(false);
+    }
+  };
+
+  const autoSaveDraft = async (synchronous: boolean = false) => {
+    if (!userId || autoSaving) return;
+
+    // Don't auto-save if we're already in edit mode with editEventId
+    if (editEventId) return;
+
+    const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
+    if (!hasData) return;
+
+    if (!synchronous) setAutoSaving(true);
+    
+    try {
+      let imageUrl = imagePreview;
+      
+      // Upload event image if provided and not already uploaded
+      if (eventImage && !imagePreview.startsWith('http')) {
+        const fileExt = eventImage.name.split('.').pop();
+        const fileName = `${userId}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('event-photos')
+          .upload(fileName, eventImage);
+        
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('event-photos')
+            .getPublicUrl(fileName);
+          
+          imageUrl = publicUrl;
+        }
+      }
+      
+      const inviteCode = eventData.coupleName1 && eventData.coupleName2 && eventData.eventDate 
+        ? generateInviteCode() 
+        : `DRAFT-${Date.now()}`;
+      
+      const eventName = eventData.coupleName1 && eventData.coupleName2
+        ? `${eventData.coupleName1} & ${eventData.coupleName2}`
+        : 'Draft Event';
+      
+      const closeDate = eventData.eventDate 
+        ? new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      if (draftEventId) {
+        // Update existing draft
+        const { error: updateError } = await supabase
+          .from("events")
+          .update({
+            name: eventName,
+            date: eventData.eventDate || null,
+            close_date: closeDate,
+            description: `Wedding celebration for ${eventName}`,
+            invite_code: inviteCode,
+            image_url: imageUrl || null,
+          })
+          .eq("id", draftEventId)
+          .eq("created_by", userId);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new draft
+        const { data: event, error: eventError } = await supabase
+          .from("events")
+          .insert({
+            name: eventName,
+            date: eventData.eventDate || null,
+            close_date: closeDate,
+            description: `Wedding celebration for ${eventName}`,
+            invite_code: inviteCode,
+            created_by: userId,
+            image_url: imageUrl || null,
+            status: 'draft',
+          })
+          .select()
+          .single();
+
+        if (eventError) throw eventError;
+
+        setDraftEventId(event.id);
+
+        // Auto-join creator to the event
+        await supabase
+          .from("event_attendees")
+          .insert({
+            event_id: event.id,
+            user_id: userId,
+          });
+      }
+      
+      if (!synchronous) {
+        console.log("Auto-saved draft");
+      }
+    } catch (error: any) {
+      console.error("Error auto-saving draft:", error);
+    } finally {
+      if (!synchronous) setAutoSaving(false);
     }
   };
 
@@ -370,7 +561,9 @@ const CreateEvent = () => {
       const closeDate = new Date(eventDate);
       closeDate.setDate(closeDate.getDate() + 3);
       
-      if (editEventId) {
+      const eventIdToUpdate = editEventId || draftEventId;
+      
+      if (eventIdToUpdate) {
         // Update existing draft event
         const { error: updateError } = await supabase
           .from("events")
@@ -383,7 +576,7 @@ const CreateEvent = () => {
             image_url: imageUrl,
             status: 'active',
           })
-          .eq("id", editEventId)
+          .eq("id", eventIdToUpdate)
           .eq("created_by", userId);
 
         if (updateError) throw updateError;
@@ -392,7 +585,7 @@ const CreateEvent = () => {
           description: `Share code: ${inviteCode}`,
         });
       } else {
-        // Create new event
+        // Create new event (shouldn't happen with auto-save, but keeping as fallback)
         const { data: event, error: eventError } = await supabase
           .from("events")
           .insert({
@@ -751,16 +944,6 @@ const CreateEvent = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleSaveDraft}
-                disabled={isCreating}
-              >
-                Save Draft
-              </Button>
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                Back
-              </Button>
               <Button
                 variant="gradient"
                 onClick={handleCreateEvent}
