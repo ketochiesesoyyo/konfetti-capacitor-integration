@@ -557,9 +557,8 @@ const Matchmaking = () => {
               <KonfettiLogo className="w-32 h-auto" />
             </div>
             {selectedEventId && (
-              <p className="text-lg text-left">
-                <span className="font-bold text-primary/70">Selected event: </span>
-                <span className="font-bold text-foreground">{events.find(e => e.id === selectedEventId)?.name}</span>
+              <p className="text-lg font-bold text-foreground text-center">
+                {events.find(e => e.id === selectedEventId)?.name}
               </p>
             )}
           </div>
@@ -649,9 +648,8 @@ const Matchmaking = () => {
             <KonfettiLogo className="w-32 h-auto" />
           </div>
           {selectedEventId && (
-            <p className="text-lg text-left mb-2">
-              <span className="font-bold text-primary/70">Selected event: </span>
-              <span className="font-bold text-foreground">{events.find(e => e.id === selectedEventId)?.name}</span>
+            <p className="text-lg font-bold text-foreground text-center mb-2">
+              {events.find(e => e.id === selectedEventId)?.name}
             </p>
           )}
           {/* Profile count badge */}
