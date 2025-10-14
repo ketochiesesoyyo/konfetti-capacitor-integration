@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -410,42 +416,66 @@ const Home = () => {
                     {/* Event Content */}
                     <div className="flex-1 p-4 flex flex-col">
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg">{event.name}</h3>
+                        <div 
+                          className="flex-1 cursor-pointer" 
+                          onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
+                        >
+                          <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(event.date).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <Badge 
-                          variant="outline"
-                          className={event.status === 'closed' 
-                            ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                            : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
-                        >
-                          {event.status === 'closed' ? 'Closed' : 'Active'}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2 mt-auto">
-                        <Button
-                          className="flex-1"
-                          onClick={() => navigate(`/matchmaking/${event.id}`)}
-                          disabled={selectionMode}
-                        >
-                          Open Event
-                        </Button>
-                        {!selectionMode && (
-                          <Button
+                        <div className="flex items-center gap-2">
+                          <Badge 
                             variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedEventToLeave(event);
-                              setLeaveDialogOpen(true);
-                            }}
+                            className={event.status === 'closed' 
+                              ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                              : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
                           >
-                            <LogOut className="w-4 h-4" />
-                          </Button>
-                        )}
+                            {event.status === 'closed' ? 'Closed' : 'Active'}
+                          </Badge>
+                          
+                          {!selectionMode && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="w-4 h-4 text-gray-600" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => navigate(`/matchmaking/${event.id}`)}>
+                                  Go Matchmaking
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={async () => {
+                                  if (!userId) return;
+                                  try {
+                                    const { error } = await supabase
+                                      .from("hidden_events")
+                                      .insert({ user_id: userId, event_id: event.id });
+                                    if (error) throw error;
+                                    setHiddenEventIds(prev => new Set([...prev, event.id]));
+                                    toast.success("Event hidden");
+                                  } catch (error: any) {
+                                    console.error("Error hiding event:", error);
+                                    toast.error("Failed to hide event");
+                                  }
+                                }}>
+                                  Hide Event
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    setSelectedEventToLeave(event);
+                                    setLeaveDialogOpen(true);
+                                  }}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  Leave Event
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
