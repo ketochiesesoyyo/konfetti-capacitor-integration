@@ -239,8 +239,10 @@ const Home = () => {
                         </div>
                       </div>
                       <Badge 
-                        variant={event.status === 'closed' ? 'secondary' : 'default'}
-                        className={event.status === 'closed' ? 'bg-yellow-500 text-yellow-950' : ''}
+                        variant="outline"
+                        className={event.status === 'closed' 
+                          ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                          : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
                       >
                         {event.status === 'closed' ? 'Closed' : 'Active'}
                       </Badge>
@@ -325,8 +327,10 @@ const Home = () => {
                       </div>
                     </div>
                     <Badge 
-                      variant={event.status === 'closed' ? 'secondary' : 'default'}
-                      className={event.status === 'closed' ? 'bg-yellow-500 text-yellow-950' : ''}
+                      variant="outline"
+                      className={event.status === 'closed' 
+                        ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                        : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
                     >
                       {event.status === 'closed' ? 'Closed' : 'Active'}
                     </Badge>
