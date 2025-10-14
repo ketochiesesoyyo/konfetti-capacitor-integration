@@ -80,7 +80,7 @@ export type Database = {
           close_date: string
           created_at: string
           created_by: string
-          date: string
+          date: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -94,7 +94,7 @@ export type Database = {
           close_date?: string
           created_at?: string
           created_by: string
-          date: string
+          date?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -108,7 +108,7 @@ export type Database = {
           close_date?: string
           created_at?: string
           created_by?: string
-          date?: string
+          date?: string | null
           description?: string | null
           id?: string
           image_url?: string | null

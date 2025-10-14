@@ -447,95 +447,16 @@ const CreateEvent = () => {
     setImagePreview("");
   };
 
-  const handleSaveDraft = async () => {
-    if (!userId) return;
-    
-    // Check if we have at least some basic info
-    if (!eventData.coupleName1 && !eventData.coupleName2 && !eventData.eventDate) {
-      toast.error("Please add at least some event information before saving as draft");
-      return;
-    }
-    
-    setIsCreating(true);
-    try {
-      let imageUrl = null;
-      
-      // Upload event image if provided
-      if (eventImage) {
-        const fileExt = eventImage.name.split('.').pop();
-        const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(fileName, eventImage);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-photos')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
-      }
-      
-      const inviteCode = eventData.coupleName1 && eventData.coupleName2 && eventData.eventDate 
-        ? generateInviteCode() 
-        : `DRAFT-${Date.now()}`;
-      
-      const eventName = eventData.coupleName1 && eventData.coupleName2
-        ? `${eventData.coupleName1} & ${eventData.coupleName2}`
-        : 'Draft Event';
-      
-      // Calculate close date (3 days after event date)
-      const closeDate = eventData.eventDate 
-        ? new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        : new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Default to 6 days from now
-      
-      // Create draft event
-      const { data: event, error: eventError } = await supabase
-        .from("events")
-        .insert({
-          name: eventName,
-          date: eventData.eventDate || null,
-          close_date: closeDate,
-          description: `Wedding celebration for ${eventName}`,
-          invite_code: inviteCode,
-          created_by: userId,
-          image_url: imageUrl,
-          status: 'draft',
-        })
-        .select()
-        .single();
-
-      if (eventError) throw eventError;
-
-      // Auto-join creator to the event
-      const { error: attendeeError } = await supabase
-        .from("event_attendees")
-        .insert({
-          event_id: event.id,
-          user_id: userId,
-        });
-
-      if (attendeeError) throw attendeeError;
-
-      toast.success("Draft saved!", {
-        description: "You can complete it from the Events page",
-      });
-      navigate("/");
-    } catch (error: any) {
-      toast.error("Failed to save draft", {
-        description: error.message,
-      });
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   const handleCreateEvent = async () => {
     if (!userId) return;
     
-    // Check if we need an image (for new events, not drafts being completed)
+    // Validate all required fields
+    if (!eventData.coupleName1 || !eventData.coupleName2 || !eventData.eventDate || !eventData.agreedToTerms) {
+      toast.error("Please complete all required fields");
+      return;
+    }
+    
+    // Check if we have an image
     if (!eventImage && !imagePreview) {
       toast.error("Please add an event image");
       return;
@@ -869,31 +790,21 @@ const CreateEvent = () => {
               </Label>
             </div>
 
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleSaveDraft}
-                disabled={isCreating}
-                className="flex-1"
-              >
-                Save Draft
-              </Button>
-              <Button
-                variant="gradient"
-                className="flex-1"
-                size="lg"
-                onClick={() => setStep(2)}
-                disabled={
-                  !eventData.coupleName1 ||
-                  !eventData.coupleName2 ||
-                  !eventData.eventDate ||
-                  !eventData.agreedToTerms ||
-                  !eventImage
-                }
-              >
-                Next
-              </Button>
-            </div>
+            <Button
+              variant="gradient"
+              className="w-full"
+              size="lg"
+              onClick={() => setStep(2)}
+              disabled={
+                !eventData.coupleName1 ||
+                !eventData.coupleName2 ||
+                !eventData.eventDate ||
+                !eventData.agreedToTerms ||
+                !eventImage
+              }
+            >
+              Next
+            </Button>
           </Card>
         ) : (
           <Card className="p-6 space-y-6 animate-fade-in">
@@ -944,16 +855,21 @@ const CreateEvent = () => {
               </div> */}
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                variant="gradient"
-                onClick={handleCreateEvent}
-                className="flex-1"
-                disabled={isCreating}
-              >
-                {isCreating ? "Creating..." : "Create Event"}
-              </Button>
-            </div>
+            <Button
+              variant="gradient"
+              onClick={handleCreateEvent}
+              className="w-full"
+              disabled={
+                isCreating ||
+                !eventData.coupleName1 ||
+                !eventData.coupleName2 ||
+                !eventData.eventDate ||
+                !eventData.agreedToTerms ||
+                (!eventImage && !imagePreview)
+              }
+            >
+              {isCreating ? "Creating..." : "Create Event"}
+            </Button>
           </Card>
         )}
       </div>
