@@ -78,9 +78,8 @@ const CreateEvent = () => {
   useEffect(() => {
     if (!userId || loadingDraft) return;
 
-    // Only auto-save if there's meaningful data
-    const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
-    if (!hasData) return;
+    // Skip if we haven't passed the paywall yet (unless editing)
+    if (showPaywall && !editEventId) return;
 
     // Clear existing timeout
     if (autoSaveTimeoutRef[0]) {
@@ -99,21 +98,20 @@ const CreateEvent = () => {
         clearTimeout(autoSaveTimeoutRef[0]);
       }
     };
-  }, [eventData, imagePreview, userId, loadingDraft]);
+  }, [eventData, imagePreview, userId, loadingDraft, showPaywall]);
 
   // Save on page unload
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Trigger immediate save on unload
-      const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
-      if (hasData && userId && !loadingDraft) {
+      // Trigger immediate save on unload if we have a draft started
+      if (userId && !loadingDraft && draftEventId) {
         autoSaveDraft(true); // Pass true for synchronous save
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [eventData, imagePreview, userId, loadingDraft]);
+  }, [userId, loadingDraft, draftEventId]);
 
   const loadExistingDraft = async (userId: string) => {
     try {
@@ -201,14 +199,49 @@ const CreateEvent = () => {
     }
   };
 
+  const initializeDraft = async () => {
+    if (!userId || draftEventId) return; // Don't create if we already have one
+
+    try {
+      // Create initial empty draft
+      const { data: event, error: eventError } = await supabase
+        .from("events")
+        .insert({
+          name: 'Draft Event',
+          date: null,
+          close_date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          description: 'Wedding celebration',
+          invite_code: `DRAFT-${Date.now()}`,
+          created_by: userId,
+          image_url: null,
+          status: 'draft',
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      setDraftEventId(event.id);
+
+      // Auto-join creator to the event
+      await supabase
+        .from("event_attendees")
+        .insert({
+          event_id: event.id,
+          user_id: userId,
+        });
+
+      console.log("Initialized empty draft");
+    } catch (error: any) {
+      console.error("Error initializing draft:", error);
+    }
+  };
+
   const autoSaveDraft = async (synchronous: boolean = false) => {
     if (!userId || autoSaving) return;
 
     // Don't auto-save if we're already in edit mode with editEventId
     if (editEventId) return;
-
-    const hasData = eventData.coupleName1 || eventData.coupleName2 || eventData.eventDate || imagePreview;
-    if (!hasData) return;
 
     if (!synchronous) setAutoSaving(true);
     
@@ -262,33 +295,8 @@ const CreateEvent = () => {
 
         if (updateError) throw updateError;
       } else {
-        // Create new draft
-        const { data: event, error: eventError } = await supabase
-          .from("events")
-          .insert({
-            name: eventName,
-            date: eventData.eventDate || null,
-            close_date: closeDate,
-            description: `Wedding celebration for ${eventName}`,
-            invite_code: inviteCode,
-            created_by: userId,
-            image_url: imageUrl || null,
-            status: 'draft',
-          })
-          .select()
-          .single();
-
-        if (eventError) throw eventError;
-
-        setDraftEventId(event.id);
-
-        // Auto-join creator to the event
-        await supabase
-          .from("event_attendees")
-          .insert({
-            event_id: event.id,
-            user_id: userId,
-          });
+        // Create new draft (should happen via initializeDraft now, but keeping as fallback)
+        await initializeDraft();
       }
       
       if (!synchronous) {
@@ -362,6 +370,8 @@ const CreateEvent = () => {
   const handlePayment = () => {
     toast.success("Payment successful! 🎉");
     setShowPaywall(false);
+    // Initialize draft immediately after payment
+    initializeDraft();
   };
 
   const generateInviteCode = () => {
@@ -725,20 +735,11 @@ const CreateEvent = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-background p-6 border-b">
-        <div className="max-w-lg mx-auto flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
-            <p className="text-sm text-subtitle">
-              Step {step} of 2 • {selectedPlanDetails?.name || "No plan selected"}
-            </p>
-          </div>
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
+          <p className="text-sm text-subtitle">
+            Step {step} of 2 • {selectedPlanDetails?.name || "No plan selected"}
+          </p>
         </div>
       </div>
 
