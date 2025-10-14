@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,10 @@ const Home = () => {
   const [leaveReason, setLeaveReason] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "active" | "closed">("all");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
+  const [hiddenEventIds, setHiddenEventIds] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState(false);
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -52,6 +57,15 @@ const Home = () => {
         }
         
         setUserId(session.user.id);
+        
+        // Fetch hidden events
+        const { data: hiddenData, error: hiddenError } = await supabase
+          .from("hidden_events")
+          .select("event_id")
+          .eq("user_id", session.user.id);
+        
+        if (hiddenError) throw hiddenError;
+        setHiddenEventIds(new Set(hiddenData?.map(h => h.event_id) || []));
         
         // Fetch events user is hosting
         const { data: hosting, error: hostingError } = await supabase
@@ -181,6 +195,81 @@ const Home = () => {
 
   const displayedHostingEvents = getSortedAndFilteredHostingEvents();
 
+  const handleToggleEventSelection = (eventId: string) => {
+    setSelectedEvents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(eventId)) {
+        newSet.delete(eventId);
+      } else {
+        newSet.add(eventId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleHideSelected = async () => {
+    if (!userId || selectedEvents.size === 0) return;
+
+    try {
+      const eventsToHide = Array.from(selectedEvents);
+      const { error } = await supabase
+        .from("hidden_events")
+        .insert(
+          eventsToHide.map(eventId => ({
+            user_id: userId,
+            event_id: eventId,
+          }))
+        );
+
+      if (error) throw error;
+
+      setHiddenEventIds(prev => new Set([...prev, ...eventsToHide]));
+      setSelectedEvents(new Set());
+      setSelectionMode(false);
+      toast.success(`Hidden ${eventsToHide.length} event(s)`);
+    } catch (error: any) {
+      console.error("Error hiding events:", error);
+      toast.error("Failed to hide events");
+    }
+  };
+
+  const handleUnhideSelected = async () => {
+    if (!userId || selectedEvents.size === 0) return;
+
+    try {
+      const eventsToUnhide = Array.from(selectedEvents);
+      const { error } = await supabase
+        .from("hidden_events")
+        .delete()
+        .eq("user_id", userId)
+        .in("event_id", eventsToUnhide);
+
+      if (error) throw error;
+
+      setHiddenEventIds(prev => {
+        const newSet = new Set(prev);
+        eventsToUnhide.forEach(id => newSet.delete(id));
+        return newSet;
+      });
+      setSelectedEvents(new Set());
+      setSelectionMode(false);
+      toast.success(`Unhidden ${eventsToUnhide.length} event(s)`);
+    } catch (error: any) {
+      console.error("Error unhiding events:", error);
+      toast.error("Failed to unhide events");
+    }
+  };
+
+  const getVisibleEvents = (events: any[]) => {
+    if (showHidden) {
+      return events.filter(e => hiddenEventIds.has(e.id));
+    }
+    return events.filter(e => !hiddenEventIds.has(e.id));
+  };
+
+  const visibleAttendingEvents = getVisibleEvents(attendingEvents);
+  const visibleHostingEvents = getVisibleEvents(displayedHostingEvents);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -193,7 +282,7 @@ const Home = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector */}
-        <Card className="p-1 mb-6">
+        <Card className="p-1 mb-4">
           <div className="grid grid-cols-2 gap-1">
             <button
               onClick={() => setActiveTab("attending")}
@@ -220,6 +309,70 @@ const Home = () => {
           </div>
         </Card>
 
+        {/* Selection Controls */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={selectionMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setSelectionMode(!selectionMode);
+              setSelectedEvents(new Set());
+            }}
+          >
+            {selectionMode ? "Cancel" : "Select"}
+          </Button>
+          
+          {selectionMode && selectedEvents.size > 0 && (
+            <>
+              {!showHidden ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleHideSelected}
+                >
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Hide ({selectedEvents.size})
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnhideSelected}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Unhide ({selectedEvents.size})
+                </Button>
+              )}
+            </>
+          )}
+
+          <div className="flex-1" />
+          
+          {hiddenEventIds.size > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowHidden(!showHidden);
+                setSelectionMode(false);
+                setSelectedEvents(new Set());
+              }}
+            >
+              {showHidden ? (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Show Active
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Show Hidden ({hiddenEventIds.size})
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+
         {/* Events List */}
         <div className="space-y-4 pb-6">
           {loading ? (
@@ -227,10 +380,20 @@ const Home = () => {
               <p className="text-muted-foreground">Loading events...</p>
             </Card>
           ) : activeTab === "attending" ? (
-            attendingEvents.length > 0 ? (
-              attendingEvents.map((event) => (
+            visibleAttendingEvents.length > 0 ? (
+              visibleAttendingEvents.map((event) => (
                 <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="flex">
+                    {/* Selection Checkbox */}
+                    {selectionMode && (
+                      <div className="flex items-center justify-center px-3">
+                        <Checkbox
+                          checked={selectedEvents.has(event.id)}
+                          onCheckedChange={() => handleToggleEventSelection(event.id)}
+                        />
+                      </div>
+                    )}
+                    
                     {/* Event Image - 3:4 ratio */}
                     <div className="w-32 shrink-0 bg-muted flex items-center justify-center">
                       {event.image_url ? (
@@ -267,24 +430,33 @@ const Home = () => {
                         <Button
                           className="flex-1"
                           onClick={() => navigate(`/matchmaking/${event.id}`)}
+                          disabled={selectionMode}
                         >
                           Open Event
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEventToLeave(event);
-                            setLeaveDialogOpen(true);
-                          }}
-                        >
-                          <LogOut className="w-4 h-4" />
-                        </Button>
+                        {!selectionMode && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedEventToLeave(event);
+                              setLeaveDialogOpen(true);
+                            }}
+                          >
+                            <LogOut className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
                 </Card>
               ))
+            ) : showHidden ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  No hidden events
+                </p>
+              </Card>
             ) : (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">
@@ -295,10 +467,10 @@ const Home = () => {
                 </Button>
               </Card>
             )
-          ) : hostingEvents.length > 0 ? (
+          ) : visibleHostingEvents.length > 0 || hostingEvents.length > 0 ? (
             <>
               {/* Sort and Filter Controls */}
-              <div className="flex gap-2 mb-4">
+              {!showHidden && <div className="flex gap-2 mb-4">
                 <div className="flex-1">
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                     <SelectTrigger className="w-full">
@@ -330,13 +502,22 @@ const Home = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              </div>}
 
-              {displayedHostingEvents.length > 0 ? (
-                displayedHostingEvents.map((event) => (
+              {visibleHostingEvents.length > 0 ? (
+                visibleHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start gap-3 mb-2">
+                    {/* Selection Checkbox */}
+                    {selectionMode && (
+                      <Checkbox
+                        checked={selectedEvents.has(event.id)}
+                        onCheckedChange={() => handleToggleEventSelection(event.id)}
+                        className="mt-1"
+                      />
+                    )}
+                    <div className="flex-1 flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-lg">{event.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -356,6 +537,7 @@ const Home = () => {
                     >
                       {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
                     </Badge>
+                    </div>
                   </div>
                   {event.status !== 'draft' && (
                     <div className="text-sm text-muted-foreground mb-4">
@@ -368,40 +550,48 @@ const Home = () => {
                     </div>
                   )}
                   <div className="flex gap-2">
-                    {event.status === 'draft' ? (
-                      <Button 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => navigate(`/create-event?edit=${event.id}`)}
-                      >
-                        Complete Draft
-                      </Button>
-                    ) : (
-                      <>
+                    {!selectionMode && (
+                      event.status === 'draft' ? (
                         <Button 
                           size="sm" 
                           className="flex-1"
-                          onClick={() => navigate(`/event-dashboard/${event.id}`)}
+                          onClick={() => navigate(`/create-event?edit=${event.id}`)}
                         >
-                          Manage Event
+                          Complete Draft
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => {
-                            navigator.clipboard.writeText(event.invite_code);
-                            toast.success("Invite code copied!");
-                          }}
-                        >
-                          Copy Code
-                        </Button>
-                      </>
+                      ) : (
+                        <>
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => navigate(`/event-dashboard/${event.id}`)}
+                          >
+                            Manage Event
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => {
+                              navigator.clipboard.writeText(event.invite_code);
+                              toast.success("Invite code copied!");
+                            }}
+                          >
+                            Copy Code
+                          </Button>
+                        </>
+                      )
                     )}
                   </div>
                 </div>
               </Card>
                 ))
+              ) : showHidden ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">
+                    No hidden events
+                  </p>
+                </Card>
               ) : (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">
@@ -410,7 +600,7 @@ const Home = () => {
                 </Card>
               )}
             </>
-          ) : (
+          ) : !showHidden ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground mb-4">
                 You haven't created any events yet
@@ -419,7 +609,7 @@ const Home = () => {
                 Create a private matchmaking space for your wedding guests
               </p>
             </Card>
-          )}
+          ) : null}
         </div>
 
         {/* Floating Action Buttons */}

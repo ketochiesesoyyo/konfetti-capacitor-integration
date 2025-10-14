@@ -119,6 +119,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hidden_events: {
+        Row: {
+          event_id: string
+          hidden_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          hidden_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          hidden_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       intro_requests: {
         Row: {
           created_at: string
