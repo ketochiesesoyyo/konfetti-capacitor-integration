@@ -207,6 +207,9 @@ const Home = () => {
   const getSortedAndFilteredAttendingEvents = () => {
     let filtered = attendingEvents;
 
+    // Filter out draft events - attendees should never see drafts
+    filtered = filtered.filter(event => event.status !== 'draft');
+
     // Apply status filter (no draft option for attending)
     if (attendingFilterStatus !== "all") {
       filtered = filtered.filter(event => event.status === attendingFilterStatus);
