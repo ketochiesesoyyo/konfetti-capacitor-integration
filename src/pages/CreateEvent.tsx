@@ -30,6 +30,8 @@ const CreateEvent = () => {
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [eventImage, setEventImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
   
   const [eventData, setEventData] = useState({
     coupleName1: "",
@@ -122,13 +124,39 @@ const CreateEvent = () => {
     return `${name1}-${name2}-${year}`;
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEventImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreateEvent = async () => {
-    if (!userId) return;
+    if (!userId || !eventImage) return;
     
     setIsCreating(true);
     try {
       const inviteCode = generateInviteCode();
       const eventName = `${eventData.coupleName1} & ${eventData.coupleName2}`;
+      
+      // Upload event image
+      const fileExt = eventImage.name.split('.').pop();
+      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('event-photos')
+        .upload(fileName, eventImage);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('event-photos')
+        .getPublicUrl(fileName);
       
       // Calculate close date (3 days after event date)
       const eventDate = new Date(eventData.eventDate);
@@ -145,6 +173,7 @@ const CreateEvent = () => {
           description: `Wedding celebration for ${eventName}`,
           invite_code: inviteCode,
           created_by: userId,
+          image_url: publicUrl,
         })
         .select()
         .single();
@@ -326,6 +355,28 @@ const CreateEvent = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="eventImage">Event Image *</Label>
+              <Input
+                id="eventImage"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              <p className="text-sm text-muted-foreground">
+                A picture of the hosts or logo of the event can be a great option
+              </p>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Event preview"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label>Theme</Label>
               <Select
                 value={eventData.theme}
@@ -371,7 +422,8 @@ const CreateEvent = () => {
                 !eventData.coupleName1 ||
                 !eventData.coupleName2 ||
                 !eventData.eventDate ||
-                !eventData.agreedToTerms
+                !eventData.agreedToTerms ||
+                !eventImage
               }
             >
               Next
@@ -382,6 +434,16 @@ const CreateEvent = () => {
             <h2 className="text-xl font-bold">Review Your Event</h2>
             
             <div className="space-y-4">
+              {imagePreview && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Event Image</p>
+                  <img
+                    src={imagePreview}
+                    alt="Event"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Couple</p>
                 <p className="font-medium">

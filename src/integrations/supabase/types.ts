@@ -83,6 +83,7 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          image_url: string | null
           invite_code: string
           name: string
           status: string
@@ -96,6 +97,7 @@ export type Database = {
           date: string
           description?: string | null
           id?: string
+          image_url?: string | null
           invite_code: string
           name: string
           status?: string
@@ -109,6 +111,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           invite_code?: string
           name?: string
           status?: string
