@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   Select,
   SelectContent,
@@ -229,41 +230,57 @@ const Home = () => {
             attendingEvents.length > 0 ? (
               attendingEvents.map((event) => (
                 <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-lg">{event.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <Badge 
-                        variant="outline"
-                        className={event.status === 'closed' 
-                          ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                          : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
-                      >
-                        {event.status === 'closed' ? 'Closed' : 'Active'}
-                      </Badge>
+                  <div className="flex">
+                    {/* Event Image - 3:4 ratio */}
+                    <div className="w-32 shrink-0 bg-muted flex items-center justify-center">
+                      {event.image_url ? (
+                        <img 
+                          src={event.image_url} 
+                          alt={event.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                      )}
                     </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        className="flex-1"
-                        onClick={() => navigate(`/matchmaking/${event.id}`)}
-                      >
-                        Open Event
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedEventToLeave(event);
-                          setLeaveDialogOpen(true);
-                        }}
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </Button>
+                    
+                    {/* Event Content */}
+                    <div className="flex-1 p-4 flex flex-col">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-lg">{event.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <Badge 
+                          variant="outline"
+                          className={event.status === 'closed' 
+                            ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                            : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
+                        >
+                          {event.status === 'closed' ? 'Closed' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 mt-auto">
+                        <Button
+                          className="flex-1"
+                          onClick={() => navigate(`/matchmaking/${event.id}`)}
+                        >
+                          Open Event
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEventToLeave(event);
+                            setLeaveDialogOpen(true);
+                          }}
+                        >
+                          <LogOut className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
