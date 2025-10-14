@@ -14,6 +14,7 @@ import { X, Heart, Info, Undo } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
+import { KonfettiLogo } from "@/components/KonfettiLogo";
 
 type Profile = {
   id: string;
@@ -519,7 +520,8 @@ const Matchmaking = () => {
         {/* Header with Event Selector */}
         <div className="bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
-            <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
+            <KonfettiLogo className="w-32 h-auto mb-2" />
+            <p className="text-sm text-subtitle mb-3">It's matchmaking time, babe!</p>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-primary text-white border-primary">
                 <SelectValue placeholder="Select an event" />
@@ -575,7 +577,8 @@ const Matchmaking = () => {
       {/* Header with Event Selector */}
       <div className="bg-background p-4 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold mb-3 text-[hsl(var(--title))]">Matchmaking</h1>
+          <KonfettiLogo className="w-32 h-auto mb-2" />
+          <p className="text-sm text-subtitle mb-3">It's matchmaking time, babe!</p>
           
           <div className="mb-2">
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
