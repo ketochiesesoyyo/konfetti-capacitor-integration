@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Heart, Info, Undo } from "lucide-react";
+import { X, Heart, Info, Undo, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 type Profile = {
   id: string;
@@ -56,6 +63,7 @@ const Matchmaking = () => {
   const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | null>(null);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [showUndo, setShowUndo] = useState(false);
+  const [isEventSheetOpen, setIsEventSheetOpen] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -510,20 +518,46 @@ const Matchmaking = () => {
         {/* Header with Event Selector */}
         <div className="bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
-            <KonfettiLogo className="w-32 h-auto mb-2" />
-            <p className="text-sm text-subtitle mb-3">It's matchmaking time, baby!</p>
-            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full bg-primary text-white border-primary">
-                <SelectValue placeholder="Select Event to find matches" />
-              </SelectTrigger>
-              <SelectContent className="bg-primary border-primary text-white z-50">
-                {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.name} - {new Date(event.date).toLocaleDateString()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-center relative mb-3">
+              <Sheet open={isEventSheetOpen} onOpenChange={setIsEventSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="absolute left-0">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left">
+                  <SheetHeader>
+                    <SheetTitle>Select Event</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <Select 
+                      value={selectedEventId || ""} 
+                      onValueChange={(value) => {
+                        setSelectedEventId(value);
+                        setIsEventSheetOpen(false);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Event to find matches" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.name} - {new Date(event.date).toLocaleDateString()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <KonfettiLogo className="w-32 h-auto" />
+            </div>
+            {selectedEventId && (
+              <p className="text-lg font-bold text-foreground text-center">
+                {events.find(e => e.id === selectedEventId)?.name}
+              </p>
+            )}
           </div>
         </div>
 
@@ -569,31 +603,55 @@ const Matchmaking = () => {
       {/* Header with Event Selector */}
       <div className="bg-background p-4 border-b">
         <div className="max-w-lg mx-auto">
-          <KonfettiLogo className="w-32 h-auto mb-2" />
-          <p className="text-sm text-subtitle mb-3">It's matchmaking time, babe!</p>
-
-          <div className="mb-2">
-            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="w-full bg-primary text-white border-primary">
-                <SelectValue placeholder="Select Event to find matches" />
-              </SelectTrigger>
-              <SelectContent className="bg-primary border-primary text-white z-50">
-                {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{event.name}</span>
-                      <span className="text-xs text-white/70">{new Date(event.date).toLocaleDateString()}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-center relative mb-3">
+            <Sheet open={isEventSheetOpen} onOpenChange={setIsEventSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="absolute left-0">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle>Select Event</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <Select 
+                    value={selectedEventId || ""} 
+                    onValueChange={(value) => {
+                      setSelectedEventId(value);
+                      setIsEventSheetOpen(false);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Event to find matches" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
+                        <SelectItem key={event.id} value={event.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{event.name}</span>
+                            <span className="text-xs">{new Date(event.date).toLocaleDateString()}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <KonfettiLogo className="w-32 h-auto" />
           </div>
-
+          {selectedEventId && (
+            <p className="text-lg font-bold text-foreground text-center mb-2">
+              {events.find(e => e.id === selectedEventId)?.name}
+            </p>
+          )}
           {/* Profile count badge */}
-          <Badge variant="secondary" className="bg-white/20 text-white border-0">
-            {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? "s" : ""} left
-          </Badge>
+          <div className="text-center">
+            <Badge variant="secondary">
+              {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? "s" : ""} left
+            </Badge>
+          </div>
         </div>
       </div>
 
