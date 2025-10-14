@@ -415,7 +415,7 @@ const Home = () => {
                     
                     {/* Event Content */}
                     <div className="flex-1 p-4 flex flex-col">
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between">
                         <div 
                           className="flex-1 cursor-pointer" 
                           onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
@@ -426,7 +426,7 @@ const Home = () => {
                             <span>{new Date(event.date).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-center gap-1">
                           <Badge 
                             variant="outline"
                             className={event.status === 'closed' 
