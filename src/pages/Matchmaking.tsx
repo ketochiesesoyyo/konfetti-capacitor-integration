@@ -10,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type Profile = {
   id: string;
@@ -63,7 +63,7 @@ const Matchmaking = () => {
   const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | null>(null);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [showUndo, setShowUndo] = useState(false);
-  const [isEventSheetOpen, setIsEventSheetOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -519,22 +519,25 @@ const Matchmaking = () => {
         <div className="bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
             <div className="flex items-center justify-center relative mb-3">
-              <Sheet open={isEventSheetOpen} onOpenChange={setIsEventSheetOpen}>
-                <SheetTrigger asChild>
+              <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+                <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="absolute left-0">
                     <Menu className="h-6 w-6" />
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="left">
-                  <SheetHeader>
-                    <SheetTitle>Select Event</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6">
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-center">Select your event</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-center text-muted-foreground">
+                      Choose the event you want to find matches for
+                    </p>
                     <Select 
                       value={selectedEventId || ""} 
                       onValueChange={(value) => {
                         setSelectedEventId(value);
-                        setIsEventSheetOpen(false);
+                        setIsEventDialogOpen(false);
                       }}
                     >
                       <SelectTrigger className="w-full">
@@ -549,8 +552,8 @@ const Matchmaking = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                </SheetContent>
-              </Sheet>
+                </DialogContent>
+              </Dialog>
               <KonfettiLogo className="w-32 h-auto" />
             </div>
             {selectedEventId && (
@@ -604,22 +607,25 @@ const Matchmaking = () => {
       <div className="bg-background p-4 border-b">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-center relative mb-3">
-            <Sheet open={isEventSheetOpen} onOpenChange={setIsEventSheetOpen}>
-              <SheetTrigger asChild>
+            <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+              <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="absolute left-0">
                   <Menu className="h-6 w-6" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <SheetHeader>
-                  <SheetTitle>Select Event</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-center">Select your event</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-center text-muted-foreground">
+                    Choose the event you want to find matches for
+                  </p>
                   <Select 
                     value={selectedEventId || ""} 
                     onValueChange={(value) => {
                       setSelectedEventId(value);
-                      setIsEventSheetOpen(false);
+                      setIsEventDialogOpen(false);
                     }}
                   >
                     <SelectTrigger className="w-full">
@@ -637,8 +643,8 @@ const Matchmaking = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </SheetContent>
-            </Sheet>
+              </DialogContent>
+            </Dialog>
             <KonfettiLogo className="w-32 h-auto" />
           </div>
           {selectedEventId && (
