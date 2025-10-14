@@ -468,8 +468,8 @@ const Home = () => {
                     )}
                     
                     {/* Event Image - Circular with margin */}
-                    <div className="w-24 shrink-0 flex items-center justify-center p-3">
-                      <div className="w-18 h-18 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                    <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                         {event.image_url ? (
                           <img 
                             src={event.image_url} 
@@ -477,7 +477,7 @@ const Home = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                          <ImageIcon className="w-10 h-10 text-muted-foreground" />
                         )}
                       </div>
                     </div>
@@ -623,8 +623,8 @@ const Home = () => {
                   )}
                   
                   {/* Event Image - Circular with margin */}
-                  <div className="w-24 shrink-0 flex items-center justify-center p-3">
-                    <div className="w-18 h-18 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                       {event.image_url ? (
                         <img 
                           src={event.image_url} 
@@ -632,7 +632,7 @@ const Home = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                        <ImageIcon className="w-10 h-10 text-muted-foreground" />
                       )}
                     </div>
                   </div>
