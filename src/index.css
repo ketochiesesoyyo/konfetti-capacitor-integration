@@ -14,7 +14,7 @@ All colors MUST be HSL.
 
   /* Sunset Theme - Pink to Washed Orange */
   .theme-sunset {
-    --background: 350 100% 99%;
+    --background: 0 0% 100%;
     --foreground: 340 30% 15%;
 
     --card: 0 0% 100%;
