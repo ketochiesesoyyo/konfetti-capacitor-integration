@@ -39,7 +39,7 @@ const Home = () => {
   const [selectedEventToLeave, setSelectedEventToLeave] = useState<any>(null);
   const [leaveReason, setLeaveReason] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "closed">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "active" | "closed">("all");
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -307,6 +307,7 @@ const Home = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Events</SelectItem>
+                      <SelectItem value="draft">Drafts Only</SelectItem>
                       <SelectItem value="active">Active Only</SelectItem>
                       <SelectItem value="closed">Closed Only</SelectItem>
                     </SelectContent>
@@ -328,35 +329,58 @@ const Home = () => {
                     </div>
                     <Badge 
                       variant="outline"
-                      className={event.status === 'closed' 
-                        ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                        : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
+                      className={
+                        event.status === 'draft'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
+                          : event.status === 'closed' 
+                            ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                            : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
+                      }
                     >
-                      {event.status === 'closed' ? 'Closed' : 'Active'}
+                      {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
                     </Badge>
                   </div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Invite code: <span className="font-mono font-semibold">{event.invite_code}</span>
-                  </div>
+                  {event.status !== 'draft' && (
+                    <div className="text-sm text-muted-foreground mb-4">
+                      Invite code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                    </div>
+                  )}
+                  {event.status === 'draft' && (
+                    <div className="text-sm text-muted-foreground mb-4">
+                      Complete your event to get an invite code
+                    </div>
+                  )}
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => navigate(`/event-dashboard/${event.id}`)}
-                    >
-                      Manage Event
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => {
-                        navigator.clipboard.writeText(event.invite_code);
-                        toast.success("Invite code copied!");
-                      }}
-                    >
-                      Copy Code
-                    </Button>
+                    {event.status === 'draft' ? (
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => navigate(`/create-event?edit=${event.id}`)}
+                      >
+                        Complete Draft
+                      </Button>
+                    ) : (
+                      <>
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => navigate(`/event-dashboard/${event.id}`)}
+                        >
+                          Manage Event
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            navigator.clipboard.writeText(event.invite_code);
+                            toast.success("Invite code copied!");
+                          }}
+                        >
+                          Copy Code
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </Card>
