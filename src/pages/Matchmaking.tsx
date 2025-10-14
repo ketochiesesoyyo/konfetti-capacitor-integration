@@ -3,13 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Heart, Info, Undo } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,13 +53,15 @@ const Matchmaking = () => {
   } | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
   const [lastSwipedProfile, setLastSwipedProfile] = useState<Profile | null>(null);
-  const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | null>(null);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [showUndo, setShowUndo] = useState(false);
 
   useEffect(() => {
     const loadEvents = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
@@ -91,12 +87,12 @@ const Matchmaking = () => {
 
       // Prioritize URL eventId, then saved eventId, then nearest upcoming event
       let defaultEventId = eventId && userEvents.find((e: Event) => e.id === eventId)?.id;
-      
+
       if (!defaultEventId) {
         const savedEventId = localStorage.getItem("matchmaking_selected_event");
         defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
       }
-      
+
       if (!defaultEventId && userEvents.length > 0) {
         const today = new Date();
         const upcomingEvent = userEvents.find((e: Event) => new Date(e.date) >= today);
@@ -136,7 +132,7 @@ const Matchmaking = () => {
       setSelectedEventCloseDate(closeDate || null);
 
       // If event is closed, show message and don't load profiles
-      if (eventStatus === 'closed') {
+      if (eventStatus === "closed") {
         setProfiles([]);
         setLoading(false);
         return;
@@ -147,7 +143,7 @@ const Matchmaking = () => {
         .from("event_attendees")
         .select("user_id")
         .eq("event_id", selectedEventId)
-        .neq("user_id", userId)
+        .neq("user_id", userId);
 
       if (attendeesError) {
         console.error("Error loading attendees:", attendeesError);
@@ -157,9 +153,7 @@ const Matchmaking = () => {
       }
 
       // Filter out the host from attendees
-      const attendeeIds = eventAttendees
-        ?.map(a => a.user_id)
-        .filter(id => id !== hostId) || [];
+      const attendeeIds = eventAttendees?.map((a) => a.user_id).filter((id) => id !== hostId) || [];
 
       if (attendeeIds.length === 0) {
         setProfiles([]);
@@ -168,10 +162,7 @@ const Matchmaking = () => {
       }
 
       // Fetch profiles for these attendees
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .in("user_id", attendeeIds);
+      const { data, error } = await supabase.from("profiles").select("*").in("user_id", attendeeIds);
 
       if (error) {
         toast.error("Failed to load profiles");
@@ -202,41 +193,41 @@ const Matchmaking = () => {
 
         // Group swipes by user
         const swipesByUser = new Map<string, Array<{ direction: string; created_at: string }>>();
-        existingSwipes?.forEach(swipe => {
+        existingSwipes?.forEach((swipe) => {
           if (!swipesByUser.has(swipe.swiped_user_id)) {
             swipesByUser.set(swipe.swiped_user_id, []);
           }
           swipesByUser.get(swipe.swiped_user_id)!.push({
             direction: swipe.direction,
-            created_at: swipe.created_at
+            created_at: swipe.created_at,
           });
         });
 
         // Filter profiles based on gender compatibility first
-        const genderCompatibleProfiles = (data || []).filter(profile => {
+        const genderCompatibleProfiles = (data || []).filter((profile) => {
           // Skip profiles without gender info
           if (!profile.gender || !profile.interested_in) {
             return false;
           }
-          
+
           // Check if current user is interested in this profile's gender
-          const userInterestedInProfile = 
-            currentUserProfile.interested_in === 'both' ||
-            (currentUserProfile.interested_in === 'men' && profile.gender === 'man') ||
-            (currentUserProfile.interested_in === 'women' && profile.gender === 'woman');
-          
+          const userInterestedInProfile =
+            currentUserProfile.interested_in === "both" ||
+            (currentUserProfile.interested_in === "men" && profile.gender === "man") ||
+            (currentUserProfile.interested_in === "women" && profile.gender === "woman");
+
           // Check if profile is interested in current user's gender (bidirectional)
           const profileInterestedInUser =
-            profile.interested_in === 'both' ||
-            (profile.interested_in === 'men' && currentUserProfile.gender === 'man') ||
-            (profile.interested_in === 'women' && currentUserProfile.gender === 'woman');
-          
+            profile.interested_in === "both" ||
+            (profile.interested_in === "men" && currentUserProfile.gender === "man") ||
+            (profile.interested_in === "women" && currentUserProfile.gender === "woman");
+
           // Both must be compatible
           return userInterestedInProfile && profileInterestedInUser;
         });
 
         // Apply age range filters (bidirectional)
-        const ageCompatibleProfiles = genderCompatibleProfiles.filter(profile => {
+        const ageCompatibleProfiles = genderCompatibleProfiles.filter((profile) => {
           // Skip profiles without age info
           if (!profile.age || !currentUserProfile.age) {
             return false;
@@ -244,50 +235,50 @@ const Matchmaking = () => {
 
           const profileAge = profile.age;
           const currentUserAge = currentUserProfile.age;
-          
+
           // Get age preferences with defaults
           const userAgeMin = currentUserProfile.age_min || 18;
           const userAgeMax = currentUserProfile.age_max || 99;
           const profileAgeMin = profile.age_min || 18;
           const profileAgeMax = profile.age_max || 99;
-          
+
           // Check if profile's age is within current user's preference range
           const profileInUserRange = profileAge >= userAgeMin && profileAge <= userAgeMax;
-          
+
           // Check if current user's age is within profile's preference range
           const userInProfileRange = currentUserAge >= profileAgeMin && currentUserAge <= profileAgeMax;
-          
+
           // Both must be in each other's range
           return profileInUserRange && userInProfileRange;
         });
 
         // Filter profiles with second chance logic
-        const filteredProfiles = ageCompatibleProfiles.filter(profile => {
+        const filteredProfiles = ageCompatibleProfiles.filter((profile) => {
           const userSwipes = swipesByUser.get(profile.user_id);
-          
+
           // Never swiped = show
           if (!userSwipes || userSwipes.length === 0) {
             return true;
           }
-          
+
           // Hit 3 swipes limit = don't show
           if (userSwipes.length >= 3) {
             return false;
           }
-          
+
           const mostRecentSwipe = userSwipes[0];
-          
+
           // Already liked = don't show again
-          if (mostRecentSwipe.direction === 'right') {
+          if (mostRecentSwipe.direction === "right") {
             return false;
           }
-          
+
           // Recently passed (< 24h) = don't show yet
           const hoursSinceSwipe = (Date.now() - new Date(mostRecentSwipe.created_at).getTime()) / (1000 * 60 * 60);
           if (hoursSinceSwipe < 24) {
             return false;
           }
-          
+
           // Passed but 24h+ elapsed = show for second chance
           return true;
         });
@@ -295,7 +286,7 @@ const Matchmaking = () => {
         setProfiles(filteredProfiles);
       }
       setLoading(false);
-      
+
       // Save selection
       localStorage.setItem("matchmaking_selected_event", selectedEventId);
     };
@@ -307,8 +298,10 @@ const Matchmaking = () => {
   const hasMoreProfiles = currentIndex < profiles.length - 1;
 
   // Parse prompts safely
-  const parsedPrompts = currentProfile?.prompts 
-    ? (Array.isArray(currentProfile.prompts) ? currentProfile.prompts : [])
+  const parsedPrompts = currentProfile?.prompts
+    ? Array.isArray(currentProfile.prompts)
+      ? currentProfile.prompts
+      : []
     : [];
 
   if (loading) {
@@ -432,10 +425,7 @@ const Matchmaking = () => {
     if (!lastSwipeId || !lastSwipedProfile || !userId) return;
 
     // Delete the swipe from database
-    const { error: deleteError } = await supabase
-      .from("swipes")
-      .delete()
-      .eq("id", lastSwipeId);
+    const { error: deleteError } = await supabase.from("swipes").delete().eq("id", lastSwipeId);
 
     if (deleteError) {
       console.error("Error undoing swipe:", deleteError);
@@ -489,7 +479,7 @@ const Matchmaking = () => {
   const handleTouchEnd = () => {
     setIsSwiping(false);
     const threshold = 100; // pixels to trigger swipe
-    
+
     if (Math.abs(swipeX) > threshold) {
       // Trigger swipe action
       if (swipeX > 0) {
@@ -498,7 +488,7 @@ const Matchmaking = () => {
         handleSwipe(false); // Swiped left = pass
       }
     }
-    
+
     // Reset swipe position
     setSwipeX(0);
     setSwipeStartX(0);
@@ -521,7 +511,7 @@ const Matchmaking = () => {
         <div className="bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
             <KonfettiLogo className="w-32 h-auto mb-2" />
-            <p className="text-sm text-subtitle mb-3">It's matchmaking time, babe!</p>
+            <p className="text-sm text-subtitle mb-3">It's matchmaking time, baby!</p>
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-primary text-white border-primary">
                 <SelectValue placeholder="Select an event" />
@@ -542,16 +532,18 @@ const Matchmaking = () => {
             {!selectedEventId || events.length === 0 ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">Enter event code</h2>
-                <p className="text-muted-foreground mb-4">
-                  Join an event to start matching with other guests.
-                </p>
+                <p className="text-muted-foreground mb-4">Join an event to start matching with other guests.</p>
                 <Button onClick={() => navigate("/join-event")}>Join Event</Button>
               </>
-            ) : selectedEventStatus === 'closed' ? (
+            ) : selectedEventStatus === "closed" ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">Event Closed</h2>
                 <p className="text-muted-foreground mb-4">
-                  This event is now closed and no new matches will appear here. However, your chats remain active until {selectedEventCloseDate ? new Date(selectedEventCloseDate).toLocaleDateString() : '3 days after the event was closed'}.
+                  This event is now closed and no new matches will appear here. However, your chats remain active until{" "}
+                  {selectedEventCloseDate
+                    ? new Date(selectedEventCloseDate).toLocaleDateString()
+                    : "3 days after the event was closed"}
+                  .
                 </p>
                 <Button onClick={() => navigate("/chats")}>View Chats</Button>
               </>
@@ -570,7 +562,7 @@ const Matchmaking = () => {
     );
   }
 
-  const selectedEvent = events.find(e => e.id === selectedEventId);
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -579,7 +571,7 @@ const Matchmaking = () => {
         <div className="max-w-lg mx-auto">
           <KonfettiLogo className="w-32 h-auto mb-2" />
           <p className="text-sm text-subtitle mb-3">It's matchmaking time, babe!</p>
-          
+
           <div className="mb-2">
             <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
               <SelectTrigger className="w-full bg-primary text-white border-primary">
@@ -590,9 +582,7 @@ const Matchmaking = () => {
                   <SelectItem key={event.id} value={event.id}>
                     <div className="flex flex-col">
                       <span className="font-medium">{event.name}</span>
-                      <span className="text-xs text-white/70">
-                        {new Date(event.date).toLocaleDateString()}
-                      </span>
+                      <span className="text-xs text-white/70">{new Date(event.date).toLocaleDateString()}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -602,7 +592,7 @@ const Matchmaking = () => {
 
           {/* Profile count badge */}
           <Badge variant="secondary" className="bg-white/20 text-white border-0">
-            {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? 's' : ''} left
+            {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? "s" : ""} left
           </Badge>
         </div>
       </div>
@@ -610,12 +600,12 @@ const Matchmaking = () => {
       {/* Profile Card */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg relative h-[calc(100vh-200px)]">
-          <Card 
+          <Card
             className={`overflow-hidden shadow-xl h-full flex flex-col ${
-              isExiting 
-                ? 'animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95' 
-                : 'animate-slide-up'
-            } ${isSwiping ? '' : 'transition-transform duration-200'}`}
+              isExiting
+                ? "animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95"
+                : "animate-slide-up"
+            } ${isSwiping ? "" : "transition-transform duration-200"}`}
             style={isSwiping ? { transform: getCardTransform() } : undefined}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -625,26 +615,20 @@ const Matchmaking = () => {
             <div className="overflow-y-auto flex-1">
               {/* Swipe Indicators */}
               {isSwiping && swipeX > 20 && (
-                <div 
-                  className="absolute top-8 left-8 z-10 pointer-events-none"
-                  style={{ opacity: getSwipeOpacity() }}
-                >
+                <div className="absolute top-8 left-8 z-10 pointer-events-none" style={{ opacity: getSwipeOpacity() }}>
                   <div className="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[-20deg] shadow-lg border-4 border-white">
                     LIKE
                   </div>
                 </div>
               )}
               {isSwiping && swipeX < -20 && (
-                <div 
-                  className="absolute top-8 right-8 z-10 pointer-events-none"
-                  style={{ opacity: getSwipeOpacity() }}
-                >
+                <div className="absolute top-8 right-8 z-10 pointer-events-none" style={{ opacity: getSwipeOpacity() }}>
                   <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[20deg] shadow-lg border-4 border-white">
                     PASS
                   </div>
                 </div>
               )}
-              
+
               {/* Photo Section */}
               <div className="relative h-[450px] gradient-sunset overflow-hidden">
                 <img
@@ -661,38 +645,37 @@ const Matchmaking = () => {
 
               {/* Info Section - Now part of unified scroll */}
               <div className="p-6 space-y-4">
-              {/* Bio */}
-              {currentProfile.bio && (
-                <div>
-                  <h3 className="font-semibold mb-1">About</h3>
-                  <p className="text-foreground">{currentProfile.bio}</p>
-                </div>
-              )}
-
-              {/* Prompts */}
-              {parsedPrompts.length > 0 && parsedPrompts.map((prompt: any, idx: number) => (
-                <div key={idx}>
-                  <h3 className="font-semibold text-sm text-muted-foreground mb-1">
-                    {prompt.question}
-                  </h3>
-                  <p className="text-foreground">{prompt.answer}</p>
-                </div>
-              ))}
-
-              {/* Interests */}
-              {currentProfile.interests && currentProfile.interests.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">Interests</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {currentProfile.interests.map((interest, idx) => (
-                      <Badge key={idx} variant="secondary">
-                        {interest}
-                      </Badge>
-                    ))}
+                {/* Bio */}
+                {currentProfile.bio && (
+                  <div>
+                    <h3 className="font-semibold mb-1">About</h3>
+                    <p className="text-foreground">{currentProfile.bio}</p>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* Prompts */}
+                {parsedPrompts.length > 0 &&
+                  parsedPrompts.map((prompt: any, idx: number) => (
+                    <div key={idx}>
+                      <h3 className="font-semibold text-sm text-muted-foreground mb-1">{prompt.question}</h3>
+                      <p className="text-foreground">{prompt.answer}</p>
+                    </div>
+                  ))}
+
+                {/* Interests */}
+                {currentProfile.interests && currentProfile.interests.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Interests</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {currentProfile.interests.map((interest, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
 
