@@ -184,6 +184,8 @@ const Matchmaking = () => {
           .eq("user_id", userId)
           .single();
 
+        // Only require current user to have preferences set
+        // Don't block if other users haven't completed their profiles yet
         if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
           toast.error("Please complete your profile with gender preferences");
           navigate("/edit-profile");
@@ -213,9 +215,10 @@ const Matchmaking = () => {
 
         // Filter profiles based on gender compatibility first
         const genderCompatibleProfiles = (data || []).filter((profile) => {
-          // Skip profiles without gender info
+          // If profile hasn't set gender preferences yet, still show them
+          // (they might be setting up their profile)
           if (!profile.gender || !profile.interested_in) {
-            return false;
+            return true; // Show incomplete profiles
           }
 
           // Check if current user is interested in this profile's gender
@@ -234,30 +237,22 @@ const Matchmaking = () => {
           return userInterestedInProfile && profileInterestedInUser;
         });
 
-        // Apply age range filters (bidirectional)
+        // Apply age range filters (only check current user's preferences)
         const ageCompatibleProfiles = genderCompatibleProfiles.filter((profile) => {
-          // Skip profiles without age info
+          // If either user doesn't have age, show the profile (don't exclude)
           if (!profile.age || !currentUserProfile.age) {
-            return false;
+            return true;
           }
 
           const profileAge = profile.age;
-          const currentUserAge = currentUserProfile.age;
 
-          // Get age preferences with defaults
+          // Get current user's age preferences with defaults
           const userAgeMin = currentUserProfile.age_min || 18;
           const userAgeMax = currentUserProfile.age_max || 99;
-          const profileAgeMin = profile.age_min || 18;
-          const profileAgeMax = profile.age_max || 99;
 
           // Check if profile's age is within current user's preference range
-          const profileInUserRange = profileAge >= userAgeMin && profileAge <= userAgeMax;
-
-          // Check if current user's age is within profile's preference range
-          const userInProfileRange = currentUserAge >= profileAgeMin && currentUserAge <= profileAgeMax;
-
-          // Both must be in each other's range
-          return profileInUserRange && userInProfileRange;
+          // We only check one direction - if the current user wants to see them
+          return profileAge >= userAgeMin && profileAge <= userAgeMax;
         });
 
         // Filter profiles with second chance logic
