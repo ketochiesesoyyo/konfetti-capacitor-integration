@@ -321,7 +321,7 @@ const CreateEvent = () => {
       name: "Premium Plan",
       price: 299,
       minGuests: 11,
-      maxGuests: 100,
+      maxGuests: 50,
       description: "For memorable celebrations",
       features: [
         "Up to 100 guests",
@@ -335,7 +335,7 @@ const CreateEvent = () => {
     {
       id: "vip",
       name: "VIP Plan",
-      price: 4999,
+      price: 2999,
       minGuests: 101,
       maxGuests: null,
       description: "Ultimate party experience",
