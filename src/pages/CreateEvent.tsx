@@ -323,25 +323,19 @@ const CreateEvent = () => {
       minGuests: 11,
       maxGuests: 50,
       description: "For memorable celebrations",
-      features: [
-        "Up to 100 guests",
-        "3 days active after wedding",
-        "Full matchmaking",
-        "Guest management",
-        "Priority support",
-      ],
+      features: ["Up to 50 guests", "3 days active", "Full matchmaking", "Guest management", "Priority support"],
       popular: true,
     },
     {
       id: "vip",
       name: "VIP Plan",
-      price: 2999,
-      minGuests: 101,
+      price: 1099,
+      minGuests: 51,
       maxGuests: null,
       description: "Ultimate party experience",
       features: [
-        "100+ guests",
-        "7 days active after wedding",
+        "50+ guests",
+        "3 days active",
         "Full matchmaking",
         "VIP badge for event page",
         "Exclusive VIP themes",
@@ -569,7 +563,7 @@ const CreateEvent = () => {
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="gradient-sunset text-white text-xs font-bold px-3 py-1 rounded-full">
-                      MOST POPULAR
+                      MOST POPULAR PACKAGE
                     </span>
                   </div>
                 )}
