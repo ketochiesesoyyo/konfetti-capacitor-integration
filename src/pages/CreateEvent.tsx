@@ -342,7 +342,7 @@ const CreateEvent = () => {
     {
       id: "vip",
       name: "VIP Plan",
-      price: 1099,
+      price: 2999,
       minGuests: 51,
       maxGuests: null,
       description: "Ultimate party experience",
@@ -587,12 +587,12 @@ const CreateEvent = () => {
                   eventData.selectedPlan === plan.id
                     ? "ring-2 ring-primary shadow-md"
                     : ""
-                } ${plan.popular ? "relative" : ""}`}
+                } ${plan.popular ? "relative gradient-primary" : ""}`}
                 onClick={() => setEventData({ ...eventData, selectedPlan: plan.id })}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="gradient-sunset text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <span className="bg-black text-white text-xs font-bold px-3 py-1 rounded-full">
                       MOST POPULAR
                     </span>
                   </div>
