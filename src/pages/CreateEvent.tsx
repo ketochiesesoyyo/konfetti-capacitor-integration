@@ -23,6 +23,7 @@ import {
 import { Calendar, ArrowLeft, Check, Camera, X } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
+import { eventSchema } from "@/lib/validation";
 
 const CreateEvent = () => {
   const navigate = useNavigate();
@@ -498,14 +499,30 @@ const CreateEvent = () => {
           description: `Share code: ${inviteCode}`,
         });
       } else {
+        // Validate event data before creating
+        const validationResult = eventSchema.safeParse({
+          name: eventName,
+          description: `Wedding celebration for ${eventName}`,
+          date: eventData.eventDate,
+        });
+
+        if (!validationResult.success) {
+          const firstError = validationResult.error.errors[0];
+          toast.error(firstError.message);
+          setIsCreating(false);
+          return;
+        }
+
+        const validated = validationResult.data;
+
         // Create new event (shouldn't happen with auto-save, but keeping as fallback)
         const { data: event, error: eventError } = await supabase
           .from("events")
           .insert({
-            name: eventName,
-            date: eventData.eventDate,
+            name: validated.name,
+            date: validated.date,
             close_date: closeDate.toISOString().split('T')[0],
-            description: `Wedding celebration for ${eventName}`,
+            description: validated.description,
             invite_code: inviteCode,
             created_by: userId,
             image_url: imageUrl,

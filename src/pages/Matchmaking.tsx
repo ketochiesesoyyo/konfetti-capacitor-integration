@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import { swipeSchema, matchSchema } from "@/lib/validation";
 import {
   Dialog,
   DialogContent,
@@ -320,17 +321,31 @@ const Matchmaking = () => {
   const handleSwipe = async (liked: boolean) => {
     if (!userId || !selectedEventId || !currentProfile) return;
 
+    // Validate swipe data
+    const swipeValidation = swipeSchema.safeParse({
+      direction: liked ? "right" : "left",
+      swiped_user_id: currentProfile.user_id,
+      event_id: selectedEventId,
+    });
+
+    if (!swipeValidation.success) {
+      toast.error("Invalid swipe data");
+      return;
+    }
+
     // Trigger exit animation
     setIsExiting(true);
+
+    const validated = swipeValidation.data;
 
     // Save the swipe and capture the ID
     const { data: swipeData, error: swipeError } = await supabase
       .from("swipes")
       .insert({
         user_id: userId,
-        swiped_user_id: currentProfile.user_id,
-        event_id: selectedEventId,
-        direction: liked ? "right" : "left",
+        swiped_user_id: validated.swiped_user_id,
+        event_id: validated.event_id,
+        direction: validated.direction,
       })
       .select()
       .single();
@@ -380,13 +395,27 @@ const Matchmaking = () => {
           .maybeSingle();
 
         if (!existingMatch) {
+          // Validate match data
+          const matchValidation = matchSchema.safeParse({
+            user1_id: userId,
+            user2_id: currentProfile.user_id,
+            event_id: selectedEventId,
+          });
+
+          if (!matchValidation.success) {
+            console.error("Invalid match data");
+            return;
+          }
+
+          const validatedMatch = matchValidation.data;
+
           // Create match
           const { data: newMatch, error: matchError } = await supabase
             .from("matches")
             .insert({
-              user1_id: userId,
-              user2_id: currentProfile.user_id,
-              event_id: selectedEventId,
+              user1_id: validatedMatch.user1_id,
+              user2_id: validatedMatch.user2_id,
+              event_id: validatedMatch.event_id,
             })
             .select()
             .single();

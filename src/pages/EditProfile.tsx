@@ -27,6 +27,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
+import { profileSchema } from "@/lib/validation";
 import {
   Select,
   SelectContent,
@@ -244,16 +245,37 @@ const EditProfile = () => {
       return;
     }
 
+    // Validate profile data
+    const ageValue = profile.age ? parseInt(profile.age) : null;
+    if (ageValue !== null) {
+      const validationResult = profileSchema.safeParse({
+        name: profile.name,
+        age: ageValue,
+        bio: profile.bio,
+        gender: profile.gender,
+        interested_in: profile.interested_in,
+        interests: profile.interests,
+        age_min: profile.age_min,
+        age_max: profile.age_max,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
         .from("profiles")
         .update({
-          name: profile.name,
-          age: profile.age ? parseInt(profile.age) : null,
+          name: profile.name.trim(),
+          age: ageValue,
           gender: profile.gender,
           interested_in: profile.interested_in,
-          bio: profile.bio,
+          bio: profile.bio?.trim(),
           interests: profile.interests,
           photos: profile.photos,
           prompts: profile.prompts,

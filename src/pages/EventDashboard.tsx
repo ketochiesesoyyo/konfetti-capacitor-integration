@@ -33,6 +33,7 @@ import {
 import { ArrowLeft, MessageCircle, UserX, Share2, Copy, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { eventSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
@@ -238,6 +239,19 @@ const EventDashboard = () => {
 
   const handleSaveEvent = async () => {
     try {
+      // Validate event data
+      const validationResult = eventSchema.safeParse({
+        name: editedEvent.name,
+        description: editedEvent.description,
+        date: editedEvent.date,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
       let imageUrl = imagePreview;
       
       // Upload new image if changed
@@ -270,12 +284,13 @@ const EventDashboard = () => {
         closeDate = format(addDays(new Date(editedEvent.date), 3), "yyyy-MM-dd");
       }
 
+      const validated = validationResult.data;
       const { error } = await supabase
         .from("events")
         .update({
-          name: editedEvent.name,
-          description: editedEvent.description,
-          date: editedEvent.date,
+          name: validated.name,
+          description: validated.description,
+          date: validated.date,
           close_date: closeDate,
           image_url: imageUrl,
         })

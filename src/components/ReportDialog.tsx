@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { reportSchema } from "@/lib/validation";
 
 type ReportDialogProps = {
   open: boolean;
@@ -42,13 +43,15 @@ export const ReportDialog = ({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!selectedReason) {
-      toast.error("Please select a reason");
-      return;
-    }
+    // Validate input
+    const validationResult = reportSchema.safeParse({
+      reason: selectedReason,
+      custom_reason: selectedReason === "Other" ? customReason : undefined,
+    });
 
-    if (selectedReason === "Other" && !customReason.trim()) {
-      toast.error("Please provide details");
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -61,14 +64,16 @@ export const ReportDialog = ({
         return;
       }
 
+      const validated = validationResult.data;
+
       // Insert report
       const { error } = await supabase.from("reports").insert({
         reporter_id: session.user.id,
         reported_user_id: reportedUserId,
         match_id: matchId,
         event_id: eventId,
-        reason: selectedReason,
-        custom_reason: selectedReason === "Other" ? customReason : null,
+        reason: validated.reason,
+        custom_reason: selectedReason === "Other" ? validated.custom_reason : null,
       });
 
       if (error) throw error;
