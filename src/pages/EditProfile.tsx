@@ -844,6 +844,7 @@ const EditProfile = () => {
           setTempImageFile(null);
         }}
         onCropComplete={handleCropComplete}
+        type="profile"
       />
     </div>
   );

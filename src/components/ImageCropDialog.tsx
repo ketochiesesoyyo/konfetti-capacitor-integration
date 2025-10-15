@@ -12,6 +12,7 @@ interface ImageCropDialogProps {
   imageUrl: string;
   onClose: () => void;
   onCropComplete: (croppedImage: Blob) => void;
+  type?: "profile" | "event"; // Profile: 3:4 ratio, Event: 1:1 ratio
 }
 
 export const ImageCropDialog = ({
@@ -19,7 +20,10 @@ export const ImageCropDialog = ({
   imageUrl,
   onClose,
   onCropComplete,
+  type = "event",
 }: ImageCropDialogProps) => {
+  const isProfilePhoto = type === "profile";
+  const aspectRatio = isProfilePhoto ? 3 / 4 : 1;
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -47,11 +51,23 @@ export const ImageCropDialog = ({
 
       if (!ctx) return;
 
-      // Set canvas size to the cropped area
-      canvas.width = croppedAreaPixels.width;
-      canvas.height = croppedAreaPixels.height;
+      // Calculate target dimensions to fit ~1MB constraint
+      // Aim for ~1200px on longest side for good quality at ~1MB
+      const maxDimension = 1200;
+      let targetWidth = croppedAreaPixels.width;
+      let targetHeight = croppedAreaPixels.height;
+      
+      if (targetWidth > maxDimension || targetHeight > maxDimension) {
+        const scale = Math.min(maxDimension / targetWidth, maxDimension / targetHeight);
+        targetWidth = Math.round(targetWidth * scale);
+        targetHeight = Math.round(targetHeight * scale);
+      }
 
-      // Draw the cropped image
+      // Set canvas to target size (resizing for compression)
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      // Draw the cropped and resized image
       ctx.drawImage(
         image,
         croppedAreaPixels.x,
@@ -60,16 +76,34 @@ export const ImageCropDialog = ({
         croppedAreaPixels.height,
         0,
         0,
-        croppedAreaPixels.width,
-        croppedAreaPixels.height
+        targetWidth,
+        targetHeight
       );
 
-      // Convert canvas to blob
-      canvas.toBlob((blob) => {
-        if (blob) {
-          onCropComplete(blob);
-        }
-      }, "image/jpeg", 0.9);
+      // Try to compress to ~1MB with dynamic quality adjustment
+      const tryCompress = async (quality: number): Promise<Blob | null> => {
+        return new Promise((resolve) => {
+          canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+        });
+      };
+
+      let quality = 0.85;
+      let blob = await tryCompress(quality);
+      const targetSize = 1 * 1024 * 1024; // 1MB
+
+      // Adjust quality if needed to hit ~1MB target
+      if (blob && blob.size > targetSize * 1.5) {
+        quality = 0.75;
+        blob = await tryCompress(quality);
+      }
+      if (blob && blob.size > targetSize * 2) {
+        quality = 0.65;
+        blob = await tryCompress(quality);
+      }
+
+      if (blob) {
+        onCropComplete(blob);
+      }
     } catch (error) {
       console.error("Error cropping image:", error);
     } finally {
@@ -89,17 +123,13 @@ export const ImageCropDialog = ({
             image={imageUrl}
             crop={crop}
             zoom={zoom}
-            aspect={1}
+            aspect={aspectRatio}
             onCropChange={onCropChange}
             onCropComplete={onCropCompleteCallback}
             onZoomChange={setZoom}
-            cropShape="round"
+            cropShape={isProfilePhoto ? "rect" : "round"}
             showGrid={false}
           />
-          {/* Circular preview guide */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="w-64 h-64 rounded-full border-4 border-white shadow-lg opacity-50"></div>
-          </div>
         </div>
 
         <div className="space-y-4">
