@@ -6,30 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, ArrowLeft, Check, Camera, X } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
-import { eventSchema } from "@/lib/validation";
 
 const CreateEvent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const editEventId = searchParams.get('edit');
-  
+  const editEventId = searchParams.get("edit");
+
   const [showPaywall, setShowPaywall] = useState(true);
   const [isPaid] = useState(false); // Will be connected to real payment state
   const [step, setStep] = useState(1);
@@ -44,7 +31,7 @@ const CreateEvent = () => {
   const [draftEventId, setDraftEventId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
-  
+
   const [eventData, setEventData] = useState({
     coupleName1: "",
     coupleName2: "",
@@ -57,12 +44,14 @@ const CreateEvent = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
       } else {
         setUserId(session.user.id);
-        
+
         // Load draft if editing
         if (editEventId) {
           await loadDraftEvent(editEventId, session.user.id);
@@ -110,8 +99,8 @@ const CreateEvent = () => {
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [userId, loadingDraft, draftEventId]);
 
   const loadExistingDraft = async (userId: string) => {
@@ -130,7 +119,7 @@ const CreateEvent = () => {
       if (drafts && drafts.length > 0) {
         const draft = drafts[0];
         setDraftEventId(draft.id);
-        
+
         // Parse event name to extract couple names
         const nameParts = draft.name.split(" & ");
         setEventData({
@@ -147,7 +136,7 @@ const CreateEvent = () => {
         if (draft.image_url) {
           setImagePreview(draft.image_url);
         }
-        
+
         toast.success("Loaded your draft", {
           description: "Continue where you left off",
         });
@@ -172,7 +161,7 @@ const CreateEvent = () => {
 
       if (event) {
         setDraftEventId(event.id);
-        
+
         // Parse event name to extract couple names
         const nameParts = event.name.split(" & ");
         setEventData({
@@ -189,7 +178,7 @@ const CreateEvent = () => {
         if (event.image_url) {
           setImagePreview(event.image_url);
         }
-        
+
         setShowPaywall(false); // Skip paywall for drafts
       }
     } catch (error: any) {
@@ -208,14 +197,14 @@ const CreateEvent = () => {
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
-          name: 'Draft Event',
+          name: "Draft Event",
           date: null,
-          close_date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          description: 'Wedding celebration',
+          close_date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          description: "Wedding celebration",
           invite_code: `DRAFT-${Date.now()}`,
           created_by: userId,
           image_url: null,
-          status: 'draft',
+          status: "draft",
         })
         .select()
         .single();
@@ -225,12 +214,10 @@ const CreateEvent = () => {
       setDraftEventId(event.id);
 
       // Auto-join creator to the event
-      await supabase
-        .from("event_attendees")
-        .insert({
-          event_id: event.id,
-          user_id: userId,
-        });
+      await supabase.from("event_attendees").insert({
+        event_id: event.id,
+        user_id: userId,
+      });
 
       console.log("Initialized empty draft");
     } catch (error: any) {
@@ -245,39 +232,39 @@ const CreateEvent = () => {
     if (editEventId) return;
 
     if (!synchronous) setAutoSaving(true);
-    
+
     try {
       let imageUrl = imagePreview;
-      
+
       // Upload event image if provided and not already uploaded
-      if (eventImage && !imagePreview.startsWith('http')) {
-        const fileExt = eventImage.name.split('.').pop();
+      if (eventImage && !imagePreview.startsWith("http")) {
+        const fileExt = eventImage.name.split(".").pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(fileName, eventImage);
-        
+
+        const { error: uploadError } = await supabase.storage.from("event-photos").upload(fileName, eventImage);
+
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('event-photos')
-            .getPublicUrl(fileName);
-          
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("event-photos").getPublicUrl(fileName);
+
           imageUrl = publicUrl;
         }
       }
-      
-      const inviteCode = eventData.coupleName1 && eventData.coupleName2 && eventData.eventDate 
-        ? generateInviteCode() 
-        : `DRAFT-${Date.now()}`;
-      
-      const eventName = eventData.coupleName1 && eventData.coupleName2
-        ? `${eventData.coupleName1} & ${eventData.coupleName2}`
-        : 'Draft Event';
-      
-      const closeDate = eventData.eventDate 
-        ? new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        : new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const inviteCode =
+        eventData.coupleName1 && eventData.coupleName2 && eventData.eventDate
+          ? generateInviteCode()
+          : `DRAFT-${Date.now()}`;
+
+      const eventName =
+        eventData.coupleName1 && eventData.coupleName2
+          ? `${eventData.coupleName1} & ${eventData.coupleName2}`
+          : "Draft Event";
+
+      const closeDate = eventData.eventDate
+        ? new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+        : new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
       if (draftEventId) {
         // Update existing draft
@@ -299,7 +286,7 @@ const CreateEvent = () => {
         // Create new draft (should happen via initializeDraft now, but keeping as fallback)
         await initializeDraft();
       }
-      
+
       if (!synchronous) {
         console.log("Auto-saved draft");
       }
@@ -334,19 +321,32 @@ const CreateEvent = () => {
       name: "Premium Plan",
       price: 299,
       minGuests: 11,
-      maxGuests: 50,
+      maxGuests: 100,
       description: "For memorable celebrations",
-      features: ["Up to 50 guests", "3 days active", "Full matchmaking", "Guest management", "Priority support"],
+      features: [
+        "Up to 100 guests",
+        "3 days active after wedding",
+        "Full matchmaking",
+        "Guest management",
+        "Priority support",
+      ],
       popular: true,
     },
     {
       id: "vip",
       name: "VIP Plan",
-      price: 1099,
-      minGuests: 51,
+      price: 4999,
+      minGuests: 101,
       maxGuests: null,
       description: "Ultimate party experience",
-      features: ["50+ guests", "3 days active", "Full matchmaking", "VIP badge for event page", "Exclusive VIP themes", "Dedicated support"],
+      features: [
+        "100+ guests",
+        "7 days active after wedding",
+        "Full matchmaking",
+        "VIP badge for event page",
+        "Exclusive VIP themes",
+        "Dedicated support",
+      ],
     },
   ];
 
@@ -358,8 +358,8 @@ const CreateEvent = () => {
   };
 
   const generateInviteCode = () => {
-    const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, '');
-    const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, '');
+    const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, "");
+    const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, "");
     const year = new Date(eventData.eventDate).getFullYear();
     return `${name1}-${name2}-${year}`;
   };
@@ -375,7 +375,7 @@ const CreateEvent = () => {
     }
 
     // Validate file type
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
+    if (!["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) {
       toast.error("Please upload a JPG, PNG, or WEBP image");
       return;
     }
@@ -391,31 +391,31 @@ const CreateEvent = () => {
     if (!tempImageFile) return;
 
     setCropDialogOpen(false);
-    
+
     // Convert blob to file and set as event image
     const file = new File([croppedBlob], tempImageFile.name, { type: croppedBlob.type });
     setEventImage(file);
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
-    
+
     // Clean up temp URL
     URL.revokeObjectURL(tempImageUrl);
     setTempImageUrl("");
     setTempImageFile(null);
-    
+
     toast.success("Photo ready!");
   };
 
   const handleTakePhoto = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files[0]) {
@@ -432,51 +432,49 @@ const CreateEvent = () => {
 
   const handleCreateEvent = async () => {
     if (!userId) return;
-    
+
     // Validate all required fields
     if (!eventData.coupleName1 || !eventData.coupleName2 || !eventData.eventDate || !eventData.agreedToTerms) {
       toast.error("Please complete all required fields");
       return;
     }
-    
+
     // Check if we have an image
     if (!eventImage && !imagePreview) {
       toast.error("Please add an event image");
       return;
     }
-    
+
     setIsCreating(true);
     try {
       const inviteCode = generateInviteCode();
       const eventName = `${eventData.coupleName1} & ${eventData.coupleName2}`;
-      
+
       let imageUrl = imagePreview; // Use existing preview if editing draft
-      
+
       // Upload new event image if provided
       if (eventImage) {
-        const fileExt = eventImage.name.split('.').pop();
+        const fileExt = eventImage.name.split(".").pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(fileName, eventImage);
-        
+
+        const { error: uploadError } = await supabase.storage.from("event-photos").upload(fileName, eventImage);
+
         if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-photos')
-          .getPublicUrl(fileName);
-        
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("event-photos").getPublicUrl(fileName);
+
         imageUrl = publicUrl;
       }
-      
+
       // Calculate close date (3 days after event date)
       const eventDate = new Date(eventData.eventDate);
       const closeDate = new Date(eventDate);
       closeDate.setDate(closeDate.getDate() + 3);
-      
+
       const eventIdToUpdate = editEventId || draftEventId;
-      
+
       if (eventIdToUpdate) {
         // Update existing draft event
         const { error: updateError } = await supabase
@@ -484,11 +482,11 @@ const CreateEvent = () => {
           .update({
             name: eventName,
             date: eventData.eventDate,
-            close_date: closeDate.toISOString().split('T')[0],
+            close_date: closeDate.toISOString().split("T")[0],
             description: `Wedding celebration for ${eventName}`,
             invite_code: inviteCode,
             image_url: imageUrl,
-            status: 'active',
+            status: "active",
           })
           .eq("id", eventIdToUpdate)
           .eq("created_by", userId);
@@ -499,34 +497,18 @@ const CreateEvent = () => {
           description: `Share code: ${inviteCode}`,
         });
       } else {
-        // Validate event data before creating
-        const validationResult = eventSchema.safeParse({
-          name: eventName,
-          description: `Wedding celebration for ${eventName}`,
-          date: eventData.eventDate,
-        });
-
-        if (!validationResult.success) {
-          const firstError = validationResult.error.errors[0];
-          toast.error(firstError.message);
-          setIsCreating(false);
-          return;
-        }
-
-        const validated = validationResult.data;
-
         // Create new event (shouldn't happen with auto-save, but keeping as fallback)
         const { data: event, error: eventError } = await supabase
           .from("events")
           .insert({
-            name: validated.name,
-            date: validated.date,
-            close_date: closeDate.toISOString().split('T')[0],
-            description: validated.description,
+            name: eventName,
+            date: eventData.eventDate,
+            close_date: closeDate.toISOString().split("T")[0],
+            description: `Wedding celebration for ${eventName}`,
             invite_code: inviteCode,
             created_by: userId,
             image_url: imageUrl,
-            status: 'active',
+            status: "active",
           })
           .select()
           .single();
@@ -534,12 +516,10 @@ const CreateEvent = () => {
         if (eventError) throw eventError;
 
         // Auto-join creator to the event
-        const { error: attendeeError } = await supabase
-          .from("event_attendees")
-          .insert({
-            event_id: event.id,
-            user_id: userId,
-          });
+        const { error: attendeeError } = await supabase.from("event_attendees").insert({
+          event_id: event.id,
+          user_id: userId,
+        });
 
         if (attendeeError) throw attendeeError;
 
@@ -547,7 +527,7 @@ const CreateEvent = () => {
           description: `Share code: ${inviteCode}`,
         });
       }
-      
+
       navigate("/");
     } catch (error: any) {
       toast.error("Failed to create event", {
@@ -558,7 +538,7 @@ const CreateEvent = () => {
     }
   };
 
-  const selectedPlanDetails = pricingPlans.find(p => p.id === eventData.selectedPlan);
+  const selectedPlanDetails = pricingPlans.find((p) => p.id === eventData.selectedPlan);
 
   if (loadingDraft) {
     return (
@@ -574,19 +554,15 @@ const CreateEvent = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Choose Your Event Plan</DialogTitle>
-            <DialogDescription>
-              Select a plan based on your expected number of guests
-            </DialogDescription>
+            <DialogDescription>Select a plan based on your expected number of guests</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             {pricingPlans.map((plan) => (
               <Card
                 key={plan.id}
                 className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                  eventData.selectedPlan === plan.id
-                    ? "ring-2 ring-primary shadow-md"
-                    : ""
+                  eventData.selectedPlan === plan.id ? "ring-2 ring-primary shadow-md" : ""
                 } ${plan.popular ? "relative" : ""}`}
                 onClick={() => setEventData({ ...eventData, selectedPlan: plan.id })}
               >
@@ -600,15 +576,10 @@ const CreateEvent = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-bold text-lg">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {plan.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {plan.features.map((feature, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-1 text-xs text-muted-foreground"
-                        >
+                        <div key={idx} className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Check className="w-3 h-3 text-primary" />
                           {feature}
                         </div>
@@ -619,9 +590,7 @@ const CreateEvent = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold">
-                      {plan.price === 0 ? "Free" : `$${plan.price.toFixed(2)}`}
-                    </p>
+                    <p className="text-2xl font-bold">{plan.price === 0 ? "Free" : `$${plan.price.toFixed(2)}`}</p>
                     <p className="text-xs text-muted-foreground">one-time</p>
                   </div>
                 </div>
@@ -638,11 +607,7 @@ const CreateEvent = () => {
                 ? "Continue with Free Plan"
                 : `Purchase ${selectedPlanDetails?.name || "Plan"} - $${selectedPlanDetails?.price.toFixed(2)}`}
             </Button>
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => navigate("/")}
-            >
+            <Button variant="ghost" className="w-full" onClick={() => navigate("/")}>
               Cancel
             </Button>
           </div>
@@ -672,9 +637,7 @@ const CreateEvent = () => {
                 id="couple1"
                 placeholder="e.g., Sarah"
                 value={eventData.coupleName1}
-                onChange={(e) =>
-                  setEventData({ ...eventData, coupleName1: e.target.value })
-                }
+                onChange={(e) => setEventData({ ...eventData, coupleName1: e.target.value })}
               />
             </div>
 
@@ -684,9 +647,7 @@ const CreateEvent = () => {
                 id="couple2"
                 placeholder="e.g., James"
                 value={eventData.coupleName2}
-                onChange={(e) =>
-                  setEventData({ ...eventData, coupleName2: e.target.value })
-                }
+                onChange={(e) => setEventData({ ...eventData, coupleName2: e.target.value })}
               />
             </div>
 
@@ -697,14 +658,13 @@ const CreateEvent = () => {
                   id="eventDate"
                   type="date"
                   value={eventData.eventDate}
-                  onChange={(e) =>
-                    setEventData({ ...eventData, eventDate: e.target.value })
-                  }
+                  onChange={(e) => setEventData({ ...eventData, eventDate: e.target.value })}
                 />
                 <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
               <p className="text-sm text-muted-foreground">
-                Matchmaking will remain active for 3 days after your event to allow guests to finish conversations and complete their matches.
+                Matchmaking will remain active for 3 days after your event to allow guests to finish conversations and
+                complete their matches.
               </p>
             </div>
 
@@ -715,11 +675,7 @@ const CreateEvent = () => {
               </p>
               {imagePreview ? (
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Event preview"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={imagePreview} alt="Event preview" className="w-full h-full object-cover" />
                   <button
                     onClick={handleRemovePhoto}
                     className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 hover:bg-destructive/90 transition-colors"
@@ -780,9 +736,7 @@ const CreateEvent = () => {
               <Checkbox
                 id="terms"
                 checked={eventData.agreedToTerms}
-                onCheckedChange={(checked) =>
-                  setEventData({ ...eventData, agreedToTerms: checked as boolean })
-                }
+                onCheckedChange={(checked) => setEventData({ ...eventData, agreedToTerms: checked as boolean })}
               />
               <Label htmlFor="terms" className="text-sm leading-tight">
                 I confirm all guests will be 18+ and agree to the Terms of Service
@@ -808,16 +762,12 @@ const CreateEvent = () => {
         ) : (
           <Card className="p-6 space-y-6 animate-fade-in">
             <h2 className="text-xl font-bold">Review Your Event</h2>
-            
+
             <div className="space-y-4">
               {imagePreview && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Event Image</p>
-                  <img
-                    src={imagePreview}
-                    alt="Event"
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+                  <img src={imagePreview} alt="Event" className="w-full h-48 object-cover rounded-lg" />
                 </div>
               )}
               <div>
@@ -828,18 +778,14 @@ const CreateEvent = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Event Date</p>
-                <p className="font-medium">
-                  {new Date(eventData.eventDate).toLocaleDateString()}
-                </p>
+                <p className="font-medium">{new Date(eventData.eventDate).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Matchmaking Active Until</p>
                 <p className="font-medium">
                   {new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  (3 days after event)
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">(3 days after event)</p>
               </div>
               {/* Theme display hidden for future use */}
               {/* <div>
