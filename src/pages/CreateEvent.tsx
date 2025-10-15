@@ -563,7 +563,7 @@ const CreateEvent = () => {
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="gradient-sunset text-white text-xs font-bold px-3 py-1 rounded-full">
-                      MOST POPULAR PACKAGE
+                      MOST POPULAR
                     </span>
                   </div>
                 )}
