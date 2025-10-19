@@ -44,153 +44,170 @@ const Chats = () => {
   const [unmatchDialogOpen, setUnmatchDialogOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<MatchChat | null>(null);
 
-  useEffect(() => {
-    const loadMatches = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUserId(session.user.id);
+  const loadMatches = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+    setUserId(session.user.id);
 
-      // Fetch matches
-      const { data: matches, error } = await supabase
-        .from("matches")
-        .select(`
-          id,
-          user1_id,
-          user2_id,
-          event_id,
-          matched_at,
-          events(name),
-          user1:profiles!matches_user1_id_fkey(id, name, photos),
-          user2:profiles!matches_user2_id_fkey(id, name, photos)
-        `)
-        .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
-        .order('matched_at', { ascending: false });
+    // Fetch matches
+    const { data: matches, error } = await supabase
+      .from("matches")
+      .select(`
+        id,
+        user1_id,
+        user2_id,
+        event_id,
+        matched_at,
+        events(name),
+        user1:profiles!matches_user1_id_fkey(id, name, photos),
+        user2:profiles!matches_user2_id_fkey(id, name, photos)
+      `)
+      .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
+      .order('matched_at', { ascending: false });
 
-      if (error) {
-        console.error("Error loading matches:", error);
-        toast.error("Failed to load matches");
-        setLoading(false);
-        return;
-      }
+    if (error) {
+      console.error("Error loading matches:", error);
+      toast.error("Failed to load matches");
+      setLoading(false);
+      return;
+    }
 
-      // For each match, get the last message
-      const chatsWithMessages = await Promise.all(
-        (matches || []).map(async (match: any) => {
-          const otherUser = match.user1_id === session.user.id ? match.user2 : match.user1;
-          const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
+    // For each match, get the last message
+    const chatsWithMessages = await Promise.all(
+      (matches || []).map(async (match: any) => {
+        const otherUser = match.user1_id === session.user.id ? match.user2 : match.user1;
+        const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
 
-          // Get last message
+        // Get last message
+        const { data: lastMsg } = await supabase
+          .from("messages")
+          .select("content, created_at, sender_id")
+          .eq("match_id", match.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Count unread messages
+        const { count: unreadCount } = await supabase
+          .from("messages")
+          .select("*", { count: 'exact', head: true })
+          .eq("match_id", match.id)
+          .neq("sender_id", session.user.id)
+          .is("read_at", null);
+
+        const timeAgo = lastMsg 
+          ? getTimeAgo(new Date(lastMsg.created_at))
+          : getTimeAgo(new Date(match.matched_at));
+
+        return {
+          matchId: match.id,
+          userId: otherUserId,
+          name: otherUser.name,
+          photo: otherUser.photos?.[0] || "/placeholder.svg",
+          lastMessage: lastMsg?.content || "Say hi! 👋",
+          timestamp: timeAgo,
+          unread: unreadCount || 0,
+          eventName: match.events.name,
+          eventId: match.event_id,
+        };
+      })
+    );
+
+    setMatchChats(chatsWithMessages);
+    
+    // Fetch direct messages from hosts
+    await loadHostChats(session.user.id);
+    
+    setLoading(false);
+  };
+
+  const loadHostChats = async (currentUserId: string) => {
+    // Get all events where the user is a guest
+    const { data: attendeeEvents } = await supabase
+      .from("event_attendees")
+      .select("event_id, events(id, name, created_by)")
+      .eq("user_id", currentUserId);
+
+    if (!attendeeEvents) return;
+
+    // For each event, check for direct messages from the host
+    const hostChatsData = await Promise.all(
+      attendeeEvents
+        .filter((ae: any) => ae.events.created_by !== currentUserId) // Exclude own events
+        .map(async (ae: any) => {
+          const eventId = ae.events.id;
+          const hostId = ae.events.created_by;
+
+          // Get last message from host
           const { data: lastMsg } = await supabase
             .from("messages")
             .select("content, created_at, sender_id")
-            .eq("match_id", match.id)
+            .eq("event_id", eventId)
+            .or(`and(sender_id.eq.${hostId},recipient_id.eq.${currentUserId}),and(sender_id.eq.${currentUserId},recipient_id.eq.${hostId})`)
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
 
-          // Count unread messages
+          if (!lastMsg) return null; // No messages yet
+
+          // Count unread messages from host
           const { count: unreadCount } = await supabase
             .from("messages")
             .select("*", { count: 'exact', head: true })
-            .eq("match_id", match.id)
-            .neq("sender_id", session.user.id)
+            .eq("event_id", eventId)
+            .eq("sender_id", hostId)
+            .eq("recipient_id", currentUserId)
             .is("read_at", null);
 
-          const timeAgo = lastMsg 
-            ? getTimeAgo(new Date(lastMsg.created_at))
-            : getTimeAgo(new Date(match.matched_at));
+          // Get host profile
+          const { data: hostProfile } = await supabase
+            .from("profiles")
+            .select("name, photos")
+            .eq("user_id", hostId)
+            .single();
 
           return {
-            matchId: match.id,
-            userId: otherUserId,
-            name: otherUser.name,
-            photo: otherUser.photos?.[0] || "/placeholder.svg",
-            lastMessage: lastMsg?.content || "Say hi! 👋",
-            timestamp: timeAgo,
+            eventId,
+            hostId,
+            hostName: hostProfile?.name || "Host",
+            hostPhoto: hostProfile?.photos?.[0] || "/placeholder.svg",
+            lastMessage: lastMsg.content,
+            timestamp: getTimeAgo(new Date(lastMsg.created_at)),
             unread: unreadCount || 0,
-            eventName: match.events.name,
-            eventId: match.event_id,
+            eventName: ae.events.name,
           };
         })
-      );
+    );
 
-      setMatchChats(chatsWithMessages);
-      
-      // Fetch direct messages from hosts
-      await loadHostChats(session.user.id);
-      
-      setLoading(false);
-    };
+    // Filter out null values
+    setHostChats(hostChatsData.filter((chat): chat is HostChat => chat !== null));
+  };
 
-    const loadHostChats = async (currentUserId: string) => {
-      // Get all events where the user is a guest
-      const { data: attendeeEvents } = await supabase
-        .from("event_attendees")
-        .select("event_id, events(id, name, created_by)")
-        .eq("user_id", currentUserId);
-
-      if (!attendeeEvents) return;
-
-      // For each event, check for direct messages from the host
-      const hostChatsData = await Promise.all(
-        attendeeEvents
-          .filter((ae: any) => ae.events.created_by !== currentUserId) // Exclude own events
-          .map(async (ae: any) => {
-            const eventId = ae.events.id;
-            const hostId = ae.events.created_by;
-
-            // Get last message from host
-            const { data: lastMsg } = await supabase
-              .from("messages")
-              .select("content, created_at, sender_id")
-              .eq("event_id", eventId)
-              .or(`and(sender_id.eq.${hostId},recipient_id.eq.${currentUserId}),and(sender_id.eq.${currentUserId},recipient_id.eq.${hostId})`)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            if (!lastMsg) return null; // No messages yet
-
-            // Count unread messages from host
-            const { count: unreadCount } = await supabase
-              .from("messages")
-              .select("*", { count: 'exact', head: true })
-              .eq("event_id", eventId)
-              .eq("sender_id", hostId)
-              .eq("recipient_id", currentUserId)
-              .is("read_at", null);
-
-            // Get host profile
-            const { data: hostProfile } = await supabase
-              .from("profiles")
-              .select("name, photos")
-              .eq("user_id", hostId)
-              .single();
-
-            return {
-              eventId,
-              hostId,
-              hostName: hostProfile?.name || "Host",
-              hostPhoto: hostProfile?.photos?.[0] || "/placeholder.svg",
-              lastMessage: lastMsg.content,
-              timestamp: getTimeAgo(new Date(lastMsg.created_at)),
-              unread: unreadCount || 0,
-              eventName: ae.events.name,
-            };
-          })
-      );
-
-      // Filter out null values
-      setHostChats(hostChatsData.filter((chat): chat is HostChat => chat !== null));
-    };
-
+  useEffect(() => {
     loadMatches();
 
-    // Subscribe to realtime message updates
+    // Subscribe to realtime match updates
     const channel = supabase
+      .channel('matches-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches'
+        },
+        () => {
+          // Reload matches when matches change (including deletes)
+          loadMatches();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to realtime message updates
+    const messagesChannel = supabase
       .channel('messages-updates')
       .on(
         'postgres_changes',
@@ -208,6 +225,7 @@ const Chats = () => {
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(messagesChannel);
     };
   }, [navigate]);
 
@@ -233,8 +251,8 @@ const Chats = () => {
   };
 
   const handleActionComplete = () => {
-    // Reload chats after unmatch/report
-    setMatchChats(prev => prev.filter(c => c.matchId !== selectedChat?.matchId));
+    // Reload chats from database after unmatch/report
+    loadMatches();
     setSelectedChat(null);
   };
 
