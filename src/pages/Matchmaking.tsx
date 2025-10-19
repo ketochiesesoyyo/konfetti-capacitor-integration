@@ -361,6 +361,8 @@ const Matchmaking = () => {
       setLastSwipeId(null);
     }, 5000);
 
+    let matchCreated = false;
+
     if (liked) {
       toast.success("Liked! 💕");
 
@@ -416,6 +418,7 @@ const Matchmaking = () => {
             console.error("Error creating match:", matchError);
           } else {
             // Show full-screen match dialog
+            matchCreated = true;
             setMatchId(newMatch.id);
             setMatchedProfile({
               id: currentProfile.user_id,
@@ -430,19 +433,26 @@ const Matchmaking = () => {
       toast("Passed");
     }
 
-    // Wait for animation to complete before moving to next profile
-    setTimeout(() => {
+    // Only move to next profile if NO match was created
+    // If match was created, user must click a button in the dialog to continue
+    if (!matchCreated) {
+      // Wait for animation to complete before moving to next profile
+      setTimeout(() => {
+        setIsExiting(false);
+        if (hasMoreProfiles) {
+          setCurrentIndex((prev) => prev + 1);
+        } else {
+          // Move to next index to trigger the empty state
+          setCurrentIndex((prev) => prev + 1);
+          toast("You've seen everyone! Check back later.", {
+            description: "New guests may join this event soon.",
+          });
+        }
+      }, 300);
+    } else {
+      // Match was created, just reset exit animation
       setIsExiting(false);
-      if (hasMoreProfiles) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        // Move to next index to trigger the empty state
-        setCurrentIndex((prev) => prev + 1);
-        toast("You've seen everyone! Check back later.", {
-          description: "New guests may join this event soon.",
-        });
-      }
-    }, 300);
+    }
   };
 
   const handleUndo = async () => {
@@ -756,6 +766,15 @@ const Matchmaking = () => {
           setShowMatchDialog(false);
           setMatchedProfile(null);
           setMatchId(null);
+          // Now advance to next profile
+          if (currentIndex < profiles.length - 1) {
+            setCurrentIndex((prev) => prev + 1);
+          } else {
+            setCurrentIndex((prev) => prev + 1);
+            toast("You've seen everyone! Check back later.", {
+              description: "New guests may join this event soon.",
+            });
+          }
         }}
       />
     </div>
