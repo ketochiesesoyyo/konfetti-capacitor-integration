@@ -522,22 +522,47 @@ const Home = () => {
                                 <DropdownMenuItem onClick={() => navigate(`/matchmaking/${event.id}`)}>
                                   Go Matchmaking
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={async () => {
-                                  if (!userId) return;
-                                  try {
-                                    const { error } = await supabase
-                                      .from("hidden_events")
-                                      .insert({ user_id: userId, event_id: event.id });
-                                    if (error) throw error;
-                                    setHiddenEventIds(prev => new Set([...prev, event.id]));
-                                    toast.success("Event hidden");
-                                  } catch (error: any) {
-                                    console.error("Error hiding event:", error);
-                                    toast.error("Failed to hide event");
-                                  }
-                                }}>
-                                  Hide Event
-                                </DropdownMenuItem>
+                                {hiddenEventIds.has(event.id) ? (
+                                  <DropdownMenuItem onClick={async () => {
+                                    if (!userId) return;
+                                    try {
+                                      const { error } = await supabase
+                                        .from("hidden_events")
+                                        .delete()
+                                        .eq("user_id", userId)
+                                        .eq("event_id", event.id);
+                                      if (error) throw error;
+                                      setHiddenEventIds(prev => {
+                                        const newSet = new Set(prev);
+                                        newSet.delete(event.id);
+                                        return newSet;
+                                      });
+                                      toast.success("Event shown");
+                                    } catch (error: any) {
+                                      console.error("Error showing event:", error);
+                                      toast.error("Failed to show event");
+                                    }
+                                  }}>
+                                    Show Event
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={async () => {
+                                    if (!userId) return;
+                                    try {
+                                      const { error } = await supabase
+                                        .from("hidden_events")
+                                        .insert({ user_id: userId, event_id: event.id });
+                                      if (error) throw error;
+                                      setHiddenEventIds(prev => new Set([...prev, event.id]));
+                                      toast.success("Event hidden");
+                                    } catch (error: any) {
+                                      console.error("Error hiding event:", error);
+                                      toast.error("Failed to hide event");
+                                    }
+                                  }}>
+                                    Hide Event
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem 
                                   onClick={() => {
                                     setSelectedEventToLeave(event);
@@ -700,22 +725,47 @@ const Home = () => {
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              <DropdownMenuItem onClick={async () => {
-                                if (!userId) return;
-                                try {
-                                  const { error } = await supabase
-                                    .from("hidden_events")
-                                    .insert({ user_id: userId, event_id: event.id });
-                                  if (error) throw error;
-                                  setHiddenEventIds(prev => new Set([...prev, event.id]));
-                                  toast.success("Event hidden");
-                                } catch (error: any) {
-                                  console.error("Error hiding event:", error);
-                                  toast.error("Failed to hide event");
-                                }
-                              }}>
-                                Hide Event
-                              </DropdownMenuItem>
+                              {hiddenEventIds.has(event.id) ? (
+                                <DropdownMenuItem onClick={async () => {
+                                  if (!userId) return;
+                                  try {
+                                    const { error } = await supabase
+                                      .from("hidden_events")
+                                      .delete()
+                                      .eq("user_id", userId)
+                                      .eq("event_id", event.id);
+                                    if (error) throw error;
+                                    setHiddenEventIds(prev => {
+                                      const newSet = new Set(prev);
+                                      newSet.delete(event.id);
+                                      return newSet;
+                                    });
+                                    toast.success("Event shown");
+                                  } catch (error: any) {
+                                    console.error("Error showing event:", error);
+                                    toast.error("Failed to show event");
+                                  }
+                                }}>
+                                  Show Event
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={async () => {
+                                  if (!userId) return;
+                                  try {
+                                    const { error } = await supabase
+                                      .from("hidden_events")
+                                      .insert({ user_id: userId, event_id: event.id });
+                                    if (error) throw error;
+                                    setHiddenEventIds(prev => new Set([...prev, event.id]));
+                                    toast.success("Event hidden");
+                                  } catch (error: any) {
+                                    console.error("Error hiding event:", error);
+                                    toast.error("Failed to hide event");
+                                  }
+                                }}>
+                                  Hide Event
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
