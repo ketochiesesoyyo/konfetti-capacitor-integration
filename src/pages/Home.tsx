@@ -395,29 +395,27 @@ const Home = () => {
 
           <div className="flex-1" />
           
-          {currentTabHiddenCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowHidden(!showHidden);
-                setSelectionMode(false);
-                setSelectedEvents(new Set());
-              }}
-            >
-              {showHidden ? (
-                <>
-                  <Eye className="w-4 h-4 mr-2" />
-                  Show Active
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-4 h-4 mr-2" />
-                  Show Hidden ({currentTabHiddenCount})
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowHidden(!showHidden);
+              setSelectionMode(false);
+              setSelectedEvents(new Set());
+            }}
+          >
+            {showHidden ? (
+              <>
+                <Eye className="w-4 h-4 mr-2" />
+                Show Active
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-4 h-4 mr-2" />
+                Show Hidden ({currentTabHiddenCount})
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Events List */}
