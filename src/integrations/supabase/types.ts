@@ -470,6 +470,7 @@ export type Database = {
           event_status: string
           event_theme: string
           guest_count: number
+          image_url: string
         }[]
       }
     }

@@ -79,6 +79,7 @@ const JoinEventByLink = () => {
         coupleName: eventData.event_name,
         eventDate: eventData.event_date,
         guestCount: Number(eventData.guest_count) || 0,
+        imageUrl: eventData.image_url,
         isValid: true,
       });
       setLoading(false);
@@ -182,6 +183,17 @@ const JoinEventByLink = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-4">
         <Card className="p-6 space-y-6 shadow-xl">
+          {/* Event Photo */}
+          {event?.imageUrl && (
+            <div className="flex justify-center -mt-16 mb-4">
+              <img
+                src={event.imageUrl}
+                alt={event.coupleName}
+                className="w-32 h-32 rounded-full object-cover border-4 border-background shadow-lg"
+              />
+            </div>
+          )}
+          
           {/* Event Details */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-muted-foreground">
