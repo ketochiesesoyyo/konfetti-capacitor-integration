@@ -398,12 +398,15 @@ const Matchmaking = () => {
 
           const validatedMatch = matchValidation.data;
 
+          // Ensure user1_id < user2_id to satisfy check constraint
+          const sortedUserIds = [validatedMatch.user1_id, validatedMatch.user2_id].sort();
+
           // Create match
           const { data: newMatch, error: matchError } = await supabase
             .from("matches")
             .insert({
-              user1_id: validatedMatch.user1_id,
-              user2_id: validatedMatch.user2_id,
+              user1_id: sortedUserIds[0],
+              user2_id: sortedUserIds[1],
               event_id: validatedMatch.event_id,
             })
             .select()
