@@ -100,6 +100,9 @@ const Home = () => {
         
         const attendingEventsData = (attending || [])
           .filter((a: any) => {
+            // Filter out events where user is the host
+            if (a.events?.created_by === session.user.id) return false;
+            
             if (!a.events?.close_date) return true;
             const closeDate = new Date(a.events.close_date);
             closeDate.setHours(0, 0, 0, 0);
@@ -107,7 +110,7 @@ const Home = () => {
           })
           .map((a: any) => ({
             ...a.events,
-            invite_code: a.events.created_by === session.user.id ? a.events.invite_code : null
+            invite_code: null // Attendees never see invite codes
           }));
         setAttendingEvents(attendingEventsData);
         
@@ -332,7 +335,7 @@ const Home = () => {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              I'm Attending
+              I'm Attending ({visibleAttendingEvents.length})
             </button>
             <button
               onClick={() => setActiveTab("hosting")}
@@ -343,7 +346,7 @@ const Home = () => {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              I'm Hosting
+              I'm Hosting ({visibleHostingEvents.length})
             </button>
           </div>
         </Card>

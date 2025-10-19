@@ -50,9 +50,6 @@ const Matchmaking = () => {
   const [selectedEventStatus, setSelectedEventStatus] = useState<string | null>(null);
   const [selectedEventCloseDate, setSelectedEventCloseDate] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
-  const [swipeX, setSwipeX] = useState(0);
-  const [swipeStartX, setSwipeStartX] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
   const [showMatchDialog, setShowMatchDialog] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<{
     id: string;
@@ -214,28 +211,21 @@ const Matchmaking = () => {
           });
         });
 
-        // Filter profiles based on gender compatibility first
+        // Filter profiles based on gender compatibility (only current user's preference matters)
         const genderCompatibleProfiles = (data || []).filter((profile) => {
-          // If profile hasn't set gender preferences yet, still show them
-          // (they might be setting up their profile)
-          if (!profile.gender || !profile.interested_in) {
+          // If profile hasn't set gender, still show them
+          if (!profile.gender) {
             return true; // Show incomplete profiles
           }
 
           // Check if current user is interested in this profile's gender
+          // Only the current user's preference matters (unidirectional)
           const userInterestedInProfile =
             currentUserProfile.interested_in === "both" ||
             (currentUserProfile.interested_in === "men" && profile.gender === "man") ||
             (currentUserProfile.interested_in === "women" && profile.gender === "woman");
 
-          // Check if profile is interested in current user's gender (bidirectional)
-          const profileInterestedInUser =
-            profile.interested_in === "both" ||
-            (profile.interested_in === "men" && currentUserProfile.gender === "man") ||
-            (profile.interested_in === "women" && currentUserProfile.gender === "woman");
-
-          // Both must be compatible
-          return userInterestedInProfile && profileInterestedInUser;
+          return userInterestedInProfile;
         });
 
         // Apply age range filters (only check current user's preferences)
@@ -385,13 +375,12 @@ const Matchmaking = () => {
         .maybeSingle();
 
       if (reciprocalSwipe) {
-        // Check if match already exists
+        // Check if match already exists (check both user combinations)
         const { data: existingMatch } = await supabase
           .from("matches")
           .select("id")
           .eq("event_id", selectedEventId)
-          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-          .or(`user1_id.eq.${currentProfile.user_id},user2_id.eq.${currentProfile.user_id}`)
+          .or(`and(user1_id.eq.${userId},user2_id.eq.${currentProfile.user_id}),and(user1_id.eq.${currentProfile.user_id},user2_id.eq.${userId})`)
           .maybeSingle();
 
         if (!existingMatch) {
@@ -495,46 +484,6 @@ const Matchmaking = () => {
     toast.success("Swipe undone");
   };
 
-  // Swipe gesture handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setSwipeStartX(e.touches[0].clientX);
-    setIsSwiping(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isSwiping) return;
-    const currentX = e.touches[0].clientX;
-    const diff = currentX - swipeStartX;
-    setSwipeX(diff);
-  };
-
-  const handleTouchEnd = () => {
-    setIsSwiping(false);
-    const threshold = 100; // pixels to trigger swipe
-
-    if (Math.abs(swipeX) > threshold) {
-      // Trigger swipe action
-      if (swipeX > 0) {
-        handleSwipe(true); // Swiped right = like
-      } else {
-        handleSwipe(false); // Swiped left = pass
-      }
-    }
-
-    // Reset swipe position
-    setSwipeX(0);
-    setSwipeStartX(0);
-  };
-
-  // Calculate rotation based on swipe distance
-  const getCardTransform = () => {
-    const rotation = swipeX / 20; // Subtle rotation effect
-    return `translateX(${swipeX}px) rotate(${rotation}deg)`;
-  };
-
-  const getSwipeOpacity = () => {
-    return Math.min(Math.abs(swipeX) / 100, 1);
-  };
 
   if (!currentProfile || profiles.length === 0) {
     return (
@@ -693,30 +642,10 @@ const Matchmaking = () => {
               isExiting
                 ? "animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95"
                 : "animate-slide-up"
-            } ${isSwiping ? "" : "transition-transform duration-200"}`}
-            style={isSwiping ? { transform: getCardTransform() } : undefined}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            }`}
           >
             {/* Entire card content is now scrollable */}
             <div className="overflow-y-auto flex-1">
-              {/* Swipe Indicators */}
-              {isSwiping && swipeX > 20 && (
-                <div className="absolute top-8 left-8 z-10 pointer-events-none" style={{ opacity: getSwipeOpacity() }}>
-                  <div className="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[-20deg] shadow-lg border-4 border-white">
-                    LIKE
-                  </div>
-                </div>
-              )}
-              {isSwiping && swipeX < -20 && (
-                <div className="absolute top-8 right-8 z-10 pointer-events-none" style={{ opacity: getSwipeOpacity() }}>
-                  <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-xl rotate-[20deg] shadow-lg border-4 border-white">
-                    PASS
-                  </div>
-                </div>
-              )}
-
               {/* Photo Section */}
               <div className="relative h-[450px] gradient-sunset overflow-hidden">
                 <img
