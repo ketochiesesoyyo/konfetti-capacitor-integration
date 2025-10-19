@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          actor_id: string
+          created_at: string
+          description: string | null
+          event_id: string | null
+          id: string
+          match_id: string | null
+          metadata: Json | null
+          reason: string
+          target_id: string
+        }
+        Insert: {
+          action_type: string
+          actor_id: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          match_id?: string | null
+          metadata?: Json | null
+          reason: string
+          target_id: string
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          match_id?: string | null
+          metadata?: Json | null
+          reason?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_attendees: {
         Row: {
           event_id: string
@@ -432,6 +486,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      unmatches: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          match_id: string | null
+          reason: string
+          unmatched_user_id: string
+          unmatcher_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          match_id?: string | null
+          reason: string
+          unmatched_user_id: string
+          unmatcher_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          match_id?: string | null
+          reason?: string
+          unmatched_user_id?: string
+          unmatcher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unmatches_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unmatches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
           },
         ]
       }

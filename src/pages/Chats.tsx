@@ -6,6 +6,9 @@ import { MessageCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ChatActionsMenu } from "@/components/ChatActionsMenu";
+import { ReportDialog } from "@/components/ReportDialog";
+import { UnmatchDialog } from "@/components/UnmatchDialog";
 
 type MatchChat = {
   matchId: string;
@@ -16,6 +19,7 @@ type MatchChat = {
   timestamp: string;
   unread: number;
   eventName: string;
+  eventId: string;
 };
 
 type HostChat = {
@@ -36,6 +40,9 @@ const Chats = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [matchChats, setMatchChats] = useState<MatchChat[]>([]);
   const [hostChats, setHostChats] = useState<HostChat[]>([]);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [unmatchDialogOpen, setUnmatchDialogOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<MatchChat | null>(null);
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -105,6 +112,7 @@ const Chats = () => {
             timestamp: timeAgo,
             unread: unreadCount || 0,
             eventName: match.events.name,
+            eventId: match.event_id,
           };
         })
       );
@@ -214,6 +222,22 @@ const Chats = () => {
     return `${days}d ago`;
   };
 
+  const handleReportAndUnmatch = (chat: MatchChat) => {
+    setSelectedChat(chat);
+    setReportDialogOpen(true);
+  };
+
+  const handleUnmatch = (chat: MatchChat) => {
+    setSelectedChat(chat);
+    setUnmatchDialogOpen(true);
+  };
+
+  const handleActionComplete = () => {
+    // Reload chats after unmatch/report
+    setMatchChats(prev => prev.filter(c => c.matchId !== selectedChat?.matchId));
+    setSelectedChat(null);
+  };
+
   const ChatItem = ({ chat }: { chat: MatchChat }) => (
     <Card 
       className="p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -237,16 +261,22 @@ const Chats = () => {
               <h3 className="font-semibold truncate">{chat.name}</h3>
               <p className="text-xs text-muted-foreground truncate">{chat.eventName}</p>
             </div>
-            <div className="flex flex-col items-end gap-1 ml-2">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {chat.timestamp}
-              </span>
-              {chat.unread > 0 && (
-                <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5">
-                  {chat.unread}
-                </Badge>
-              )}
+            <div className="flex items-center gap-2 ml-2">
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {chat.timestamp}
+                </span>
+                {chat.unread > 0 && (
+                  <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5">
+                    {chat.unread}
+                  </Badge>
+                )}
+              </div>
+              <ChatActionsMenu
+                onReportAndUnmatch={() => handleReportAndUnmatch(chat)}
+                onUnmatch={() => handleUnmatch(chat)}
+              />
             </div>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-2">{chat.lastMessage}</p>
@@ -369,6 +399,32 @@ const Chats = () => {
           )}
         </div>
       </div>
+
+      {/* Report Dialog */}
+      {selectedChat && (
+        <ReportDialog
+          open={reportDialogOpen}
+          onOpenChange={setReportDialogOpen}
+          reportedUserId={selectedChat.userId}
+          reportedUserName={selectedChat.name}
+          matchId={selectedChat.matchId}
+          eventId={selectedChat.eventId}
+          onReportSubmit={handleActionComplete}
+        />
+      )}
+
+      {/* Unmatch Dialog */}
+      {selectedChat && (
+        <UnmatchDialog
+          open={unmatchDialogOpen}
+          onOpenChange={setUnmatchDialogOpen}
+          matchedUserId={selectedChat.userId}
+          matchedUserName={selectedChat.name}
+          matchId={selectedChat.matchId}
+          eventId={selectedChat.eventId}
+          onUnmatchComplete={handleActionComplete}
+        />
+      )}
     </div>
   );
 };

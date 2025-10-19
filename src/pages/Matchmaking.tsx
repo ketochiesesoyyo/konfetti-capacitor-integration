@@ -246,8 +246,22 @@ const Matchmaking = () => {
           return profileAge >= userAgeMin && profileAge <= userAgeMax;
         });
 
+        // Fetch unmatches to exclude users who have been unmatched
+        const { data: unmatchedUsers } = await supabase
+          .from("unmatches")
+          .select("unmatched_user_id")
+          .eq("unmatcher_id", userId)
+          .eq("event_id", selectedEventId);
+
+        const unmatchedUserIds = new Set(unmatchedUsers?.map(u => u.unmatched_user_id) || []);
+
+        // Filter out unmatched users
+        const nonUnmatchedProfiles = ageCompatibleProfiles.filter((profile) => {
+          return !unmatchedUserIds.has(profile.user_id);
+        });
+
         // Filter profiles with second chance logic
-        const filteredProfiles = ageCompatibleProfiles.filter((profile) => {
+        const filteredProfiles = nonUnmatchedProfiles.filter((profile) => {
           const userSwipes = swipesByUser.get(profile.user_id);
 
           // Never swiped = show
