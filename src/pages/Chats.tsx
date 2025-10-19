@@ -250,9 +250,11 @@ const Chats = () => {
     setUnmatchDialogOpen(true);
   };
 
-  const handleActionComplete = () => {
+  const handleActionComplete = async () => {
+    // Wait a moment for database operations to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
     // Reload chats from database after unmatch/report
-    loadMatches();
+    await loadMatches();
     setSelectedChat(null);
   };
 
