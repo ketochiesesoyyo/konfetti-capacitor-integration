@@ -223,7 +223,7 @@ const JoinEventByLink = () => {
           <div className="border-t pt-4">
             <div className="bg-muted/50 p-4 rounded-lg mb-4">
               <p className="text-sm text-center">
-                <strong className="text-foreground">Plus One</strong> creates a private matchmaking
+                <strong className="text-foreground">Konfetti</strong> creates a private matchmaking
                 space for wedding guests. Swipe, match, and chat with other attendees!
               </p>
             </div>
