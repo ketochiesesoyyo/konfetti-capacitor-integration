@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, X, Calendar } from "lucide-react";
+import { Heart, X, Calendar, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ type ProfileWithEvent = {
   eventName: string;
   eventId: string;
   swipeId: string;
+  matchId?: string | null;
 };
 
 const LikedYou = () => {
@@ -181,10 +182,25 @@ const LikedYou = () => {
 
         const likedProfileMap = new Map(likedProfiles?.map(p => [p.user_id, p]) || []);
 
+        // Fetch matches for these liked profiles
+        const { data: matches } = await supabase
+          .from("matches")
+          .select("id, user1_id, user2_id, event_id")
+          .or(`and(user1_id.eq.${session.user.id},user2_id.in.(${likedUserIds.join(",")})),and(user2_id.eq.${session.user.id},user1_id.in.(${likedUserIds.join(",")}))`);
+
+        // Create a map of matches by user_id and event_id
+        const matchMap = new Map<string, string>();
+        matches?.forEach((match: any) => {
+          const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
+          matchMap.set(`${otherUserId}_${match.event_id}`, match.id);
+        });
+
         const formattedAllLikes = outgoingSwipes
           ?.map((swipe: any) => {
             const profile = likedProfileMap.get(swipe.swiped_user_id);
             if (!profile) return null;
+            
+            const matchId = matchMap.get(`${swipe.swiped_user_id}_${swipe.event_id}`);
             
             return {
               id: profile.id,
@@ -197,6 +213,7 @@ const LikedYou = () => {
               eventName: swipe.events.name,
               eventId: swipe.event_id,
               swipeId: swipe.id,
+              matchId: matchId || null,
             };
           })
           .filter(Boolean) || [];
@@ -297,7 +314,27 @@ const LikedYou = () => {
     }
   };
 
-  const ProfileCard = ({ profile, isPassed = false, showActions = true }: { profile: ProfileWithEvent; isPassed?: boolean; showActions?: boolean }) => (
+  const handleUnlike = async (profile: ProfileWithEvent) => {
+    if (!userId) return;
+
+    try {
+      // Delete the swipe
+      const { error } = await supabase
+        .from("swipes")
+        .delete()
+        .eq("id", profile.swipeId);
+
+      if (error) throw error;
+
+      toast(`Unliked ${profile.name}`);
+      setAllLikes(prev => prev.filter(p => p.swipeId !== profile.swipeId));
+    } catch (error) {
+      console.error("Error unliking:", error);
+      toast.error("Failed to unlike");
+    }
+  };
+
+  const ProfileCard = ({ profile, isPassed = false, showActions = true, showUnlike = false }: { profile: ProfileWithEvent; isPassed?: boolean; showActions?: boolean; showUnlike?: boolean }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex gap-4 p-4">
         <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0 gradient-sunset">
@@ -366,6 +403,31 @@ const LikedYou = () => {
               )}
             </div>
           )}
+          {showUnlike && (
+            <div className="flex gap-2">
+              {profile.matchId ? (
+                <Button
+                  size="sm"
+                  variant="gradient"
+                  className="flex-1"
+                  onClick={() => navigate(`/chat/${profile.matchId}`)}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Go Chat
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => handleUnlike(profile)}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Unlike
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -431,7 +493,7 @@ const LikedYou = () => {
             </Card>
           ) : allLikes.length > 0 ? (
             allLikes.map((profile) => (
-              <ProfileCard key={profile.swipeId} profile={profile} showActions={false} />
+              <ProfileCard key={profile.swipeId} profile={profile} showActions={false} showUnlike={true} />
             ))
           ) : (
             <Card className="p-8 text-center">
