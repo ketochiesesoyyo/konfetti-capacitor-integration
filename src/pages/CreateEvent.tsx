@@ -696,6 +696,7 @@ const CreateEvent = () => {
                 <Input
                   id="eventDate"
                   type="date"
+                  min={new Date().toISOString().split('T')[0]}
                   value={eventData.eventDate}
                   onChange={(e) =>
                     setEventData({ ...eventData, eventDate: e.target.value })
