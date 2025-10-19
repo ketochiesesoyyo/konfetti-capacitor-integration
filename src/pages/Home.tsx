@@ -312,6 +312,11 @@ const Home = () => {
   const visibleAttendingEvents = getVisibleEvents(displayedAttendingEvents);
   const visibleHostingEvents = getVisibleEvents(displayedHostingEvents);
 
+  // Calculate hidden event counts per tab
+  const hiddenAttendingCount = displayedAttendingEvents.filter(e => hiddenEventIds.has(e.id)).length;
+  const hiddenHostingCount = displayedHostingEvents.filter(e => hiddenEventIds.has(e.id)).length;
+  const currentTabHiddenCount = activeTab === "attending" ? hiddenAttendingCount : hiddenHostingCount;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -390,7 +395,7 @@ const Home = () => {
 
           <div className="flex-1" />
           
-          {hiddenEventIds.size > 0 && (
+          {currentTabHiddenCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -408,7 +413,7 @@ const Home = () => {
               ) : (
                 <>
                   <EyeOff className="w-4 h-4 mr-2" />
-                  Show Hidden ({hiddenEventIds.size})
+                  Show Hidden ({currentTabHiddenCount})
                 </>
               )}
             </Button>
