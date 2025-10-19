@@ -42,8 +42,13 @@ export function FullScreenMatchDialog({
   if (!matchedProfile) return null;
 
   return (
-    <Dialog open={open}>
-      <DialogContent className="max-w-full h-screen w-screen p-0 border-0 bg-gradient-to-br from-primary/90 via-accent/80 to-secondary/90">
+    <Dialog open={open} modal={true}>
+      <DialogContent 
+        className="max-w-full h-screen w-screen p-0 border-0 bg-gradient-to-br from-primary/90 via-accent/80 to-secondary/90"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {/* Confetti Animation */}
         <Confetti
           width={windowSize.width}
