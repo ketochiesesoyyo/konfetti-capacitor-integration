@@ -599,30 +599,30 @@ const CreateEvent = () => {
                 )}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="font-bold text-lg">{plan.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <h3 className={`font-bold text-lg ${plan.popular ? "text-white" : ""}`}>{plan.name}</h3>
+                    <p className={`text-sm mb-2 ${plan.popular ? "text-white/90" : "text-foreground/80"}`}>
                       {plan.description}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {plan.features.map((feature, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center gap-1 text-xs text-muted-foreground"
+                          className={`flex items-center gap-1 text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}
                         >
-                          <Check className="w-3 h-3 text-primary" />
+                          <Check className={`w-3 h-3 ${plan.popular ? "text-white" : "text-primary"}`} />
                           {feature}
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className={`text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}>
                       {plan.minGuests}-{plan.maxGuests || "unlimited"} guests
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold">
+                    <p className={`text-2xl font-bold ${plan.popular ? "text-white" : ""}`}>
                       {plan.price === 0 ? "Free" : `$${plan.price.toFixed(2)}`}
                     </p>
-                    <p className="text-xs text-muted-foreground">one-time</p>
+                    <p className={`text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}>one-time</p>
                   </div>
                 </div>
               </Card>
