@@ -182,6 +182,17 @@ const LikedYou = () => {
 
         const likedProfileMap = new Map(likedProfiles?.map(p => [p.user_id, p]) || []);
 
+        // Fetch unmatches to filter out unmatched users
+        const { data: unmatchedUsers } = await supabase
+          .from("unmatches")
+          .select("unmatched_user_id, event_id")
+          .eq("unmatcher_id", session.user.id);
+
+        // Create a set of unmatched user_id + event_id combinations
+        const unmatchedSet = new Set(
+          unmatchedUsers?.map(u => `${u.unmatched_user_id}_${u.event_id}`) || []
+        );
+
         // Fetch matches for these liked profiles
         const { data: matches } = await supabase
           .from("matches")
@@ -199,6 +210,11 @@ const LikedYou = () => {
           ?.map((swipe: any) => {
             const profile = likedProfileMap.get(swipe.swiped_user_id);
             if (!profile) return null;
+            
+            // Filter out unmatched users
+            if (unmatchedSet.has(`${swipe.swiped_user_id}_${swipe.event_id}`)) {
+              return null;
+            }
             
             const matchId = matchMap.get(`${swipe.swiped_user_id}_${swipe.event_id}`);
             

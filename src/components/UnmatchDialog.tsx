@@ -90,7 +90,17 @@ export const UnmatchDialog = ({
 
       if (auditError) console.error("Audit log error:", auditError);
 
-      // 3. Delete messages (soft delete by keeping in audit)
+      // 3. Delete the swipe (unlike) so profile can reappear in matchmaking
+      const { error: deleteSwipeError } = await supabase
+        .from("swipes")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("swiped_user_id", matchedUserId)
+        .eq("event_id", eventId);
+
+      if (deleteSwipeError) console.error("Delete swipe error:", deleteSwipeError);
+
+      // 4. Delete messages (soft delete by keeping in audit)
       const { error: deleteMessagesError } = await supabase
         .from("messages")
         .delete()
@@ -98,7 +108,7 @@ export const UnmatchDialog = ({
 
       if (deleteMessagesError) console.error("Delete messages error:", deleteMessagesError);
 
-      // 4. Delete match
+      // 5. Delete match
       const { error: deleteMatchError } = await supabase
         .from("matches")
         .delete()

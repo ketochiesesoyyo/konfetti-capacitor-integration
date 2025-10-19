@@ -133,7 +133,17 @@ export const ReportDialog = ({
         if (messageError) console.error("Message to host error:", messageError);
       }
 
-      // 6. Delete messages (soft delete by keeping in audit)
+      // 6. Delete the swipe (unlike) so profile can reappear in matchmaking
+      const { error: deleteSwipeError } = await supabase
+        .from("swipes")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("swiped_user_id", reportedUserId)
+        .eq("event_id", eventId);
+
+      if (deleteSwipeError) console.error("Delete swipe error:", deleteSwipeError);
+
+      // 7. Delete messages (soft delete by keeping in audit)
       const { error: deleteMessagesError } = await supabase
         .from("messages")
         .delete()
@@ -141,7 +151,7 @@ export const ReportDialog = ({
 
       if (deleteMessagesError) console.error("Delete messages error:", deleteMessagesError);
 
-      // 7. Delete match
+      // 8. Delete match
       const { error: deleteMatchError } = await supabase
         .from("matches")
         .delete()
