@@ -316,8 +316,16 @@ const CreateEvent = () => {
   const generateInviteCode = () => {
     const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, '');
     const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, '');
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `${name1.substring(0, 3)}${name2.substring(0, 3)}${randomNum}`;
+    const year = new Date(eventData.eventDate).getFullYear();
+    
+    // Generate 4 random alphanumeric characters (A-Z, 0-9)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randomChars = '';
+    for (let i = 0; i < 4; i++) {
+      randomChars += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    return `${name1.substring(0, 3)}${name2.substring(0, 3)}${year}${randomChars}`;
   };
 
   if (loadingDraft) {
