@@ -151,9 +151,8 @@ const Settings = () => {
         {/* Logout */}
         <Card className="p-6 shadow-card hover-lift">
           <Button
-            variant="destructive"
             onClick={handleLogout}
-            className="w-full"
+            className="w-full bg-foreground hover:bg-muted hover:text-foreground text-background"
             size="lg"
           >
             <LogOut className="w-5 h-5 mr-2" />
