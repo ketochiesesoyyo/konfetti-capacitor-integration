@@ -105,6 +105,23 @@ const JoinEventByLink = () => {
     setIsJoining(true);
     
     try {
+      // Check if event can accept more guests
+      const { data: canJoinData, error: canJoinError } = await supabase
+        .rpc('can_join_event', { _event_id: event.id });
+
+      if (canJoinError) {
+        console.error("Error checking guest limit:", canJoinError);
+        toast.error("Failed to check event capacity");
+        setIsJoining(false);
+        return;
+      }
+
+      if (!canJoinData) {
+        toast.error("This event has reached its maximum capacity (10 guests for Free plan). Please contact the host about upgrading to Premium for unlimited guests.");
+        setIsJoining(false);
+        return;
+      }
+
       // Check if already joined
       const { data: existing } = await supabase
         .from("event_attendees")

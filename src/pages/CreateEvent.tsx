@@ -30,8 +30,6 @@ const CreateEvent = () => {
   const [searchParams] = useSearchParams();
   const editEventId = searchParams.get('edit');
   
-  const [showPaywall, setShowPaywall] = useState(true);
-  const [isPaid] = useState(false); // Will be connected to real payment state
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -51,7 +49,7 @@ const CreateEvent = () => {
     eventDate: "",
     theme: "sunset",
     agreedToTerms: false,
-    selectedPlan: "",
+    plan: "free" as "free" | "premium",
     expectedGuests: 0,
   });
 
@@ -79,8 +77,8 @@ const CreateEvent = () => {
   useEffect(() => {
     if (!userId || loadingDraft) return;
 
-    // Skip if we haven't passed the paywall yet (unless editing)
-    if (showPaywall && !editEventId) return;
+    // Skip if editing existing event
+    if (editEventId) return;
 
     // Clear existing timeout
     if (autoSaveTimeoutRef[0]) {
@@ -99,7 +97,7 @@ const CreateEvent = () => {
         clearTimeout(autoSaveTimeoutRef[0]);
       }
     };
-  }, [eventData, imagePreview, userId, loadingDraft, showPaywall]);
+  }, [eventData, imagePreview, userId, loadingDraft]);
 
   // Save on page unload
   useEffect(() => {
@@ -139,7 +137,7 @@ const CreateEvent = () => {
           eventDate: draft.date || "",
           theme: "sunset",
           agreedToTerms: true,
-          selectedPlan: "",
+          plan: (draft.plan as "free" | "premium") || "free",
           expectedGuests: 0,
         });
 
@@ -181,7 +179,7 @@ const CreateEvent = () => {
           eventDate: event.date || "",
           theme: "sunset",
           agreedToTerms: true,
-          selectedPlan: "",
+          plan: (event.plan as "free" | "premium") || "free",
           expectedGuests: 0,
         });
 
@@ -189,8 +187,6 @@ const CreateEvent = () => {
         if (event.image_url) {
           setImagePreview(event.image_url);
         }
-        
-        setShowPaywall(false); // Skip paywall for drafts
       }
     } catch (error: any) {
       console.error("Error loading draft:", error);
@@ -317,52 +313,20 @@ const CreateEvent = () => {
   //   { id: "golden", name: "Golden Hour", gradient: "gradient-golden" },
   //   { id: "emerald", name: "Emerald Fizz", gradient: "gradient-emerald" },
   //   { id: "midnight", name: "Midnight Rose", gradient: "gradient-midnight" },
-  // ];
-
-  const pricingPlans = [
-    {
-      id: "free",
-      name: "Free Plan",
-      price: 0,
-      minGuests: 1,
-      maxGuests: 10,
-      description: "Perfect for intimate gatherings",
-      features: ["Up to 10 guests", "3 days active", "Basic matchmaking"],
-    },
-    {
-      id: "premium",
-      name: "Premium Plan",
-      price: 299,
-      minGuests: 11,
-      maxGuests: 50,
-      description: "For memorable celebrations",
-      features: ["Up to 50 guests", "3 days active", "Full matchmaking", "Guest management", "Priority support"],
-      popular: true,
-    },
-    {
-      id: "vip",
-      name: "VIP Plan",
-      price: 2999,
-      minGuests: 51,
-      maxGuests: null,
-      description: "Ultimate party experience",
-      features: ["50+ guests", "3 days active", "Full matchmaking", "VIP badge for event page", "Exclusive VIP themes", "Dedicated support"],
-    },
-  ];
-
-  const handlePayment = () => {
-    toast.success("Payment successful! 🎉");
-    setShowPaywall(false);
-    // Initialize draft immediately after payment
-    initializeDraft();
-  };
-
   const generateInviteCode = () => {
     const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, '');
     const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, '');
-    const year = new Date(eventData.eventDate).getFullYear();
-    return `${name1}-${name2}-${year}`;
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `${name1.substring(0, 3)}${name2.substring(0, 3)}${randomNum}`;
   };
+
+  if (loadingDraft) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading draft...</p>
+      </div>
+    );
+  }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -489,6 +453,7 @@ const CreateEvent = () => {
             invite_code: inviteCode,
             image_url: imageUrl,
             status: 'active',
+            plan: eventData.plan,
           })
           .eq("id", eventIdToUpdate)
           .eq("created_by", userId);
@@ -527,6 +492,7 @@ const CreateEvent = () => {
             created_by: userId,
             image_url: imageUrl,
             status: 'active',
+            plan: eventData.plan,
           })
           .select()
           .single();
@@ -558,96 +524,11 @@ const CreateEvent = () => {
     }
   };
 
-  const selectedPlanDetails = pricingPlans.find(p => p.id === eventData.selectedPlan);
-
   if (loadingDraft) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading draft...</p>
       </div>
-    );
-  }
-
-  if (showPaywall && !isPaid && !editEventId) {
-    return (
-      <Dialog open={showPaywall} onOpenChange={(open) => !open && navigate("/")}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Choose Your Event Plan</DialogTitle>
-            <DialogDescription>
-              Select a plan based on your expected number of guests
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {pricingPlans.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                  eventData.selectedPlan === plan.id
-                    ? "ring-2 ring-primary shadow-md"
-                    : ""
-                } ${plan.popular ? "relative gradient-primary" : ""}`}
-                onClick={() => setEventData({ ...eventData, selectedPlan: plan.id })}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-black text-white text-xs font-bold px-3 py-1 rounded-full">
-                      MOST POPULAR
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h3 className={`font-bold text-lg ${plan.popular ? "text-white" : ""}`}>{plan.name}</h3>
-                    <p className={`text-sm mb-2 ${plan.popular ? "text-white/90" : "text-foreground/80"}`}>
-                      {plan.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {plan.features.map((feature, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex items-center gap-1 text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}
-                        >
-                          <Check className={`w-3 h-3 ${plan.popular ? "text-white" : "text-primary"}`} />
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-                    <p className={`text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}>
-                      {plan.minGuests}-{plan.maxGuests || "unlimited"} guests
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-2xl font-bold ${plan.popular ? "text-white" : ""}`}>
-                      {plan.price === 0 ? "Free" : `$${plan.price.toFixed(2)}`}
-                    </p>
-                    <p className={`text-xs ${plan.popular ? "text-white/90" : "text-foreground/70"}`}>one-time</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-
-            <Button
-              className="w-full mt-4 bg-[hsl(345,80%,65%)] hover:bg-[hsl(345,80%,60%)] text-white"
-              size="lg"
-              onClick={handlePayment}
-              disabled={!eventData.selectedPlan}
-            >
-              {selectedPlanDetails?.price === 0
-                ? "Continue with Free Plan"
-                : `Purchase ${selectedPlanDetails?.name || "Plan"} - $${selectedPlanDetails?.price.toFixed(2)}`}
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => navigate("/")}
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     );
   }
 
@@ -658,10 +539,11 @@ const CreateEvent = () => {
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
           <p className="text-sm text-subtitle">
-            Step {step} of 2 • {selectedPlanDetails?.name || "No plan selected"}
+            Step {step} of 2 • {eventData.plan === "premium" ? "Premium Plan" : "Free Plan"}
           </p>
         </div>
       </div>
+
 
       <div className="max-w-lg mx-auto px-4 py-6">
         {step === 1 ? (
@@ -777,6 +659,58 @@ const CreateEvent = () => {
               </Select>
             </div> */}
 
+            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+              <Label className="text-base font-semibold">Select Your Plan</Label>
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEventData({ ...eventData, plan: 'free' })}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    eventData.plan === 'free'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-muted-foreground/20 hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg">Free Plan</h3>
+                    {eventData.plan === 'free' && <Check className="w-5 h-5 text-primary" />}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Perfect for intimate gatherings
+                  </p>
+                  <ul className="text-sm space-y-1">
+                    <li>✓ Up to 10 guests</li>
+                    <li>✓ Full matchmaking features</li>
+                    <li>✓ Event management dashboard</li>
+                  </ul>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEventData({ ...eventData, plan: 'premium' })}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    eventData.plan === 'premium'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-muted-foreground/20 hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg">Premium Plan</h3>
+                    {eventData.plan === 'premium' && <Check className="w-5 h-5 text-primary" />}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    For larger celebrations
+                  </p>
+                  <ul className="text-sm space-y-1">
+                    <li>✓ Unlimited guests</li>
+                    <li>✓ Full matchmaking features</li>
+                    <li>✓ Event management dashboard</li>
+                    <li>✓ Priority support</li>
+                  </ul>
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-start gap-2">
               <Checkbox
                 id="terms"
@@ -840,6 +774,12 @@ const CreateEvent = () => {
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   (3 days after event)
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Plan</p>
+                <p className="font-medium capitalize">
+                  {eventData.plan} Plan {eventData.plan === 'free' ? '(Max 10 guests)' : '(Unlimited guests)'}
                 </p>
               </div>
               {/* Theme display hidden for future use */}

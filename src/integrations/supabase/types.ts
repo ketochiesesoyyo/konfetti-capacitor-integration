@@ -139,6 +139,7 @@ export type Database = {
           image_url: string | null
           invite_code: string
           name: string
+          plan: string
           status: string
           updated_at: string
         }
@@ -152,6 +153,7 @@ export type Database = {
           image_url?: string | null
           invite_code: string
           name: string
+          plan?: string
           status?: string
           updated_at?: string
         }
@@ -165,6 +167,7 @@ export type Database = {
           image_url?: string | null
           invite_code?: string
           name?: string
+          plan?: string
           status?: string
           updated_at?: string
         }
@@ -495,6 +498,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_join_event: {
+        Args: { _event_id: string }
+        Returns: boolean
+      }
+      get_event_guest_count: {
+        Args: { _event_id: string }
+        Returns: number
+      }
       report_user_transaction: {
         Args: {
           _custom_reason: string
