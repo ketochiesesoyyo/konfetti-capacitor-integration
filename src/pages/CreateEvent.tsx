@@ -537,7 +537,19 @@ const CreateEvent = () => {
       {/* Header */}
       <div className="bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              className="shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Create Event</h1>
+            </div>
+          </div>
           <p className="text-sm text-subtitle">
             Step {step} of 2 • {eventData.plan === "premium" ? "Premium Plan" : "Free Plan"}
           </p>
