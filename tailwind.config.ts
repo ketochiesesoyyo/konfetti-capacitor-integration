@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -62,6 +66,25 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1.5rem",
+        "2xl": "2rem",
+        "3xl": "2.5rem",
+        "4xl": "3rem",
+      },
+      boxShadow: {
+        'xs': 'var(--shadow-xs)',
+        'soft': 'var(--shadow-soft)',
+        'card': 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+        'heavy': 'var(--shadow-heavy)',
+      },
+      backdropBlur: {
+        xs: '2px',
+        sm: '4px',
+        DEFAULT: '12px',
+        md: '12px',
+        lg: '20px',
+        xl: '32px',
       },
       keyframes: {
         "accordion-down": {
