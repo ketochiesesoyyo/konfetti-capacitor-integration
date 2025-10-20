@@ -432,7 +432,7 @@ const EventDashboard = () => {
   };
 
   const eventCode = event?.invite_code || "";
-  const eventLink = `https://plus-one-v2.lovable.app/join/${eventCode}`;
+  const eventLink = `https://konfetti-capacitor-integration.lovable.app/join/${eventCode}`;
 
   const handleShareLink = () => {
     navigator.clipboard.writeText(eventLink);
