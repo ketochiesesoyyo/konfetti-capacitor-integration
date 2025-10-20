@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ import { ImageCropDialog } from "@/components/ImageCropDialog";
 const EventDashboard = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"guests" | "stats" | "settings">("guests");
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [closeEventDialogOpen, setCloseEventDialogOpen] = useState(false);
@@ -76,7 +77,37 @@ const EventDashboard = () => {
 
   useEffect(() => {
     fetchEventData();
+    
+    // Handle payment success callback
+    const sessionId = searchParams.get('session_id');
+    const paymentStatus = searchParams.get('payment');
+    
+    if (paymentStatus === 'success' && sessionId && eventId) {
+      verifyPayment(sessionId, eventId);
+    }
   }, [eventId]);
+
+  const verifyPayment = async (sessionId: string, eventId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: { sessionId, eventId },
+      });
+
+      if (error) throw error;
+
+      toast.success("🎉 Payment verified! Premium features activated", {
+        description: "Your event now has unlimited guest capacity",
+      });
+      
+      // Remove query params from URL
+      navigate(`/event-dashboard/${eventId}`, { replace: true });
+    } catch (error: any) {
+      console.error("Payment verification error:", error);
+      toast.error("Payment verification failed", {
+        description: "Please contact support if payment was completed",
+      });
+    }
+  };
 
   useEffect(() => {
     if (activeTab === "stats") {

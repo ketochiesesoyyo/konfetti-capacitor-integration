@@ -394,6 +394,25 @@ const CreateEvent = () => {
     setImagePreview("");
   };
 
+  const handlePaymentCheckout = async (eventId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
+        body: { eventId },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Open Stripe checkout in new tab
+        window.open(data.url, '_blank');
+        toast.success("Redirecting to payment...");
+      }
+    } catch (error: any) {
+      console.error("Payment checkout error:", error);
+      toast.error("Failed to initiate payment");
+    }
+  };
+
   const handleCreateEvent = async () => {
     if (!userId) return;
     
@@ -441,6 +460,8 @@ const CreateEvent = () => {
       
       const eventIdToUpdate = editEventId || draftEventId;
       
+      let createdEventId = eventIdToUpdate;
+      
       if (eventIdToUpdate) {
         // Update existing draft event
         const { error: updateError } = await supabase
@@ -459,6 +480,14 @@ const CreateEvent = () => {
           .eq("created_by", userId);
 
         if (updateError) throw updateError;
+
+        // If Premium plan selected, redirect to payment
+        if (eventData.plan === 'premium') {
+          await handlePaymentCheckout(eventIdToUpdate);
+          toast.info("Complete payment to activate Premium features");
+          setIsCreating(false);
+          return;
+        }
 
         toast.success("Event published! 🎊", {
           description: `Share code: ${inviteCode}`,
@@ -498,6 +527,15 @@ const CreateEvent = () => {
           .single();
 
         if (eventError) throw eventError;
+        createdEventId = event.id;
+        
+        // If Premium plan selected, redirect to payment
+        if (eventData.plan === 'premium') {
+          await handlePaymentCheckout(event.id);
+          toast.info("Complete payment to activate Premium features");
+          setIsCreating(false);
+          return;
+        }
 
         // Auto-join creator to the event
         const { error: attendeeError } = await supabase
@@ -823,7 +861,7 @@ const CreateEvent = () => {
                 (!eventImage && !imagePreview)
               }
             >
-              {isCreating ? "Creating..." : "Create Event"}
+              {isCreating ? "Creating..." : eventData.plan === "premium" ? "Continue to Payment ($299)" : "Create Event"}
             </Button>
           </Card>
         )}
