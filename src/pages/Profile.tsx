@@ -150,6 +150,7 @@ const Profile = () => {
               size="icon"
               onClick={() => setShowPreview(true)}
               title="Preview your profile"
+              className="hover-scale"
             >
               <Eye className="w-5 h-5" />
             </Button>
@@ -158,6 +159,7 @@ const Profile = () => {
               size="icon"
               onClick={() => navigate("/settings")}
               title="Settings"
+              className="hover-scale"
             >
               <SettingsIcon className="w-5 h-5" />
             </Button>
@@ -167,17 +169,18 @@ const Profile = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
         {/* Photos Card */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Photos</h2>
-            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
+        <Card className="p-8 shadow-card hover-lift animate-enter">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold font-display">Photos</h2>
+            <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")} className="hover-scale">
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {photos.map((photo: string, idx: number) => (
-              <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden bg-muted">
+              <div key={idx} className="aspect-[3/4] rounded-3xl overflow-hidden bg-muted hover-scale shadow-soft transition-all">
+
                 <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
               </div>
             ))}

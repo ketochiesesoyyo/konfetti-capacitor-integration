@@ -421,9 +421,20 @@ const Home = () => {
         {/* Events List */}
         <div className="space-y-4 pb-6">
           {loading ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Loading events...</p>
-            </Card>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="p-6 animate-enter" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="flex gap-4">
+                    <div className="w-24 h-24 rounded-full animate-shimmer" />
+                    <div className="flex-1 space-y-3">
+                      <div className="h-6 w-3/4 animate-shimmer rounded-2xl" />
+                      <div className="h-4 w-1/2 animate-shimmer rounded-2xl" />
+                      <div className="h-4 w-1/3 animate-shimmer rounded-2xl" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           ) : activeTab === "attending" ? (
             <>
               {/* Sort and Filter Controls for Attending */}
@@ -479,7 +490,7 @@ const Home = () => {
                     
                     {/* Event Image - Circular with margin */}
                     <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center hover-scale transition-all shadow-soft">
                         {event.image_url ? (
                           <img 
                             src={event.image_url} 
@@ -499,7 +510,7 @@ const Home = () => {
                           className="flex-1 cursor-pointer" 
                           onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
                         >
-                          <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
+                          <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(event.date).toLocaleDateString()}</span>

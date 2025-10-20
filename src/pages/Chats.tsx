@@ -260,7 +260,7 @@ const Chats = () => {
 
   const ChatItem = ({ chat }: { chat: MatchChat }) => (
     <Card 
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      className="p-5 hover-lift shadow-card cursor-pointer active-press animate-enter transition-all"
       onClick={() => navigate(`/chat/${chat.matchId}`, { 
         state: { 
           matchId: chat.matchId,
@@ -271,8 +271,8 @@ const Chats = () => {
         } 
       })}
     >
-      <div className="flex gap-3">
-        <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 gradient-sunset">
+      <div className="flex gap-4">
+        <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 gradient-sunset shadow-soft hover-scale transition-all">
           <img src={chat.photo} alt={chat.name} className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
@@ -288,7 +288,7 @@ const Chats = () => {
                   {chat.timestamp}
                 </span>
                 {chat.unread > 0 && (
-                  <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5">
+                  <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5 animate-bounce-in">
                     {chat.unread}
                   </Badge>
                 )}
@@ -307,7 +307,7 @@ const Chats = () => {
 
   const HostChatItem = ({ chat }: { chat: HostChat }) => (
     <Card 
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      className="p-5 hover-lift shadow-card cursor-pointer active-press animate-enter transition-all"
       onClick={() => navigate(`/chat/${chat.hostId}`, { 
         state: { 
           userId: chat.hostId, 
@@ -389,9 +389,20 @@ const Chats = () => {
         {/* Chats List */}
         <div className="space-y-3 pb-6">
           {loading ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Loading chats...</p>
-            </Card>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="p-5 animate-enter" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="flex gap-4">
+                    <div className="w-14 h-14 rounded-full animate-shimmer" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 w-1/3 animate-shimmer rounded-2xl" />
+                      <div className="h-4 w-3/4 animate-shimmer rounded-2xl" />
+                      <div className="h-3 w-1/4 animate-shimmer rounded-2xl" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           ) : activeTab === "matches" ? (
             matchChats.length > 0 ? (
               matchChats.map((chat) => <ChatItem key={chat.matchId} chat={chat} />)
