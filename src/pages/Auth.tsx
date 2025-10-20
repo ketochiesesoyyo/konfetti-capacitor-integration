@@ -30,8 +30,35 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if there's a pending invite in URL params
+        const isOAuthReturn = searchParams.get("oauth") === "true";
         const pendingInvite = searchParams.get("invite");
+        
+        // If returning from OAuth, check if profile needs completion
+        if (isOAuthReturn) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, age, bio, photos')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          // New user or incomplete profile - redirect to profile creation
+          const needsProfileCompletion = !profile?.age || !profile?.photos || profile?.photos?.length === 0;
+          
+          if (needsProfileCompletion) {
+            if (pendingInvite) {
+              navigate(`/edit-profile?invite=${pendingInvite}`, { 
+                state: { isNewUser: true }
+              });
+            } else {
+              navigate("/edit-profile", { 
+                state: { isNewUser: true }
+              });
+            }
+            return;
+          }
+        }
+        
+        // Existing user with complete profile
         if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
@@ -133,10 +160,16 @@ const Auth = () => {
     try {
       setIsLoading(true);
       
+      // Build redirect URL with pending invite if present
+      const pendingInvite = searchParams.get("invite");
+      const redirectTo = pendingInvite 
+        ? `${window.location.origin}/auth?invite=${pendingInvite}&oauth=true`
+        : `${window.location.origin}/auth?oauth=true`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
