@@ -152,7 +152,7 @@ const Settings = () => {
         <Card className="p-6 shadow-card hover-lift">
           <Button
             onClick={handleLogout}
-            className="w-full bg-foreground hover:bg-muted hover:text-foreground text-background"
+            className="w-full bg-[#000000] hover:bg-[#404040] text-white"
             size="lg"
           >
             <LogOut className="w-5 h-5 mr-2" />
