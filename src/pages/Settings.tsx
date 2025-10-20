@@ -94,7 +94,7 @@ const Settings = () => {
             <div className="p-3 rounded-2xl bg-primary/10">
               <Mail className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold font-display">Change Email</h2>
+            <h2 className="text-xl font-semibold">Change Email</h2>
           </div>
           <div className="space-y-4">
             <div>
@@ -119,7 +119,7 @@ const Settings = () => {
             <div className="p-3 rounded-2xl bg-primary/10">
               <Lock className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold font-display">Change Password</h2>
+            <h2 className="text-xl font-semibold">Change Password</h2>
           </div>
           <div className="space-y-4">
             <div>
