@@ -100,6 +100,20 @@ serve(async (req) => {
 
     console.log("[VERIFY] Premium access granted");
 
+    // Activate the event now that payment is confirmed
+    const { error: eventError } = await supabaseClient
+      .from("events")
+      .update({ status: "active" })
+      .eq("id", eventId)
+      .eq("created_by", user.id);
+
+    if (eventError) {
+      console.error("[VERIFY] Error activating event:", eventError);
+      throw eventError;
+    }
+
+    console.log("[VERIFY] Event activated");
+
     return new Response(JSON.stringify({ success: true, message: "Payment verified and Premium access granted" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

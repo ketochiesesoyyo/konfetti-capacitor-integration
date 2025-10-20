@@ -473,7 +473,7 @@ const CreateEvent = () => {
             description: `Wedding celebration for ${eventName}`,
             invite_code: inviteCode,
             image_url: imageUrl,
-            status: 'active',
+            status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
             plan: eventData.plan,
           })
           .eq("id", eventIdToUpdate)
