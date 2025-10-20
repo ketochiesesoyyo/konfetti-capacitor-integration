@@ -285,6 +285,7 @@ const Auth = () => {
           </Button>
         </form>
 
+        {/* Google login hidden until OAuth is configured
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -327,6 +328,7 @@ const Auth = () => {
             </Button>
           </div>
         </div>
+        */}
 
         <div className="mt-6 text-center">
           <button
