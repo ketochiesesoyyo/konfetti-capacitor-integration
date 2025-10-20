@@ -29,15 +29,15 @@ const Layout = ({ children }: LayoutProps) => {
   const hideNav = location.pathname.includes("/auth");
 
   return (
-    <div className="flex flex-col h-screen" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <main className="flex-1 overflow-y-auto pb-20">{children}</main>
+    <div className="flex flex-col h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <main className="flex-1 overflow-y-auto pb-24 px-1">{children}</main>
       
       {!hideNav && (
         <nav 
-          className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50"
+          className="fixed bottom-0 left-0 right-0 glass-light border-t border-border/50 shadow-heavy z-50 backdrop-blur-xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+          <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = isActive(tab.path);
@@ -47,14 +47,14 @@ const Layout = ({ children }: LayoutProps) => {
                   key={tab.path}
                   onClick={() => navigate(tab.path)}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg transition-all",
+                    "flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-all duration-300",
                     active
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-primary bg-primary/10 shadow-soft scale-105"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 hover:scale-105"
                   )}
                 >
-                  <Icon className={cn("w-5 h-5", active && "fill-primary")} />
-                  <span className="text-xs font-medium">{tab.label}</span>
+                  <Icon className={cn("w-6 h-6 transition-all", active && "fill-primary")} />
+                  <span className={cn("text-xs font-medium", active && "font-semibold")}>{tab.label}</span>
                 </button>
               );
             })}
