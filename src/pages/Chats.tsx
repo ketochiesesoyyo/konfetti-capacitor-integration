@@ -359,15 +359,15 @@ const Chats = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector */}
-        <Card className="p-1 mb-6">
-          <div className="grid grid-cols-2 gap-1">
+        <Card className="p-1.5 mb-6 shadow-soft">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setActiveTab("matches")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
                 activeTab === "matches"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
               Matches ({matchChats.length})
@@ -375,10 +375,10 @@ const Chats = () => {
             <button
               onClick={() => setActiveTab("hosts")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
                 activeTab === "hosts"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
               Hosts ({hostChats.length})
