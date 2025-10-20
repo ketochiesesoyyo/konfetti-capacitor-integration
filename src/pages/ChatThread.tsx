@@ -9,6 +9,7 @@ import { handleError } from "@/lib/errorHandling";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 import { ReportDialog } from "@/components/ReportDialog";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -344,17 +345,19 @@ const ChatThread = () => {
               className={`flex ${msg.sender_id === userId ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                className={cn(
+                  "max-w-[75%] rounded-3xl px-5 py-3 shadow-soft transition-all",
                   msg.sender_id === userId
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
+                    ? "gradient-primary text-white"
+                    : "bg-card border border-border/50"
+                )}
               >
-                <p className="text-sm">{msg.content}</p>
+                <p className="text-sm leading-relaxed">{msg.content}</p>
                 <p
-                  className={`text-xs mt-1 ${
-                    msg.sender_id === userId ? "text-primary-foreground/70" : "text-muted-foreground"
-                  }`}
+                  className={cn(
+                    "text-xs mt-1.5",
+                    msg.sender_id === userId ? "text-white/70" : "text-muted-foreground"
+                  )}
                 >
                   {formatTime(msg.created_at)}
                 </p>

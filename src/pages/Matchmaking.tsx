@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { swipeSchema, matchSchema } from "@/lib/validation";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -665,11 +666,12 @@ const Matchmaking = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg relative h-[calc(100vh-200px)]">
           <Card
-            className={`overflow-hidden shadow-xl h-full flex flex-col ${
+            className={cn(
+              "overflow-hidden shadow-card hover-lift h-full flex flex-col rounded-[36px]",
               isExiting
                 ? "animate-[scale-out_0.3s_ease-out,fade-out_0.3s_ease-out] opacity-0 scale-95"
-                : "animate-slide-up"
-            }`}
+                : "animate-enter"
+            )}
           >
             {/* Entire card content is now scrollable */}
             <div className="overflow-y-auto flex-1">
@@ -680,39 +682,39 @@ const Matchmaking = () => {
                   alt={currentProfile.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
-                  <h2 className="text-3xl font-bold mb-1">
+                <div className="absolute bottom-0 left-0 right-0 glass-medium p-8 text-white border-t border-white/20">
+                  <h2 className="text-3xl font-bold mb-1 font-display drop-shadow-lg">
                     {currentProfile.name}, {currentProfile.age || "?"}
                   </h2>
                 </div>
               </div>
 
               {/* Info Section - Now part of unified scroll */}
-              <div className="p-6 space-y-4">
+              <div className="p-8 space-y-6">
                 {/* Bio */}
                 {currentProfile.bio && (
-                  <div>
-                    <h3 className="font-semibold mb-1">About</h3>
-                    <p className="text-foreground">{currentProfile.bio}</p>
+                  <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                    <h3 className="font-semibold mb-2 text-primary">About</h3>
+                    <p className="text-foreground leading-relaxed">{currentProfile.bio}</p>
                   </div>
                 )}
 
                 {/* Prompts */}
                 {parsedPrompts.length > 0 &&
                   parsedPrompts.map((prompt: any, idx: number) => (
-                    <div key={idx}>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-1">{prompt.question}</h3>
-                      <p className="text-foreground">{prompt.answer}</p>
+                    <div key={idx} className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                      <h3 className="font-semibold text-sm text-primary mb-2">{prompt.question}</h3>
+                      <p className="text-foreground leading-relaxed">{prompt.answer}</p>
                     </div>
                   ))}
 
                 {/* Interests */}
                 {currentProfile.interests && currentProfile.interests.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Interests</h3>
+                  <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                    <h3 className="font-semibold mb-3 text-primary">Interests</h3>
                     <div className="flex flex-wrap gap-2">
                       {currentProfile.interests.map((interest, idx) => (
-                        <Badge key={idx} variant="secondary">
+                        <Badge key={idx} variant="secondary" className="rounded-full px-4 py-1.5">
                           {interest}
                         </Badge>
                       ))}
@@ -746,7 +748,7 @@ const Matchmaking = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-full w-16 h-16 border-2 hover:border-destructive hover:bg-destructive/10 bg-background shadow-xl"
+                className="rounded-full w-16 h-16 border-2 hover:border-destructive hover:bg-destructive/10 bg-card shadow-card hover:shadow-card-hover transition-all"
                 onClick={() => handleSwipe(false)}
               >
                 <X className="w-8 h-8 text-destructive" />
@@ -756,7 +758,7 @@ const Matchmaking = () => {
               <Button
                 size="lg"
                 variant="gradient"
-                className="rounded-full w-20 h-20 shadow-2xl"
+                className="rounded-full w-20 h-20 shadow-card-hover hover:scale-110 transition-all"
                 onClick={() => handleSwipe(true)}
               >
                 <Heart className="w-10 h-10" />

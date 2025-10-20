@@ -329,15 +329,15 @@ const Home = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector */}
-        <Card className="p-1 mb-4">
-          <div className="grid grid-cols-2 gap-1">
+        <Card className="p-1.5 mb-6 shadow-soft">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setActiveTab("attending")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
                 activeTab === "attending"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
               I'm Attending ({visibleAttendingEvents.length})
@@ -345,10 +345,10 @@ const Home = () => {
             <button
               onClick={() => setActiveTab("hosting")}
               className={cn(
-                "py-2 px-4 rounded-lg font-medium transition-all text-sm",
+                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
                 activeTab === "hosting"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
               I'm Hosting ({visibleHostingEvents.length})
@@ -463,8 +463,9 @@ const Home = () => {
               )}
 
               {visibleAttendingEvents.length > 0 ? (
-              visibleAttendingEvents.map((event) => (
-                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              visibleAttendingEvents.map((event, index) => (
+                <Card key={event.id} className={cn("overflow-hidden hover-lift shadow-card animate-enter", `delay-${Math.min(index * 100, 600)}`)}>
+
                   <div className="flex">
                     {/* Selection Checkbox */}
                     {selectionMode && (

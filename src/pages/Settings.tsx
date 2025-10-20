@@ -96,10 +96,12 @@ const Settings = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
         {/* Theme Selection */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Palette className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">App Theme</h2>
+        <Card className="p-8 shadow-card hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              <Palette className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold font-display">App Theme</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {THEMES.map((t) => (
@@ -109,31 +111,33 @@ const Settings = () => {
                 className="relative group"
               >
                 <div 
-                  className="aspect-square rounded-lg transition-transform group-hover:scale-105"
+                  className="aspect-square rounded-3xl transition-all duration-300 group-hover:scale-105 shadow-card group-hover:shadow-card-hover"
                   style={{ background: t.preview }}
                 />
                 {theme === t.id && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white rounded-full p-1.5">
-                      <Check className="w-5 h-5 text-primary" />
+                    <div className="bg-white rounded-full p-2 shadow-card">
+                      <Check className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                 )}
-                <p className="text-sm mt-2 text-center font-medium">{t.name}</p>
+                <p className="text-sm mt-3 text-center font-semibold">{t.name}</p>
               </button>
             ))}
           </div>
         </Card>
 
         {/* Change Email */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Mail className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Change Email</h2>
+        <Card className="p-8 shadow-card hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              <Mail className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold font-display">Change Email</h2>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="new-email">New Email</Label>
+              <Label htmlFor="new-email" className="text-sm font-medium mb-2 block">New Email</Label>
               <Input
                 id="new-email"
                 type="email"
@@ -142,21 +146,23 @@ const Settings = () => {
                 placeholder="your.new@email.com"
               />
             </div>
-            <Button onClick={handleEmailChange} disabled={loading} className="w-full">
+            <Button onClick={handleEmailChange} disabled={loading} className="w-full" size="lg">
               Update Email
             </Button>
           </div>
         </Card>
 
         {/* Change Password */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Lock className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Change Password</h2>
+        <Card className="p-8 shadow-card hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              <Lock className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold font-display">Change Password</h2>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="new-password">New Password</Label>
+              <Label htmlFor="new-password" className="text-sm font-medium mb-2 block">New Password</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -166,7 +172,7 @@ const Settings = () => {
               />
             </div>
             <div>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Label htmlFor="confirm-password" className="text-sm font-medium mb-2 block">Confirm Password</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -175,20 +181,21 @@ const Settings = () => {
                 placeholder="••••••••"
               />
             </div>
-            <Button onClick={handlePasswordChange} disabled={loading} className="w-full">
+            <Button onClick={handlePasswordChange} disabled={loading} className="w-full" size="lg">
               Update Password
             </Button>
           </div>
         </Card>
 
         {/* Logout */}
-        <Card className="p-6">
+        <Card className="p-6 shadow-card hover-lift">
           <Button
             variant="destructive"
             onClick={handleLogout}
             className="w-full"
+            size="lg"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="w-5 h-5 mr-2" />
             Logout
           </Button>
         </Card>
