@@ -81,9 +81,15 @@ const EventDashboard = () => {
     // Handle payment success callback
     const sessionId = searchParams.get('session_id');
     const paymentStatus = searchParams.get('payment');
+    const tab = searchParams.get('tab');
     
     if (paymentStatus === 'success' && sessionId && eventId) {
       verifyPayment(sessionId, eventId);
+    }
+    
+    // Set active tab from URL parameter
+    if (tab === 'settings' || tab === 'guests' || tab === 'stats') {
+      setActiveTab(tab as "guests" | "stats" | "settings");
     }
   }, [eventId]);
 
