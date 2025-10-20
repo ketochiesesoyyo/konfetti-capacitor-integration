@@ -510,17 +510,17 @@ const EventDashboard = () => {
 
       <div className="max-w-lg mx-auto px-4 pt-6">
         {/* Tab Selector */}
-        <Card className="p-1 mb-6">
-          <div className="grid grid-cols-3 gap-1">
+        <Card className="p-1.5 mb-6 shadow-soft">
+          <div className="grid grid-cols-3 gap-2">
             {["guests", "stats", "settings"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={cn(
-                  "py-2 px-3 rounded-lg font-medium transition-all text-sm capitalize",
+                  "py-3 px-4 rounded-2xl font-semibold transition-all duration-300 text-sm capitalize",
                   activeTab === tab
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-soft scale-105"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
                 )}
               >
                 {tab}
