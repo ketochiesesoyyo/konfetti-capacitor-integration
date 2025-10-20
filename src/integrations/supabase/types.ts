@@ -495,12 +495,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      report_user_transaction: {
+        Args: {
+          _custom_reason: string
+          _event_id: string
+          _match_id: string
+          _reason: string
+          _reported_user_id: string
+          _reporter_id: string
+        }
+        Returns: undefined
+      }
+      unmatch_user_transaction: {
+        Args: {
+          _description: string
+          _event_id: string
+          _match_id: string
+          _reason: string
+          _unmatched_user_id: string
+          _unmatcher_id: string
+        }
+        Returns: undefined
+      }
       user_is_event_attendee: {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
       user_is_event_host: {
         Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      users_share_active_event: {
+        Args: { user_a: string; user_b: string }
         Returns: boolean
       }
       users_share_event: {

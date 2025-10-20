@@ -60,61 +60,28 @@ export const UnmatchDialog = ({
         return;
       }
 
-      // 1. Create unmatch record
-      const { error: unmatchError } = await supabase
-        .from("unmatches")
-        .insert({
-          unmatcher_id: session.user.id,
-          unmatched_user_id: matchedUserId,
-          event_id: eventId,
-          match_id: matchId,
-          reason: selectedReason,
-          description: selectedReason === "Other" ? description : null,
-        });
+      // Use transactional function to ensure atomic operations
+      const { error } = await supabase.rpc("unmatch_user_transaction", {
+        _unmatcher_id: session.user.id,
+        _unmatched_user_id: matchedUserId,
+        _event_id: eventId,
+        _match_id: matchId,
+        _reason: selectedReason,
+        _description: selectedReason === "Other" ? description : null,
+      });
 
-      if (unmatchError) throw unmatchError;
-
-      // 2. Create audit log
-      const { error: auditError } = await supabase
-        .from("audit_logs")
-        .insert({
-          action_type: "unmatch",
-          actor_id: session.user.id,
-          target_id: matchedUserId,
-          event_id: eventId,
-          match_id: matchId,
-          reason: selectedReason,
-          description: selectedReason === "Other" ? description : null,
-          metadata: { matched_user_name: matchedUserName },
-        });
-
-      if (auditError) console.error("Audit log error:", auditError);
-
-      // 3. Delete the swipe (unlike) so profile can reappear in matchmaking
-      const { error: deleteSwipeError } = await supabase
-        .from("swipes")
-        .delete()
-        .eq("user_id", session.user.id)
-        .eq("swiped_user_id", matchedUserId)
-        .eq("event_id", eventId);
-
-      if (deleteSwipeError) console.error("Delete swipe error:", deleteSwipeError);
-
-      // 4. Delete messages (soft delete by keeping in audit)
-      const { error: deleteMessagesError } = await supabase
-        .from("messages")
-        .delete()
-        .eq("match_id", matchId);
-
-      if (deleteMessagesError) console.error("Delete messages error:", deleteMessagesError);
-
-      // 5. Delete match
-      const { error: deleteMatchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("id", matchId);
-
-      if (deleteMatchError) throw deleteMatchError;
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes("Unauthorized")) {
+          toast.error("You don't have permission to unmatch");
+        } else if (error.code === "23505") {
+          // Duplicate key violation - already unmatched
+          toast.info("Already unmatched");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("You've unmatched successfully");
       onOpenChange(false);

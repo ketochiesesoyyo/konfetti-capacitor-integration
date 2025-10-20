@@ -66,62 +66,43 @@ export const ReportDialog = ({
 
       const validated = validationResult.data;
 
-      // 1. Insert report
-      const { error: reportError } = await supabase.from("reports").insert({
-        reporter_id: session.user.id,
-        reported_user_id: reportedUserId,
-        match_id: matchId,
-        event_id: eventId,
-        reason: validated.reason,
-        custom_reason: selectedReason === "Other" ? validated.custom_reason : null,
-      });
-
-      if (reportError) throw reportError;
-
-      // 2. Create unmatch record
-      const { error: unmatchError } = await supabase
-        .from("unmatches")
-        .insert({
-          unmatcher_id: session.user.id,
-          unmatched_user_id: reportedUserId,
-          event_id: eventId,
-          match_id: matchId,
-          reason: `Report: ${validated.reason}`,
-          description: selectedReason === "Other" ? validated.custom_reason : null,
-        });
-
-      if (unmatchError) console.error("Unmatch error:", unmatchError);
-
-      // 3. Create audit log
-      const { error: auditError } = await supabase
-        .from("audit_logs")
-        .insert({
-          action_type: "report",
-          actor_id: session.user.id,
-          target_id: reportedUserId,
-          event_id: eventId,
-          match_id: matchId,
-          reason: validated.reason,
-          description: selectedReason === "Other" ? validated.custom_reason : null,
-          metadata: { reported_user_name: reportedUserName },
-        });
-
-      if (auditError) console.error("Audit log error:", auditError);
-
-      // 4. Get event host info
+      // Get event host info before transaction
       const { data: eventData } = await supabase
         .from("events")
         .select("created_by, name")
         .eq("id", eventId)
         .single();
 
+      // Use transactional function to ensure atomic operations
+      const { error } = await supabase.rpc("report_user_transaction", {
+        _reporter_id: session.user.id,
+        _reported_user_id: reportedUserId,
+        _event_id: eventId,
+        _match_id: matchId,
+        _reason: validated.reason,
+        _custom_reason: selectedReason === "Other" ? validated.custom_reason : null,
+      });
+
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes("Unauthorized")) {
+          toast.error("You don't have permission to report");
+        } else if (error.code === "23505") {
+          // Duplicate key violation - already reported
+          toast.info("Already reported");
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      // Send message to host notifying them of the report (outside transaction)
       if (eventData?.created_by && eventData.created_by !== session.user.id) {
-        // 5. Send message to host notifying them of the report
         const reportMessage = `🚨 Report Alert\n\nUser ${reportedUserName} has been reported for: ${validated.reason}${
           selectedReason === "Other" && validated.custom_reason ? `\n\nDetails: ${validated.custom_reason}` : ""
         }\n\nEvent: ${eventData.name}\nReported by: ${session.user.email}`;
 
-        const { error: messageError } = await supabase
+        await supabase
           .from("messages")
           .insert({
             sender_id: session.user.id,
@@ -129,35 +110,7 @@ export const ReportDialog = ({
             event_id: eventId,
             content: reportMessage,
           });
-
-        if (messageError) console.error("Message to host error:", messageError);
       }
-
-      // 6. Delete the swipe (unlike) so profile can reappear in matchmaking
-      const { error: deleteSwipeError } = await supabase
-        .from("swipes")
-        .delete()
-        .eq("user_id", session.user.id)
-        .eq("swiped_user_id", reportedUserId)
-        .eq("event_id", eventId);
-
-      if (deleteSwipeError) console.error("Delete swipe error:", deleteSwipeError);
-
-      // 7. Delete messages (soft delete by keeping in audit)
-      const { error: deleteMessagesError } = await supabase
-        .from("messages")
-        .delete()
-        .eq("match_id", matchId);
-
-      if (deleteMessagesError) console.error("Delete messages error:", deleteMessagesError);
-
-      // 8. Delete match
-      const { error: deleteMatchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("id", matchId);
-
-      if (deleteMatchError) console.error("Delete match error:", deleteMatchError);
 
       toast.success("Report submitted and user unmatched");
       onOpenChange(false);
