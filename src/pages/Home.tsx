@@ -831,10 +831,10 @@ const Home = () => {
         </div>
 
         {/* Floating Action Buttons */}
-        <div className="fixed bottom-20 right-4 flex flex-col gap-3">
+        <div className="fixed bottom-28 right-4 flex flex-col gap-3 z-40">
           <Button
             size="lg"
-            className="shadow-xl bg-primary text-white border-primary"
+            className="shadow-card hover:shadow-card-hover bg-primary text-white border-primary hover-lift"
             onClick={handleCreateEvent}
           >
             <Plus className="w-5 h-5" />
@@ -843,7 +843,7 @@ const Home = () => {
           <Button
             variant="outline"
             size="lg"
-            className="shadow-xl bg-background"
+            className="shadow-card hover:shadow-card-hover bg-background hover-lift"
             onClick={() => navigate("/join-event")}
           >
             Join Event
