@@ -28,11 +28,12 @@ const JoinEventByLink = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Save invite code for after authentication
+        // Redirect to auth with invite code in URL
         if (code) {
-          localStorage.setItem("pendingInvite", code.toUpperCase());
+          navigate(`/auth?invite=${code.toUpperCase()}`);
+        } else {
+          navigate("/auth");
         }
-        navigate("/auth");
         return;
       }
       
@@ -45,14 +46,11 @@ const JoinEventByLink = () => {
         .eq("user_id", session.user.id)
         .single();
       
-      // If profile incomplete, redirect to profile creation
+      // If profile incomplete, redirect to profile creation with invite in URL
       if (!profileData || !profileData.name || !profileData.age || profileData.photos?.length === 0) {
         toast.info("Please complete your profile first");
-        navigate("/edit-profile", { 
-          state: { 
-            isNewUser: true,
-            pendingInvite: code 
-          } 
+        navigate(`/edit-profile?invite=${code || ''}`, { 
+          state: { isNewUser: true } 
         });
         return;
       }

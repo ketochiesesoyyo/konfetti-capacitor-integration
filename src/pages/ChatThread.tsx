@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Send, MoreVertical, UserX, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { handleError } from "@/lib/errorHandling";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 import { ReportDialog } from "@/components/ReportDialog";
 import { z } from "zod";
@@ -98,8 +99,7 @@ const ChatThread = () => {
           .order("created_at", { ascending: true });
 
         if (error) {
-          console.error("Error loading messages:", error);
-          toast.error("Failed to load messages");
+          handleError(error, "Failed to load messages", "MessagesLoad");
         } else {
           setMessages(data || []);
           
@@ -139,8 +139,7 @@ const ChatThread = () => {
           .order("created_at", { ascending: true });
 
         if (error) {
-          console.error("Error loading messages:", error);
-          toast.error("Failed to load messages");
+          handleError(error, "Failed to load messages", "MessagesLoadMatch");
         } else {
           setMessages(data || []);
           
@@ -233,8 +232,7 @@ const ChatThread = () => {
         .insert(messageData);
 
       if (error) {
-        console.error("Error sending message:", error);
-        toast.error("Failed to send message");
+        handleError(error, "Failed to send message", "MessageSend");
       } else {
         setMessage("");
       }
@@ -267,8 +265,7 @@ const ChatThread = () => {
       toast.success("Unmatched successfully");
       navigate("/chats");
     } catch (error) {
-      console.error("Error unmatching:", error);
-      toast.error("Failed to unmatch");
+      handleError(error, "Failed to unmatch", "Unmatch");
     }
   };
 

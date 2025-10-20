@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { SortablePhoto } from "@/components/SortablePhoto";
+import { handleError } from "@/lib/errorHandling";
 import {
   DndContext,
   closestCenter,
@@ -39,9 +40,11 @@ import {
 const EditProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const isNewUser = location.state?.isNewUser;
   
   const [profile, setProfile] = useState({
     name: "",
@@ -145,8 +148,7 @@ const EditProfile = () => {
         .maybeSingle();
 
       if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        toast.error("Failed to load profile");
+        handleError(profileError, "Failed to load profile", "ProfileFetch");
         return;
       }
 
@@ -164,8 +166,7 @@ const EditProfile = () => {
           });
         
         if (insertError) {
-          console.error("Error creating profile:", insertError);
-          toast.error("Failed to create profile");
+          handleError(insertError, "Failed to create profile", "ProfileCreate");
           return;
         }
         
@@ -285,8 +286,7 @@ const EditProfile = () => {
         .eq("user_id", userId);
 
       if (error) {
-        console.error("Error updating profile:", error);
-        toast.error("Failed to update profile");
+        handleError(error, "Failed to update profile", "ProfileUpdate");
         return;
       }
 
@@ -295,16 +295,15 @@ const EditProfile = () => {
       // Update original profile to match saved state
       setOriginalProfile(profile);
       
-      // Check if there's a pending invite
-      const pendingInvite = localStorage.getItem("pendingInvite") || location.state?.pendingInvite;
+      // Check if there's a pending invite in URL params
+      const pendingInvite = searchParams.get("invite");
       if (pendingInvite && isNewUser) {
         navigate(`/join/${pendingInvite}`);
       } else {
         navigate("/profile");
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to update profile");
+      handleError(error, "Failed to update profile", "ProfileUpdateCatch");
     } finally {
       setSaving(false);
     }
@@ -355,9 +354,11 @@ const EditProfile = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(fileName);
+      
+      const publicUrl = data.publicUrl;
 
       setProfile({
         ...profile,
@@ -366,8 +367,7 @@ const EditProfile = () => {
 
       toast.success("Photo uploaded!");
     } catch (error) {
-      console.error("Error uploading photo:", error);
-      toast.error("Failed to upload photo");
+      handleError(error, "Failed to upload photo", "PhotoUpload");
     } finally {
       setUploadingPhoto(false);
       // Clean up temp URL
@@ -401,8 +401,7 @@ const EditProfile = () => {
 
       toast.success("Photo removed!");
     } catch (error) {
-      console.error("Error deleting photo:", error);
-      toast.error("Failed to delete photo");
+      handleError(error, "Failed to delete photo", "PhotoDelete");
     }
   };
 

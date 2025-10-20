@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 
+const isDev = import.meta.env.DEV;
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,8 +30,8 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if there's a pending invite
-        const pendingInvite = localStorage.getItem("pendingInvite");
+        // Check if there's a pending invite in URL params
+        const pendingInvite = searchParams.get("invite");
         if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
@@ -38,7 +40,7 @@ const Auth = () => {
       }
     };
     checkAuth();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,8 +76,8 @@ const Auth = () => {
 
         toast.success("Welcome back!");
         
-        // Check if there's a pending invite
-        const pendingInvite = localStorage.getItem("pendingInvite");
+        // Check if there's a pending invite in URL params
+        const pendingInvite = searchParams.get("invite");
         if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
@@ -105,18 +107,23 @@ const Auth = () => {
 
         toast.success("Account created! Please complete your profile.");
         
-        // Redirect to profile creation with pending invite info
-        const pendingInvite = localStorage.getItem("pendingInvite");
-        navigate("/edit-profile", { 
-          state: { 
-            isNewUser: true,
-            pendingInvite: pendingInvite 
-          } 
-        });
+        // Redirect to profile creation with pending invite in URL
+        const pendingInvite = searchParams.get("invite");
+        if (pendingInvite) {
+          navigate(`/edit-profile?invite=${pendingInvite}`, { 
+            state: { isNewUser: true }
+          });
+        } else {
+          navigate("/edit-profile", { 
+            state: { isNewUser: true }
+          });
+        }
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
-      toast.error("An error occurred. Please try again.");
+      // Error already shown via specific error handling above
+      if (isDev) {
+        console.error("Auth error:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -139,11 +146,15 @@ const Auth = () => {
 
       if (error) {
         toast.error(`Failed to sign in with ${provider}`);
-        console.error(error);
+        if (isDev) {
+          console.error(error);
+        }
       }
     } catch (error) {
-      console.error("Social login error:", error);
       toast.error("An error occurred during social login");
+      if (isDev) {
+        console.error("Social login error:", error);
+      }
     } finally {
       setIsLoading(false);
     }
