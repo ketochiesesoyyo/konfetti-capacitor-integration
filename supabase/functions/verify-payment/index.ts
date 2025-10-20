@@ -122,11 +122,35 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error("[VERIFY] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error("[VERIFY-PAYMENT] Error:", error);
+    
+    // Map errors to user-friendly messages without exposing internal details
+    let userMessage = "Unable to verify payment. Please contact support.";
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      // Log full error server-side only
+      console.error("[VERIFY-PAYMENT] Full error details:", error.message, error.stack);
+      
+      // Map specific error types to generic messages
+      if (error.message.includes("not authenticated")) {
+        userMessage = "Authentication required. Please sign in.";
+        statusCode = 401;
+      } else if (error.message.includes("Session ID") || error.message.includes("Event ID")) {
+        userMessage = "Invalid request. Required information is missing.";
+        statusCode = 400;
+      } else if (error.message.includes("not completed")) {
+        userMessage = "Payment not completed. Please try again.";
+        statusCode = 400;
+      } else if (error.message.includes("already exists")) {
+        userMessage = "This payment has already been processed.";
+        statusCode = 409;
+      }
+    }
+    
+    return new Response(JSON.stringify({ error: userMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: statusCode,
     });
   }
 });

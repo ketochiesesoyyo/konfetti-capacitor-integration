@@ -28,8 +28,13 @@ export const swipeSchema = z.object({
 
 // Report validation
 export const reportSchema = z.object({
-  reason: z.string().min(1, 'Please select a reason'),
+  reason: z.string().min(1, 'Please select a reason').max(100, 'Reason must be less than 100 characters'),
   custom_reason: z.string().trim().max(500, 'Details must be less than 500 characters').optional(),
+});
+
+// Message validation
+export const messageSchema = z.object({
+  content: z.string().trim().min(1, 'Message cannot be empty').max(5000, 'Message must be less than 5000 characters'),
 });
 
 // Match validation

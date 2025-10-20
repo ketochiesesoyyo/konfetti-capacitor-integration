@@ -207,7 +207,7 @@ const ChatThread = () => {
     content: z.string()
       .trim()
       .min(1, "Message cannot be empty")
-      .max(2000, "Message too long (max 2000 characters)")
+      .max(5000, "Message too long (max 5000 characters)")
   });
 
   const handleSend = async () => {

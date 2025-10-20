@@ -77,10 +77,28 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("[CHECKOUT] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    
+    // Map errors to user-friendly messages without exposing internal details
+    let userMessage = "Unable to create checkout session. Please try again.";
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      // Log full error server-side only
+      console.error("[CHECKOUT] Full error details:", error.message, error.stack);
+      
+      // Map specific error types to generic messages
+      if (error.message.includes("not authenticated")) {
+        userMessage = "Authentication required. Please sign in.";
+        statusCode = 401;
+      } else if (error.message.includes("Event ID is required")) {
+        userMessage = "Invalid request. Event information is missing.";
+        statusCode = 400;
+      }
+    }
+    
+    return new Response(JSON.stringify({ error: userMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: statusCode,
     });
   }
 });
