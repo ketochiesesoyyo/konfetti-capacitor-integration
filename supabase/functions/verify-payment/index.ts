@@ -100,19 +100,22 @@ serve(async (req) => {
 
     console.log("[VERIFY] Premium access granted");
 
-    // Activate the event now that payment is confirmed
+    // Activate the event and upgrade to premium plan
     const { error: eventError } = await supabaseClient
       .from("events")
-      .update({ status: "active" })
+      .update({ 
+        status: "active",
+        plan: "premium"
+      })
       .eq("id", eventId)
       .eq("created_by", user.id);
 
     if (eventError) {
-      console.error("[VERIFY] Error activating event:", eventError);
+      console.error("[VERIFY] Error activating/upgrading event:", eventError);
       throw eventError;
     }
 
-    console.log("[VERIFY] Event activated");
+    console.log("[VERIFY] Event activated and upgraded to premium");
 
     return new Response(JSON.stringify({ success: true, message: "Payment verified and Premium access granted" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

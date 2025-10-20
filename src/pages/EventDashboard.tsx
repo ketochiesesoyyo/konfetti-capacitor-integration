@@ -99,6 +99,9 @@ const EventDashboard = () => {
         description: "Your event now has unlimited guest capacity",
       });
       
+      // Refresh event data to show updated plan
+      await fetchEventData();
+      
       // Remove query params from URL
       navigate(`/event-dashboard/${eventId}`, { replace: true });
     } catch (error: any) {
@@ -106,6 +109,29 @@ const EventDashboard = () => {
       toast.error("Payment verification failed", {
         description: "Please contact support if payment was completed",
       });
+    }
+  };
+
+  const handleUpgradeToPremium = async () => {
+    if (!eventId) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
+        body: { eventId },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Open Stripe checkout in new tab
+        window.open(data.url, '_blank');
+        toast.success("Opening payment page...", {
+          description: "Complete payment to upgrade to Premium",
+        });
+      }
+    } catch (error: any) {
+      console.error("Upgrade checkout error:", error);
+      toast.error("Failed to initiate upgrade");
     }
   };
 
@@ -761,6 +787,36 @@ const EventDashboard = () => {
               }}
               onCropComplete={handleCropComplete}
             />
+
+            {/* Upgrade to Premium */}
+            {event.plan === 'free' && event.status === 'active' && (
+              <Card className="p-6 border-primary/50 bg-primary/5">
+                <h3 className="font-semibold mb-2">Upgrade to Premium</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Unlock unlimited guests and premium features for your event.
+                </p>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-primary">✓</span>
+                    <span>Unlimited guests (currently limited to 10)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-primary">✓</span>
+                    <span>Priority support</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-primary">✓</span>
+                    <span>Advanced analytics</span>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full"
+                  onClick={handleUpgradeToPremium}
+                >
+                  Upgrade to Premium - $299
+                </Button>
+              </Card>
+            )}
 
             <Card className="p-6 border-destructive/50">
               <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>
