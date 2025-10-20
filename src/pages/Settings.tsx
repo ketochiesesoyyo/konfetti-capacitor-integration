@@ -3,20 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, LogOut, Palette, Lock, Mail, Check } from "lucide-react";
+import { ArrowLeft, LogOut, Lock, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/contexts/ThemeContext";
-
-const THEMES = [
-  { id: "sunset", name: "Sunset", preview: "linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%)" },
-  { id: "midnight", name: "Midnight", preview: "hsl(240, 8%, 12%)" },
-] as const;
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -95,38 +88,6 @@ const Settings = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
-        {/* Theme Selection */}
-        <Card className="p-8 shadow-card hover-lift">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-2xl bg-primary/10">
-              <Palette className="w-6 h-6 text-primary" />
-            </div>
-            <h2 className="text-xl font-semibold font-display">App Theme</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {THEMES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTheme(t.id as any)}
-                className="relative group"
-              >
-                <div 
-                  className="aspect-square rounded-3xl transition-all duration-300 group-hover:scale-105 shadow-card group-hover:shadow-card-hover"
-                  style={{ background: t.preview }}
-                />
-                {theme === t.id && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white rounded-full p-2 shadow-card">
-                      <Check className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-                )}
-                <p className="text-sm mt-3 text-center font-semibold">{t.name}</p>
-              </button>
-            ))}
-          </div>
-        </Card>
-
         {/* Change Email */}
         <Card className="p-8 shadow-card hover-lift">
           <div className="flex items-center gap-3 mb-6">
