@@ -657,65 +657,52 @@ const Home = () => {
               {visibleHostingEvents.length > 0 ? (
                 visibleHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="flex min-h-[120px]">
-                  {/* Selection Checkbox */}
-                  {selectionMode && (
-                    <div className="flex items-center justify-center px-2 sm:px-3">
-                      <Checkbox
-                        checked={selectedEvents.has(event.id)}
-                        onCheckedChange={() => handleToggleEventSelection(event.id)}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Event Image - Circular with margin */}
-                  <div className="w-20 sm:w-28 shrink-0 flex items-start justify-start py-3 pl-2 sm:pl-3">
-                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                      {event.image_url ? (
-                        <img 
-                          src={event.image_url} 
-                          alt={event.name}
-                          className="w-full h-full object-cover"
+                <div className="flex flex-col">
+                  <div className="flex min-h-[120px]">
+                    {/* Selection Checkbox */}
+                    {selectionMode && (
+                      <div className="flex items-center justify-center px-2 sm:px-3">
+                        <Checkbox
+                          checked={selectedEvents.has(event.id)}
+                          onCheckedChange={() => handleToggleEventSelection(event.id)}
                         />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 sm:w-10 sm:h-10 text-muted-foreground" />
-                      )}
+                      </div>
+                    )}
+                    
+                    {/* Event Image - Circular with margin */}
+                    <div className="w-20 sm:w-28 shrink-0 flex items-start justify-start py-3 pl-2 sm:pl-3">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                        {event.image_url ? (
+                          <img 
+                            src={event.image_url} 
+                            alt={event.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 sm:w-10 sm:h-10 text-muted-foreground" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Event Content */}
-                  <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
-                    <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3">
-                      <div 
-                        className="flex-1 cursor-pointer min-w-0 w-full" 
-                        onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
-                      >
-                        <h3 className="font-semibold text-base sm:text-lg hover:text-primary transition-colors break-words">{event.name}</h3>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1 flex-wrap">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
-                          <span className="break-words">{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
-                        </div>
-                        {event.status !== 'draft' && (
-                          <>
+                    
+                    {/* Event Content */}
+                    <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
+                      <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3">
+                        <div 
+                          className="flex-1 cursor-pointer min-w-0 w-full" 
+                          onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
+                        >
+                          <h3 className="font-semibold text-base sm:text-lg hover:text-primary transition-colors break-words">{event.name}</h3>
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1 flex-wrap">
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                            <span className="break-words">{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
+                          </div>
+                          {event.status !== 'draft' && (
                             <div className="text-xs text-muted-foreground mt-1 break-all">
                               Code: <span className="font-mono font-semibold">{event.invite_code}</span>
                             </div>
-                            {event.plan === 'free' && event.status === 'active' && (
-                              <Button
-                                size="sm"
-                                className="mt-3 w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/event-dashboard/${event.id}?tab=settings`);
-                                }}
-                              >
-                                Upgrade to Premium - $299
-                              </Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <div className="flex sm:flex-col flex-row items-center gap-2 sm:gap-1">
+                          )}
+                        </div>
+                        <div className="flex sm:flex-col flex-row items-center gap-2 sm:gap-1">
                         <Badge 
                           variant="outline"
                           className={
@@ -801,6 +788,23 @@ const Home = () => {
                       </div>
                     </div>
                   </div>
+                  </div>
+                
+                {/* Upgrade Button - Full Width */}
+                {event.status !== 'draft' && event.plan === 'free' && event.status === 'active' && (
+                  <div className="px-2 pb-3 sm:px-3">
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/event-dashboard/${event.id}?tab=settings`);
+                      }}
+                    >
+                      Upgrade to Premium - $299
+                    </Button>
+                  </div>
+                )}
                 </div>
               </Card>
                 ))
