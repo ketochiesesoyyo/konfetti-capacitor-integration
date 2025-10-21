@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+const requestSchema = z.object({
+  eventId: z.string().uuid("Invalid event ID format"),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,10 +36,16 @@ serve(async (req) => {
     
     console.log("[CHECKOUT] User authenticated:", user.email);
 
-    const { eventId } = await req.json();
-    if (!eventId) {
-      throw new Error("Event ID is required");
+    // Validate input with Zod schema
+    const body = await req.json();
+    const validationResult = requestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      console.error("[CHECKOUT] Validation error:", validationResult.error);
+      throw new Error("Invalid input data");
     }
+    
+    const { eventId } = validationResult.data;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -90,8 +101,8 @@ serve(async (req) => {
       if (error.message.includes("not authenticated")) {
         userMessage = "Authentication required. Please sign in.";
         statusCode = 401;
-      } else if (error.message.includes("Event ID is required")) {
-        userMessage = "Invalid request. Event information is missing.";
+      } else if (error.message.includes("Event ID is required") || error.message.includes("Invalid input data")) {
+        userMessage = "Invalid request. Event information is missing or invalid.";
         statusCode = 400;
       }
     }
