@@ -696,23 +696,9 @@ const Home = () => {
                           <span>{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
                         </div>
                         {event.status !== 'draft' && (
-                          <>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Code: <span className="font-mono font-semibold">{event.invite_code}</span>
-                            </div>
-                            {event.plan === 'free' && event.status === 'active' && (
-                              <Button
-                                size="sm"
-                                className="mt-3 w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/event-dashboard/${event.id}?tab=settings`);
-                                }}
-                              >
-                                Upgrade to Premium - $299
-                              </Button>
-                            )}
-                          </>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                          </div>
                         )}
                       </div>
                       <div className="flex flex-col items-center gap-1">
@@ -802,6 +788,22 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Upgrade Button - Full Width Below */}
+                {event.status !== 'draft' && event.plan === 'free' && event.status === 'active' && (
+                  <div className="px-3 pb-3">
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/event-dashboard/${event.id}?tab=settings`);
+                      }}
+                    >
+                      Upgrade to Premium - $299
+                    </Button>
+                  </div>
+                )}
               </Card>
                 ))
               ) : showHidden ? (
