@@ -1,7 +1,9 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, User, Heart, MessageCircle, PartyPopper } from "lucide-react";
+import { User, Heart, MessageCircle, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
+import MatchIconNormal from "@/assets/match-icon-normal.svg";
+import MatchIconActive from "@/assets/match-icon-purple.svg";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,12 +14,12 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
 
   const tabs = [
-    { path: "/", icon: Home, label: "Events" },
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/matchmaking", icon: PartyPopper, label: "Match" },
+    { path: "/", icon: PartyPopper, label: "Events" },
+    { path: "/matchmaking", customIcon: true, label: "" },
     { path: "/liked", icon: Heart, label: "Liked" },
     { path: "/chats", icon: MessageCircle, label: "Chats" },
-  ];
+  ] as const;
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -39,7 +41,6 @@ const Layout = ({ children }: LayoutProps) => {
         >
           <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-4">
             {tabs.map((tab) => {
-              const Icon = tab.icon;
               const active = isActive(tab.path);
               
               return (
@@ -53,8 +54,18 @@ const Layout = ({ children }: LayoutProps) => {
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 hover:scale-105"
                   )}
                 >
-                  <Icon className={cn("w-6 h-6 transition-all", active && "fill-primary")} />
-                  <span className={cn("text-xs font-medium", active && "font-semibold")}>{tab.label}</span>
+                  {"customIcon" in tab && tab.customIcon ? (
+                    <img 
+                      src={active ? MatchIconActive : MatchIconNormal} 
+                      alt="Match"
+                      className="w-6 h-6 transition-all"
+                    />
+                  ) : (
+                    "icon" in tab && tab.icon && <tab.icon className={cn("w-6 h-6 transition-all", active && "fill-primary")} />
+                  )}
+                  {tab.label && (
+                    <span className={cn("text-xs font-medium", active && "font-semibold")}>{tab.label}</span>
+                  )}
                 </button>
               );
             })}
