@@ -58,7 +58,7 @@ const Layout = ({ children }: LayoutProps) => {
                     <img 
                       src={active ? MatchIconActive : MatchIconNormal} 
                       alt="Match"
-                      className="w-6 h-6 transition-all"
+                      className="w-12 h-12 transition-all"
                     />
                   ) : (
                     "icon" in tab && tab.icon && <tab.icon className={cn("w-6 h-6 transition-all", active && "fill-primary")} />
