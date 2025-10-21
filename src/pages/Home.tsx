@@ -489,7 +489,7 @@ const Home = () => {
                     )}
                     
                     {/* Event Image - Circular with margin */}
-                    <div className="w-20 sm:w-28 shrink-0 flex items-center justify-start py-3 pl-2 sm:pl-3">
+                    <div className="w-20 sm:w-28 shrink-0 flex items-start justify-start py-3 pl-2 sm:pl-3">
                       <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center hover-scale transition-all shadow-soft">
                         {event.image_url ? (
                           <img 
@@ -669,7 +669,7 @@ const Home = () => {
                   )}
                   
                   {/* Event Image - Circular with margin */}
-                  <div className="w-20 sm:w-28 shrink-0 flex items-center justify-start py-3 pl-2 sm:pl-3">
+                  <div className="w-20 sm:w-28 shrink-0 flex items-start justify-start py-3 pl-2 sm:pl-3">
                     <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                       {event.image_url ? (
                         <img 
