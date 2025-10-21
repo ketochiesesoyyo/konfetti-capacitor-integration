@@ -686,44 +686,47 @@ const Home = () => {
                     
                     {/* Event Content */}
                     <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
-                      <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3">
-                        <div 
-                          className="flex-1 cursor-pointer min-w-0 w-full" 
-                          onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
-                        >
-                          <h3 className="font-semibold text-base sm:text-lg hover:text-primary transition-colors break-words">{event.name}</h3>
-                          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1 flex-wrap">
-                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
-                            <span className="break-words">{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
-                          </div>
-                          {event.status !== 'draft' && (
-                            <div className="text-xs text-muted-foreground mt-1 break-all">
-                              Code: <span className="font-mono font-semibold">{event.invite_code}</span>
-                            </div>
-                          )}
+                      <div 
+                        className="flex-1 cursor-pointer min-w-0 w-full" 
+                        onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
+                      >
+                        <h3 className="font-semibold text-base sm:text-lg hover:text-primary transition-colors break-words">{event.name}</h3>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1 flex-wrap">
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                          <span className="break-words">{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
                         </div>
-                        <div className="flex sm:flex-col flex-row items-center gap-2 sm:gap-1">
-                        <Badge 
-                          variant="outline"
-                          className={
-                            event.status === 'draft'
-                              ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
-                              : event.status === 'closed' 
-                                ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                                : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
-                          }
-                        >
-                          {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
-                        </Badge>
-                        
-                        {!selectionMode && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="w-4 h-4 text-gray-600" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                        {event.status !== 'draft' && (
+                          <div className="text-xs text-muted-foreground mt-1 break-all">
+                            Code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Status Badge and Menu - Full Width */}
+                  <div className="flex items-center justify-between px-2 pb-3 sm:px-3 sm:pb-3">
+                    <Badge 
+                      variant="outline"
+                      className={
+                        event.status === 'draft'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
+                          : event.status === 'closed' 
+                            ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                            : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
+                      }
+                    >
+                      {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
+                    </Badge>
+                    
+                    {!selectionMode && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="w-4 h-4 text-gray-600" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
                               {event.status === 'draft' ? (
                                 <DropdownMenuItem onClick={() => navigate(`/create-event?edit=${event.id}`)}>
                                   Complete Draft
@@ -786,9 +789,6 @@ const Home = () => {
                           </DropdownMenu>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  </div>
                 
                 {/* Upgrade Button - Full Width */}
                 {event.status !== 'draft' && event.plan === 'free' && event.status === 'active' && (
