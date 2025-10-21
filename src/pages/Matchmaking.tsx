@@ -683,7 +683,7 @@ const Matchmaking = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute bottom-0 left-0 right-0 glass-medium p-8 text-white border-t border-white/20">
-                  <h2 className="text-3xl font-bold mb-1 font-display drop-shadow-lg">
+                  <h2 className="text-3xl font-bold mb-1 drop-shadow-lg">
                     {currentProfile.name}, {currentProfile.age || "?"}
                   </h2>
                 </div>

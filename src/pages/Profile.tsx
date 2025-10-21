@@ -171,7 +171,7 @@ const Profile = () => {
         {/* Photos Card */}
         <Card className="p-8 shadow-card hover-lift animate-enter">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold font-display">Photos</h2>
+            <h2 className="text-lg font-semibold">Photos</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")} className="hover-scale">
               <Edit className="w-4 h-4 mr-2" />
               Edit
