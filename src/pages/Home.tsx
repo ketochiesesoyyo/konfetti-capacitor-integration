@@ -477,10 +477,10 @@ const Home = () => {
               visibleAttendingEvents.map((event, index) => (
                 <Card key={event.id} className={cn("overflow-hidden hover-lift shadow-card animate-enter", `delay-${Math.min(index * 100, 600)}`)}>
 
-                  <div className="flex">
+                  <div className="flex flex-col sm:flex-row min-h-[120px]">
                     {/* Selection Checkbox */}
                     {selectionMode && (
-                      <div className="flex items-center justify-center px-3">
+                      <div className="flex items-center justify-center px-3 sm:py-0 py-2">
                         <Checkbox
                           checked={selectedEvents.has(event.id)}
                           onCheckedChange={() => handleToggleEventSelection(event.id)}
@@ -489,7 +489,7 @@ const Home = () => {
                     )}
                     
                     {/* Event Image - Circular with margin */}
-                    <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
+                    <div className="w-full sm:w-28 shrink-0 flex items-center justify-center py-3 sm:pl-3">
                       <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center hover-scale transition-all shadow-soft">
                         {event.image_url ? (
                           <img 
@@ -504,19 +504,19 @@ const Home = () => {
                     </div>
                     
                     {/* Event Content */}
-                    <div className="flex-1 p-4 flex flex-col">
-                      <div className="flex items-start justify-between">
+                    <div className="flex-1 p-4 flex flex-col min-w-0">
+                      <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3">
                         <div 
-                          className="flex-1 cursor-pointer" 
+                          className="flex-1 cursor-pointer min-w-0 w-full" 
                           onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
                         >
-                          <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                          <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer break-words">{event.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
+                            <Calendar className="w-4 h-4 shrink-0" />
+                            <span className="break-words">{new Date(event.date).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex sm:flex-col flex-row items-center gap-2 sm:gap-1">
                           <Badge 
                             variant="outline"
                             className={event.status === 'closed' 
@@ -657,10 +657,10 @@ const Home = () => {
               {visibleHostingEvents.length > 0 ? (
                 visibleHostingEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="flex">
+                <div className="flex flex-col sm:flex-row min-h-[120px]">
                   {/* Selection Checkbox */}
                   {selectionMode && (
-                    <div className="flex items-center justify-center px-3">
+                    <div className="flex items-center justify-center px-3 sm:py-0 py-2">
                       <Checkbox
                         checked={selectedEvents.has(event.id)}
                         onCheckedChange={() => handleToggleEventSelection(event.id)}
@@ -669,7 +669,7 @@ const Home = () => {
                   )}
                   
                   {/* Event Image - Circular with margin */}
-                  <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
+                  <div className="w-full sm:w-28 shrink-0 flex items-center justify-center py-3 sm:pl-3">
                     <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                       {event.image_url ? (
                         <img 
@@ -684,20 +684,20 @@ const Home = () => {
                   </div>
                   
                   {/* Event Content */}
-                  <div className="flex-1 p-4 flex flex-col">
-                    <div className="flex items-start justify-between">
+                  <div className="flex-1 p-4 flex flex-col min-w-0">
+                    <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3">
                       <div 
-                        className="flex-1 cursor-pointer" 
+                        className="flex-1 cursor-pointer min-w-0 w-full" 
                         onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
                       >
-                        <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
+                        <h3 className="font-semibold text-lg hover:text-primary transition-colors break-words">{event.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
+                          <Calendar className="w-4 h-4 shrink-0" />
+                          <span className="break-words">{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
                         </div>
                         {event.status !== 'draft' && (
                           <>
-                            <div className="text-xs text-muted-foreground mt-1">
+                            <div className="text-xs text-muted-foreground mt-1 break-all">
                               Code: <span className="font-mono font-semibold">{event.invite_code}</span>
                             </div>
                             {event.plan === 'free' && event.status === 'active' && (
@@ -715,7 +715,7 @@ const Home = () => {
                           </>
                         )}
                       </div>
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex sm:flex-col flex-row items-center gap-2 sm:gap-1">
                         <Badge 
                           variant="outline"
                           className={
