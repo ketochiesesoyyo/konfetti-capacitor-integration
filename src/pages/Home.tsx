@@ -685,7 +685,7 @@ const Home = () => {
                     </div>
                     
                     {/* Event Content */}
-                    <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
+                    <div className="flex-1 px-3 pt-3 sm:px-4 sm:pt-4 flex flex-col min-w-0">
                       <div 
                         className="flex-1 cursor-pointer min-w-0 w-full" 
                         onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
@@ -697,7 +697,7 @@ const Home = () => {
                         </div>
                         {event.status !== 'draft' && (
                           <div className="text-xs text-muted-foreground mt-1 break-all">
-                            Code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                            <span className="font-mono font-semibold">{event.invite_code}</span>
                           </div>
                         )}
                       </div>
@@ -705,7 +705,7 @@ const Home = () => {
                   </div>
                   
                   {/* Status Badge and Menu - Full Width */}
-                  <div className="flex items-center justify-between px-2 pb-3 sm:px-3 sm:pb-3">
+                  <div className="flex items-center justify-between px-2 py-2 sm:px-3 sm:py-2">
                     <Badge 
                       variant="outline"
                       className={
@@ -792,7 +792,7 @@ const Home = () => {
                 
                 {/* Upgrade Button - Full Width */}
                 {event.status !== 'draft' && event.plan === 'free' && event.status === 'active' && (
-                  <div className="px-2 pb-3 sm:px-3">
+                  <div className="px-2 py-2 sm:px-3 sm:py-2">
                     <Button
                       size="sm"
                       className="w-full"
