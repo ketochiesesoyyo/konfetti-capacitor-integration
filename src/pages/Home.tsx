@@ -320,7 +320,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background p-6 border-b">
+      <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <KonfettiLogo className="w-32 h-auto mb-1" />
           <p className="text-sm text-subtitle">Find your perfect match at every celebration</p>

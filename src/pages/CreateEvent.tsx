@@ -581,7 +581,7 @@ const CreateEvent = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background p-6 border-b">
+      <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <Button

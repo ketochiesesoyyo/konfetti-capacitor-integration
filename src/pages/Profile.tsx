@@ -138,7 +138,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
-      <div className="bg-background p-6 border-b">
+      <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-1 text-[hsl(var(--title))]">{user.name}'s Profile</h1>
