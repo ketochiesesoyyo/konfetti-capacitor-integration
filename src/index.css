@@ -23,9 +23,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 345 25% 20%;
 
-    --primary: 350 75% 65%;
+    --primary: 282 82% 49%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 350 80% 75%;
+    --primary-glow: 286 78% 69%;
 
     --secondary: 20 60% 95%;
     --secondary-foreground: 345 50% 30%;
@@ -41,21 +41,21 @@ All colors MUST be HSL.
 
     --border: 20 30% 92%;
     --input: 20 30% 94%;
-    --ring: 350 75% 65%;
+    --ring: 282 82% 49%;
 
     --title: 345 30% 15%;
-    --subtitle: 350 75% 65%;
+    --subtitle: 282 82% 49%;
 
     /* Bloom-style soft gradients */
-    --gradient-header: linear-gradient(135deg, hsl(350, 75%, 70%) 0%, hsl(20, 75%, 80%) 100%);
-    --gradient-primary-vertical: linear-gradient(180deg, hsl(350, 75%, 70%) 0%, hsl(15, 70%, 75%) 100%);
+    --gradient-header: linear-gradient(135deg, hsl(282, 82%, 49%) 0%, hsl(286, 78%, 69%) 100%);
+    --gradient-primary-vertical: linear-gradient(180deg, hsl(282, 82%, 49%) 0%, hsl(286, 78%, 69%) 100%);
     
     /* Very soft layered shadows */
-    --shadow-xs: 0 2px 8px rgba(255, 182, 193, 0.08);
-    --shadow-soft: 0 4px 16px rgba(255, 182, 193, 0.12);
-    --shadow-card: 0 8px 24px -4px rgba(255, 182, 193, 0.15);
-    --shadow-card-hover: 0 12px 32px -8px rgba(255, 182, 193, 0.2);
-    --shadow-heavy: 0 20px 60px -10px rgba(255, 182, 193, 0.25);
+    --shadow-xs: 0 2px 8px rgba(180, 22, 226, 0.08);
+    --shadow-soft: 0 4px 16px rgba(180, 22, 226, 0.12);
+    --shadow-card: 0 8px 24px -4px rgba(180, 22, 226, 0.15);
+    --shadow-card-hover: 0 12px 32px -8px rgba(180, 22, 226, 0.2);
+    --shadow-heavy: 0 20px 60px -10px rgba(180, 22, 226, 0.25);
     
     /* Glassmorphism values */
     --glass-light: rgba(255, 255, 255, 0.7);
@@ -136,7 +136,7 @@ All colors MUST be HSL.
 
   /* Theme-aware gradient for backgrounds and buttons */
   .theme-sunset .gradient-primary {
-    background: linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%);
+    background: linear-gradient(135deg, hsl(282, 82%, 49%) 0%, hsl(286, 78%, 69%) 100%);
   }
 
   .theme-midnight .gradient-primary {
@@ -145,7 +145,7 @@ All colors MUST be HSL.
 
   /* Backward compatibility - can remove once all uses are updated */
   .gradient-sunset {
-    background: linear-gradient(135deg, hsl(345, 80%, 65%) 0%, hsl(25, 85%, 75%) 100%);
+    background: linear-gradient(135deg, hsl(282, 82%, 49%) 0%, hsl(286, 78%, 69%) 100%);
   }
 
   /* Glassmorphism Utility Classes */
