@@ -32,43 +32,42 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="flex flex-col h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <main className="flex-1 overflow-y-auto pb-24 px-1">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-28 px-1">{children}</main>
       
       {!hideNav && (
         <nav 
-          className="fixed bottom-0 left-0 right-0 glass-light border-t border-border/50 shadow-heavy z-50 backdrop-blur-xl"
+          className="fixed bottom-6 left-4 right-4 z-50"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-4">
-            {tabs.map((tab) => {
-              const active = isActive(tab.path);
-              
-              return (
-                <button
-                  key={tab.path}
-                  onClick={() => navigate(tab.path)}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-all duration-300",
-                    active
-                      ? "text-primary bg-primary/10 shadow-soft scale-105"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 hover:scale-105"
-                  )}
-                >
-                  {"customIcon" in tab && tab.customIcon ? (
-                    <img 
-                      src={active ? MatchIconActive : MatchIconNormal} 
-                      alt="Match"
-                      className="w-12 h-12 transition-all"
-                    />
-                  ) : (
-                    "icon" in tab && tab.icon && <tab.icon className={cn("w-6 h-6 transition-all", active && "fill-primary")} />
-                  )}
-                  {tab.label && (
-                    <span className={cn("text-xs font-medium", active && "font-semibold")}>{tab.label}</span>
-                  )}
-                </button>
-              );
-            })}
+          <div className="glass-light border border-border/50 shadow-heavy backdrop-blur-xl rounded-full">
+            <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-6">
+              {tabs.map((tab) => {
+                const active = isActive(tab.path);
+                
+                return (
+                  <button
+                    key={tab.path}
+                    onClick={() => navigate(tab.path)}
+                    className={cn(
+                      "flex items-center justify-center p-3 rounded-full transition-all duration-300",
+                      active
+                        ? "text-primary bg-primary/10 shadow-soft"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    )}
+                  >
+                    {"customIcon" in tab && tab.customIcon ? (
+                      <img 
+                        src={active ? MatchIconActive : MatchIconNormal} 
+                        alt="Match"
+                        className="w-7 h-7 transition-all"
+                      />
+                    ) : (
+                      "icon" in tab && tab.icon && <tab.icon className={cn("w-7 h-7 transition-all", active && "fill-primary")} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </nav>
       )}

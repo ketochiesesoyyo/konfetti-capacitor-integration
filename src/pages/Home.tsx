@@ -833,22 +833,21 @@ const Home = () => {
         </div>
 
         {/* Floating Action Buttons */}
-        <div className="fixed bottom-28 right-4 flex flex-col gap-3 z-40">
+        <div className="fixed bottom-28 right-6 flex flex-col gap-3 z-40">
           <Button
             size="lg"
-            className="shadow-card hover:shadow-card-hover bg-primary text-white border-primary hover-lift"
+            className="rounded-full w-14 h-14 shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-gradient-primary"
             onClick={handleCreateEvent}
           >
-            <Plus className="w-5 h-5" />
-            Create Event
+            <Plus className="w-6 h-6" />
           </Button>
           <Button
             variant="outline"
             size="lg"
-            className="shadow-card hover:shadow-card-hover bg-background hover-lift"
+            className="rounded-full w-14 h-14 shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2"
             onClick={() => navigate("/join-event")}
           >
-            Join Event
+            <Users className="w-6 h-6" />
           </Button>
         </div>
       </div>
