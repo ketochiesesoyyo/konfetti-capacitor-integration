@@ -36,11 +36,11 @@ const Layout = ({ children }: LayoutProps) => {
       
       {!hideNav && (
         <nav 
-          className="fixed bottom-6 left-0 right-0 z-50"
+          className="fixed bottom-6 left-0 right-0 z-50 px-6"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="glass-light border border-border/50 shadow-heavy backdrop-blur-xl rounded-full max-w-lg mx-auto">
-            <div className="flex justify-around items-center h-16 px-6">
+            <div className="flex justify-around items-center h-16 px-4 sm:px-6">
               {tabs.map((tab) => {
                 const active = isActive(tab.path);
                 
@@ -49,7 +49,7 @@ const Layout = ({ children }: LayoutProps) => {
                     key={tab.path}
                     onClick={() => navigate(tab.path)}
                     className={cn(
-                      "flex items-center justify-center p-3 rounded-full transition-all duration-300",
+                      "flex items-center justify-center p-2 sm:p-3 rounded-full transition-all duration-300",
                       active
                         ? "text-primary bg-primary/10 shadow-soft"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -59,10 +59,10 @@ const Layout = ({ children }: LayoutProps) => {
                       <img 
                         src={active ? MatchIconActive : MatchIconNormal} 
                         alt="Match"
-                        className="w-7 h-7 transition-all"
+                        className="w-5 h-5 sm:w-7 sm:h-7 transition-all"
                       />
                     ) : (
-                      "icon" in tab && tab.icon && <tab.icon className={cn("w-7 h-7 transition-all", active && "fill-primary")} />
+                      "icon" in tab && tab.icon && <tab.icon className={cn("w-5 h-5 sm:w-7 sm:h-7 transition-all", active && "fill-primary")} />
                     )}
                   </button>
                 );
