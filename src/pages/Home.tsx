@@ -54,6 +54,7 @@ const Home = () => {
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [hiddenEventIds, setHiddenEventIds] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -832,22 +833,47 @@ const Home = () => {
           ) : null}
         </div>
 
-        {/* Floating Action Buttons */}
-        <div className="fixed bottom-28 right-6 flex flex-col gap-3 z-40">
+        {/* Floating Action Button */}
+        <div className="fixed bottom-28 right-6 z-40">
+          {/* Expanded Action Buttons */}
+          <div className={cn(
+            "flex flex-col gap-3 mb-3 transition-all duration-300",
+            fabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+          )}>
+            <Button
+              size="lg"
+              className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-background border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap px-6"
+              onClick={() => {
+                handleCreateEvent();
+                setFabOpen(false);
+              }}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Event
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2 whitespace-nowrap px-6"
+              onClick={() => {
+                navigate("/join-event");
+                setFabOpen(false);
+              }}
+            >
+              Join Event
+            </Button>
+          </div>
+
+          {/* Main FAB Button */}
           <Button
             size="lg"
-            className="rounded-full w-14 h-14 shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-gradient-primary"
-            onClick={handleCreateEvent}
+            className={cn(
+              "rounded-full w-16 h-16 shadow-heavy hover:shadow-glow transition-all duration-300 bg-gradient-primary",
+              fabOpen && "rotate-45"
+            )}
+            onClick={() => setFabOpen(!fabOpen)}
           >
-            <Plus className="w-6 h-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full w-14 h-14 shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2"
-            onClick={() => navigate("/join-event")}
-          >
-            <Users className="w-6 h-6" />
+            <Plus className="w-7 h-7" />
           </Button>
         </div>
       </div>
