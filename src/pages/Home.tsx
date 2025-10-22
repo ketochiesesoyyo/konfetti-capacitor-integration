@@ -835,48 +835,50 @@ const Home = () => {
 
         {/* Floating Action Button */}
         <div className="fixed bottom-28 left-0 right-0 z-40 pointer-events-none">
-          <div className="max-w-lg mx-auto px-4 flex justify-end">
-            <div className="pointer-events-auto">
-              {/* Expanded Action Buttons */}
-              <div className={cn(
-                "flex flex-col gap-3 mb-3 transition-all duration-300",
-                fabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-              )}>
+          <div className="max-w-lg mx-auto px-4">
+            <div className="relative flex justify-end">
+              <div className="pointer-events-auto">
+                {/* Expanded Action Buttons */}
+                <div className={cn(
+                  "absolute bottom-20 right-0 flex flex-col gap-3 transition-all duration-300",
+                  fabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+                )}>
+                  <Button
+                    size="lg"
+                    className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-background border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap px-6"
+                    onClick={() => {
+                      handleCreateEvent();
+                      setFabOpen(false);
+                    }}
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create Event
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2 whitespace-nowrap px-6"
+                    onClick={() => {
+                      navigate("/join-event");
+                      setFabOpen(false);
+                    }}
+                  >
+                    Join Event
+                  </Button>
+                </div>
+
+                {/* Main FAB Button */}
                 <Button
                   size="lg"
-                  className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-background border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap px-6"
-                  onClick={() => {
-                    handleCreateEvent();
-                    setFabOpen(false);
-                  }}
+                  className={cn(
+                    "rounded-full w-16 h-16 shadow-heavy hover:shadow-glow transition-all duration-300 bg-primary hover:bg-primary/80",
+                    fabOpen && "rotate-45"
+                  )}
+                  onClick={() => setFabOpen(!fabOpen)}
                 >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Event
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2 whitespace-nowrap px-6"
-                  onClick={() => {
-                    navigate("/join-event");
-                    setFabOpen(false);
-                  }}
-                >
-                  Join Event
+                  <Plus className="w-7 h-7 text-primary-foreground" />
                 </Button>
               </div>
-
-              {/* Main FAB Button */}
-              <Button
-                size="lg"
-                className={cn(
-                  "rounded-full w-16 h-16 shadow-heavy hover:shadow-glow transition-all duration-300 bg-gradient-primary",
-                  fabOpen && "rotate-45"
-                )}
-                onClick={() => setFabOpen(!fabOpen)}
-              >
-                <Plus className="w-7 h-7" />
-              </Button>
             </div>
           </div>
         </div>
