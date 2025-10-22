@@ -36,11 +36,11 @@ const Layout = ({ children }: LayoutProps) => {
       
       {!hideNav && (
         <nav 
-          className="fixed bottom-6 left-4 right-4 z-50"
+          className="fixed bottom-6 left-0 right-0 z-50"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <div className="glass-light border border-border/50 shadow-heavy backdrop-blur-xl rounded-full">
-            <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-6">
+          <div className="glass-light border border-border/50 shadow-heavy backdrop-blur-xl rounded-full max-w-lg mx-auto">
+            <div className="flex justify-around items-center h-16 px-6">
               {tabs.map((tab) => {
                 const active = isActive(tab.path);
                 
