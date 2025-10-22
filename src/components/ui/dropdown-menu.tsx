@@ -25,7 +25,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-xl px-3 py-2 text-sm outline-none transition-all data-[state=open]:font-semibold focus:font-semibold",
+      "flex cursor-default select-none items-center rounded-xl px-3 py-2 text-sm outline-none transition-all data-[state=open]:font-semibold focus:font-semibold hover:font-semibold",
       inset && "pl-8",
       className,
     )}
@@ -79,7 +79,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-xl px-3 py-2 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:bg-secondary/30",
+      "relative flex cursor-default select-none items-center rounded-xl px-3 py-2 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:font-semibold",
       inset && "pl-8",
       className,
     )}
@@ -95,7 +95,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:bg-secondary/30",
+      "relative flex cursor-default select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:font-semibold",
       className,
     )}
     checked={checked}
@@ -118,7 +118,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:bg-secondary/30",
+      "relative flex cursor-default select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:font-semibold hover:font-semibold",
       className,
     )}
     {...props}
