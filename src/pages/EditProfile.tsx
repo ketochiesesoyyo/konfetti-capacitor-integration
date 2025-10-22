@@ -822,7 +822,7 @@ const EditProfile = () => {
       <div className="fixed left-0 right-0 flex items-center justify-center z-50 pointer-events-none px-4" style={{ bottom: '30px' }}>
         <div className="pointer-events-auto w-full max-w-lg">
           <Button 
-            className={hasChanges() ? "w-full bg-primary text-white hover:bg-[hsl(var(--primary-glow))] animate-pulse" : "w-full bg-primary/40 text-white hover:bg-primary/60"}
+            className={hasChanges() ? "w-full bg-primary text-white hover:bg-[hsl(var(--primary-glow))]" : "w-full bg-primary/40 text-white hover:bg-primary/60"}
             style={{ boxShadow: '0 0 12px rgba(0, 0, 0, 0.25)' }}
             size="lg" 
             onClick={handleSave}
