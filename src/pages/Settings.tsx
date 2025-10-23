@@ -3,17 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, LogOut, Lock, Mail } from "lucide-react";
+import { ArrowLeft, LogOut, Lock, Mail, Languages } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    toast.success(lng === 'en' ? 'Language changed to English' : 'Idioma cambiado a Español');
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -144,6 +151,34 @@ const Settings = () => {
             </div>
             <Button onClick={handlePasswordChange} disabled={loading} className="w-full" size="lg">
               Update Password
+            </Button>
+          </div>
+        </Card>
+
+        {/* Language Selection */}
+        <Card className="p-8 shadow-card hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              <Languages className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold">Language / Idioma</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={() => changeLanguage('en')}
+              variant={i18n.language === 'en' ? 'default' : 'outline'}
+              size="lg"
+              className="w-full"
+            >
+              English
+            </Button>
+            <Button
+              onClick={() => changeLanguage('es')}
+              variant={i18n.language === 'es' ? 'default' : 'outline'}
+              size="lg"
+              className="w-full"
+            >
+              Español
             </Button>
           </div>
         </Card>
