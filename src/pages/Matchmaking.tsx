@@ -11,6 +11,7 @@ import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { swipeSchema, matchSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ type Event = {
 const Matchmaking = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +156,7 @@ const Matchmaking = () => {
 
       if (attendeesError) {
         console.error("Error loading attendees:", attendeesError);
-        toast.error("Failed to load profiles");
+        toast.error(t('matchmaking.failedLoadProfiles'));
         setLoading(false);
         return;
       }
@@ -172,7 +174,7 @@ const Matchmaking = () => {
       const { data, error } = await supabase.from("profiles").select("*").in("user_id", attendeeIds);
 
       if (error) {
-        toast.error("Failed to load profiles");
+        toast.error(t('matchmaking.failedLoadProfiles'));
         console.error(error);
         setProfiles([]);
       } else {
@@ -186,7 +188,7 @@ const Matchmaking = () => {
         // Only require current user to have preferences set
         // Don't block if other users haven't completed their profiles yet
         if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
-          toast.error("Please complete your profile with gender preferences");
+          toast.error(t('matchmaking.completeProfile'));
           navigate("/edit-profile");
           setLoading(false);
           return;
@@ -317,7 +319,7 @@ const Matchmaking = () => {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="p-8 text-center max-w-md">
-          <p className="text-muted-foreground">Loading profiles...</p>
+          <p className="text-muted-foreground">{t('matchmaking.loadingProfiles')}</p>
         </Card>
       </div>
     );
@@ -334,7 +336,7 @@ const Matchmaking = () => {
     });
 
     if (!swipeValidation.success) {
-      toast.error("Invalid swipe data");
+      toast.error(t('matchmaking.invalidSwipe'));
       return;
     }
 
@@ -357,7 +359,7 @@ const Matchmaking = () => {
 
     if (swipeError) {
       console.error("Error saving swipe:", swipeError);
-      toast.error("Failed to save swipe");
+      toast.error(t('matchmaking.failedSaveSwipe'));
       setIsExiting(false);
       return;
     }
@@ -379,7 +381,7 @@ const Matchmaking = () => {
     let matchCreated = false;
 
     if (liked) {
-      toast.success("Liked! 💕");
+      toast.success(t('matchmaking.liked'));
 
       // Check if the other user already liked us
       const { data: reciprocalSwipe } = await supabase
@@ -445,7 +447,7 @@ const Matchmaking = () => {
         }
       }
     } else {
-      toast("Passed");
+      toast(t('matchmaking.passed'));
     }
 
     // Only move to next profile if NO match was created
@@ -459,8 +461,8 @@ const Matchmaking = () => {
         } else {
           // Move to next index to trigger the empty state
           setCurrentIndex((prev) => prev + 1);
-          toast("You've seen everyone! Check back later.", {
-            description: "New guests may join this event soon.",
+          toast(t('matchmaking.seenEveryone'), {
+            description: t('matchmaking.checkBackLater'),
           });
         }
       }, 300);
@@ -478,7 +480,7 @@ const Matchmaking = () => {
 
     if (deleteError) {
       console.error("Error undoing swipe:", deleteError);
-      toast.error("Failed to undo");
+      toast.error(t('matchmaking.failedUndo'));
       return;
     }
 
@@ -509,7 +511,7 @@ const Matchmaking = () => {
     setLastSwipeDirection(null);
     setLastSwipeId(null);
 
-    toast.success("Swipe undone");
+    toast.success(t('matchmaking.swipeUndone'));
   };
 
 
