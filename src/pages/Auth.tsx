@@ -10,12 +10,14 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import { useTranslation } from "react-i18next";
 
 const isDev = import.meta.env.DEV;
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,12 +75,12 @@ const Auth = () => {
     e.preventDefault();
     
     if (!isLogin && password !== confirmPassword) {
-      toast.error("Passwords don't match");
+      toast.error(t('auth.passwordsNoMatch'));
       return;
     }
 
     if (!isLogin && !agreedToTerms) {
-      toast.error("Please confirm you are 18+ and agree to terms");
+      toast.error(t('auth.confirmAge'));
       return;
     }
 
@@ -94,14 +96,14 @@ const Auth = () => {
 
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
-            toast.error("Invalid email or password");
+            toast.error(t('auth.invalidCredentials'));
           } else {
             toast.error(error.message);
           }
           return;
         }
 
-        toast.success("Welcome back!");
+        toast.success(t('auth.welcomeBack'));
         
         // Check if there's a pending invite in URL params
         const pendingInvite = searchParams.get("invite");
@@ -125,14 +127,14 @@ const Auth = () => {
 
         if (error) {
           if (error.message.includes("already registered")) {
-            toast.error("This email is already registered");
+            toast.error(t('auth.emailRegistered'));
           } else {
             toast.error(error.message);
           }
           return;
         }
 
-        toast.success("Account created! Please complete your profile.");
+        toast.success(t('auth.accountCreated'));
         
         // Redirect to profile creation with pending invite in URL
         const pendingInvite = searchParams.get("invite");
@@ -178,13 +180,13 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(`Failed to sign in with ${provider}`);
+        toast.error(t('auth.failedSignIn', { provider }));
         if (isDev) {
           console.error(error);
         }
       }
     } catch (error) {
-      toast.error("An error occurred during social login");
+      toast.error(t('auth.socialLoginError'));
       if (isDev) {
         console.error("Social login error:", error);
       }
@@ -199,17 +201,17 @@ const Auth = () => {
         <div className="flex flex-col items-center mb-8">
           <KonfettiLogo className="w-48 h-auto mb-4" />
           <p className="text-sm text-muted-foreground text-center">
-            The Wedding Matchmaking App
+            {t('auth.appTitle')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -217,7 +219,7 @@ const Auth = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('auth.password')}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -241,7 +243,7 @@ const Auth = () => {
           {!isLogin && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -269,7 +271,7 @@ const Auth = () => {
                   onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                 />
                 <Label htmlFor="terms" className="text-sm leading-tight">
-                  I confirm I am 18+ and agree to the Terms of Service
+                  {t('auth.ageTerms')}
                 </Label>
               </div>
             </>
@@ -281,7 +283,7 @@ const Auth = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}
+            {isLoading ? t('auth.loading') : isLogin ? t('auth.signIn') : t('auth.createAccount')}
           </Button>
         </form>
 
@@ -337,8 +339,8 @@ const Auth = () => {
             className="text-sm text-primary hover:underline"
           >
             {isLogin
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
+              ? t('auth.noAccount')
+              : t('auth.hasAccount')}
           </button>
         </div>
       </Card>
