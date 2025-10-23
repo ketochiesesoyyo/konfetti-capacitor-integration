@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type UnmatchDialogProps = {
   open: boolean;
@@ -18,15 +19,6 @@ type UnmatchDialogProps = {
   onUnmatchComplete: () => void;
 };
 
-const UNMATCH_REASONS = [
-  "We didn't click",
-  "I'm no longer interested",
-  "Conversation stalled",
-  "Personal preference",
-  "I prefer not to say",
-  "Other",
-];
-
 export const UnmatchDialog = ({
   open,
   onOpenChange,
@@ -36,18 +28,27 @@ export const UnmatchDialog = ({
   eventId,
   onUnmatchComplete,
 }: UnmatchDialogProps) => {
+  const { t } = useTranslation();
   const [selectedReason, setSelectedReason] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const UNMATCH_REASONS = [
+    t('unmatchDialog.reasonNoInterest'),
+    t('unmatchDialog.reasonFoundSomeone'),
+    t('unmatchDialog.reasonInappropriate'),
+    t('unmatchDialog.reasonNoChemistry'),
+    t('unmatchDialog.reasonOther'),
+  ];
+
   const handleUnmatch = async () => {
     if (!selectedReason) {
-      toast.error("Please select a reason");
+      toast.error(t('unmatchDialog.selectReason'));
       return;
     }
 
-    if (selectedReason === "Other" && !description.trim()) {
-      toast.error("Please provide a description");
+    if (selectedReason === t('unmatchDialog.reasonOther') && !description.trim()) {
+      toast.error(t('unmatchDialog.provideDescription'));
       return;
     }
 
@@ -56,7 +57,7 @@ export const UnmatchDialog = ({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error("You must be logged in");
+        toast.error(t('unmatchDialog.mustBeLoggedIn'));
         return;
       }
 
@@ -67,28 +68,28 @@ export const UnmatchDialog = ({
         _event_id: eventId,
         _match_id: matchId,
         _reason: selectedReason,
-        _description: selectedReason === "Other" ? description : null,
+        _description: selectedReason === t('unmatchDialog.reasonOther') ? description : null,
       });
 
       if (error) {
         // Handle specific error cases
         if (error.message.includes("Unauthorized")) {
-          toast.error("You don't have permission to unmatch");
+          toast.error(t('unmatchDialog.noPermission'));
         } else if (error.code === "23505") {
           // Duplicate key violation - already unmatched
-          toast.info("Already unmatched");
+          toast.info(t('unmatchDialog.alreadyUnmatched'));
         } else {
           throw error;
         }
         return;
       }
 
-      toast.success("You've unmatched successfully");
+      toast.success(t('unmatchDialog.unmatchSuccess'));
       onOpenChange(false);
       onUnmatchComplete();
     } catch (error) {
       console.error("Error unmatching:", error);
-      toast.error("Failed to unmatch. Please try again.");
+      toast.error(t('unmatchDialog.unmatchFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -100,10 +101,10 @@ export const UnmatchDialog = ({
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <UserX className="w-5 h-5" />
-            <DialogTitle>Unmatch {matchedUserName}</DialogTitle>
+            <DialogTitle>{t('unmatchDialog.title', { name: matchedUserName })}</DialogTitle>
           </div>
           <DialogDescription>
-            This will remove your chat with {matchedUserName}. They won't be notified, but you won't be able to match again in this event.
+            {t('unmatchDialog.whyUnmatch')}
           </DialogDescription>
         </DialogHeader>
 
@@ -119,9 +120,9 @@ export const UnmatchDialog = ({
             ))}
           </RadioGroup>
 
-          {selectedReason === "Other" && (
+          {selectedReason === t('unmatchDialog.reasonOther') && (
             <div className="space-y-2">
-              <Label htmlFor="unmatch-description">Please provide details (optional)</Label>
+              <Label htmlFor="unmatch-description">{t('unmatchDialog.provideDetails')}</Label>
               <Textarea
                 id="unmatch-description"
                 placeholder="Tell us more..."
@@ -143,14 +144,14 @@ export const UnmatchDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            {t('unmatchDialog.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={handleUnmatch}
             disabled={submitting || !selectedReason}
           >
-            {submitting ? "Unmatching..." : "Unmatch"}
+            {submitting ? "Unmatching..." : t('unmatchDialog.unmatch')}
           </Button>
         </div>
       </DialogContent>

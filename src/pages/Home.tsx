@@ -452,9 +452,9 @@ const Home = () => {
                         </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="date">Sort by Date</SelectItem>
-                        <SelectItem value="name">Sort by Name</SelectItem>
-                        <SelectItem value="status">Sort by Status</SelectItem>
+                        <SelectItem value="date">{t('home.sortByDate')}</SelectItem>
+                        <SelectItem value="name">{t('home.sortByName')}</SelectItem>
+                        <SelectItem value="status">{t('home.sortByStatus')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -467,9 +467,9 @@ const Home = () => {
                         </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Events</SelectItem>
-                        <SelectItem value="active">Active Only</SelectItem>
-                        <SelectItem value="closed">Closed Only</SelectItem>
+                        <SelectItem value="all">{t('home.allEvents')}</SelectItem>
+                        <SelectItem value="active">{t('home.activeOnly')}</SelectItem>
+                        <SelectItem value="closed">{t('home.closedOnly')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -555,13 +555,13 @@ const Home = () => {
                                         newSet.delete(event.id);
                                         return newSet;
                                       });
-                                      toast.success("Event shown");
+                                      toast.success(t('home.eventShown'));
                                     } catch (error: any) {
                                       console.error("Error showing event:", error);
-                                      toast.error("Failed to show event");
+                                      toast.error(t('home.failedShow'));
                                     }
                                   }}>
-                                    Show Event
+                                    {t('home.showEvent')}
                                   </DropdownMenuItem>
                                 ) : (
                                   <DropdownMenuItem onClick={async () => {
@@ -572,13 +572,13 @@ const Home = () => {
                                         .insert({ user_id: userId, event_id: event.id });
                                       if (error) throw error;
                                       setHiddenEventIds(prev => new Set([...prev, event.id]));
-                                      toast.success("Event hidden");
+                                      toast.success(t('home.eventHidden'));
                                     } catch (error: any) {
                                       console.error("Error hiding event:", error);
-                                      toast.error("Failed to hide event");
+                                      toast.error(t('home.failedShow'));
                                     }
                                   }}>
-                                    Hide Event
+                                    {t('home.hideEvent')}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem 
@@ -588,7 +588,7 @@ const Home = () => {
                                   }}
                                   className="text-destructive focus:text-destructive"
                                 >
-                                  Leave Event
+                                  {t('home.leaveEvent')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

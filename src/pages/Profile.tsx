@@ -173,10 +173,10 @@ const Profile = () => {
         {/* Photos Card */}
         <Card className="p-8 shadow-card hover-lift animate-enter">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold">Photos</h2>
+            <h2 className="text-lg font-semibold">{t('profile.photos')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")} className="hover-scale">
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -191,7 +191,7 @@ const Profile = () => {
               onClick={() => navigate("/edit-profile")}
             >
               <Camera className="w-6 h-6 mb-1" />
-              <span className="text-xs">Add Photo</span>
+              <span className="text-xs">{t('profile.addPhoto')}</span>
             </button>
           </div>
         </Card>
@@ -199,19 +199,19 @@ const Profile = () => {
         {/* Basic Info Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Basic Info</h2>
+            <h2 className="text-base font-semibold">{t('profile.basicInfo')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           <div className="space-y-3">
             <div>
-              <p className="text-sm text-muted-foreground">Name & Age</p>
+              <p className="text-sm text-muted-foreground">{t('profile.nameAge')}</p>
               <p className="font-medium">{user.name}, {user.age}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Gender</p>
+              <p className="text-sm text-muted-foreground">{t('profile.gender')}</p>
               <p className="font-medium">{user.gender}</p>
             </div>
           </div>
@@ -220,15 +220,15 @@ const Profile = () => {
         {/* Age Range Preference Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Age Range</h2>
+            <h2 className="text-base font-semibold">{t('profile.ageRange')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Interested in ages {user.age_min || 18} - {(user.age_max || 99) >= 65 ? '65+' : (user.age_max || 99)}
+              {t('profile.interestedInAges', { min: user.age_min || 18, max: (user.age_max || 99) >= 65 ? '65+' : (user.age_max || 99) })}
             </p>
             <Slider
               value={[user.age_min || 18, Math.min(user.age_max || 99, 65)]}
@@ -248,10 +248,10 @@ const Profile = () => {
         {/* Bio Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">About Me</h2>
+            <h2 className="text-base font-semibold">{t('profile.aboutMe')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           <p className="text-foreground">{user.bio}</p>
@@ -260,10 +260,10 @@ const Profile = () => {
         {/* Prompts Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Prompts</h2>
+            <h2 className="text-base font-semibold">{t('profile.prompts')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           {prompts.length > 0 ? (
@@ -278,17 +278,17 @@ const Profile = () => {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No prompts added yet</p>
+            <p className="text-muted-foreground text-sm">{t('profile.noPrompts')}</p>
           )}
         </Card>
 
         {/* Interests Card */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold">Interests</h2>
+            <h2 className="text-base font-semibold">{t('profile.interests')}</h2>
             <Button size="sm" variant="ghost" onClick={() => navigate("/edit-profile")}>
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              {t('profile.edit')}
             </Button>
           </div>
           {interests.length > 0 ? (
@@ -300,7 +300,7 @@ const Profile = () => {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No interests added yet</p>
+            <p className="text-muted-foreground text-sm">{t('profile.noInterests')}</p>
           )}
         </Card>
       </div>
@@ -321,7 +321,7 @@ const Profile = () => {
                 <h2 className="text-3xl font-bold mb-1">
                   {user?.name || "User"}, {user?.age || "?"}
                 </h2>
-                <p className="text-sm text-white/80">Preview Mode</p>
+                <p className="text-sm text-white/80">{t('profile.previewMode')}</p>
               </div>
             </div>
 
@@ -330,7 +330,7 @@ const Profile = () => {
             {/* Bio */}
             {user?.bio && (
               <div>
-                <h3 className="font-semibold mb-1">About</h3>
+                <h3 className="font-semibold mb-1">{t('profile.about')}</h3>
                 <p className="text-foreground">{user.bio}</p>
               </div>
             )}
@@ -370,7 +370,7 @@ const Profile = () => {
             {/* Interests */}
             {user?.interests && user.interests.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Interests</h3>
+                <h3 className="font-semibold mb-2">{t('profile.interests')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {user.interests.map((interest: string, idx: number) => (
                     <Badge key={idx} variant="secondary">
@@ -384,7 +384,7 @@ const Profile = () => {
             {/* Empty State */}
             {!user?.bio && (!user?.prompts || user.prompts.length === 0) && (!user?.interests || user.interests.length === 0) && (
               <p className="text-muted-foreground text-sm text-center py-4">
-                Add more details to your profile to show here!
+                {t('profile.addMoreDetails')}
               </p>
             )}
             </div>

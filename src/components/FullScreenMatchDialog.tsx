@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { MessageCircle, PartyPopper } from "lucide-react";
 import Confetti from "react-confetti";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface FullScreenMatchDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function FullScreenMatchDialog({
   onStartChat,
   onKeepMatching,
 }: FullScreenMatchDialogProps) {
+  const { t } = useTranslation();
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -68,12 +70,12 @@ export function FullScreenMatchDialog({
 
           {/* Match Title */}
           <h1 className="text-5xl md:text-6xl font-bold text-white text-center mb-4 animate-fade-in">
-            It's a Match!
+            {t('matchDialog.title')}
           </h1>
 
           {/* Match Subtitle */}
           <p className="text-xl md:text-2xl text-white/90 text-center mb-12 max-w-md animate-fade-in">
-            Get ready to vibe and celebrate together! 🎉
+            {t('matchDialog.subtitle', { name: matchedProfile.name })}
           </p>
 
           {/* Matched Profile */}
@@ -97,7 +99,7 @@ export function FullScreenMatchDialog({
               className="flex-1 text-lg py-6 bg-white text-primary hover:bg-white/90 shadow-2xl"
             >
               <MessageCircle className="w-5 h-5 mr-2" />
-              Start Chatting
+              {t('matchDialog.startChatting')}
             </Button>
             <Button
               size="lg"
@@ -106,7 +108,7 @@ export function FullScreenMatchDialog({
               className="flex-1 text-lg py-6 bg-white/20 text-white border-white/50 hover:bg-white/30 backdrop-blur-sm shadow-xl"
             >
               <PartyPopper className="w-5 h-5 mr-2" />
-              Keep Matching
+              {t('matchDialog.keepMatching')}
             </Button>
           </div>
         </div>
