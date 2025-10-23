@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,13 +24,13 @@ const Settings = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Logged out successfully");
+    toast.success(t('settings.loggedOut'));
     navigate("/auth");
   };
 
   const handleEmailChange = async () => {
     if (!newEmail) {
-      toast.error("Please enter a new email");
+      toast.error(t('settings.enterNewEmail'));
       return;
     }
 
@@ -41,24 +41,24 @@ const Settings = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Email update sent! Check your inbox to confirm.");
+      toast.success(t('settings.emailUpdateSent'));
       setNewEmail("");
     }
   };
 
   const handlePasswordChange = async () => {
     if (!newPassword) {
-      toast.error("Please enter a new password");
+      toast.error(t('settings.enterNewPassword'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t('settings.passwordsNoMatch'));
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(t('settings.passwordMinLength'));
       return;
     }
 
@@ -69,7 +69,7 @@ const Settings = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Password updated successfully");
+      toast.success(t('settings.passwordUpdated'));
       setNewPassword("");
       setConfirmPassword("");
     }
@@ -88,8 +88,8 @@ const Settings = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-[hsl(var(--title))]">Settings</h1>
-            <p className="text-sm mt-1 text-subtitle">Customize your experience</p>
+            <h1 className="text-3xl font-bold text-[hsl(var(--title))]">{t('settings.title')}</h1>
+            <p className="text-sm mt-1 text-subtitle">{t('settings.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -101,21 +101,21 @@ const Settings = () => {
             <div className="p-3 rounded-2xl bg-primary/10">
               <Mail className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold">Change Email</h2>
+            <h2 className="text-xl font-semibold">{t('settings.changeEmail')}</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="new-email" className="text-sm font-medium mb-2 block">New Email</Label>
+              <Label htmlFor="new-email" className="text-sm font-medium mb-2 block">{t('settings.newEmail')}</Label>
               <Input
                 id="new-email"
                 type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="your.new@email.com"
+                placeholder={t('settings.emailPlaceholder')}
               />
             </div>
             <Button onClick={handleEmailChange} disabled={loading} className="w-full" size="lg">
-              Update Email
+              {t('settings.updateEmail')}
             </Button>
           </div>
         </Card>
@@ -126,11 +126,11 @@ const Settings = () => {
             <div className="p-3 rounded-2xl bg-primary/10">
               <Lock className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold">Change Password</h2>
+            <h2 className="text-xl font-semibold">{t('settings.changePassword')}</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="new-password" className="text-sm font-medium mb-2 block">New Password</Label>
+              <Label htmlFor="new-password" className="text-sm font-medium mb-2 block">{t('settings.newPassword')}</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -140,7 +140,7 @@ const Settings = () => {
               />
             </div>
             <div>
-              <Label htmlFor="confirm-password" className="text-sm font-medium mb-2 block">Confirm Password</Label>
+              <Label htmlFor="confirm-password" className="text-sm font-medium mb-2 block">{t('settings.confirmPassword')}</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -150,7 +150,7 @@ const Settings = () => {
               />
             </div>
             <Button onClick={handlePasswordChange} disabled={loading} className="w-full" size="lg">
-              Update Password
+              {t('settings.updatePassword')}
             </Button>
           </div>
         </Card>
@@ -191,7 +191,7 @@ const Settings = () => {
             size="lg"
           >
             <LogOut className="w-5 h-5 mr-2" />
-            Logout
+            {t('settings.logout')}
           </Button>
         </Card>
       </div>
