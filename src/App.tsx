@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import "./i18n/config";
 
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
