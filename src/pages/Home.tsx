@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ import { Label } from "@/components/ui/label";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"attending" | "hosting">("attending");
   const [hostingEvents, setHostingEvents] = useState<any[]>([]);
   const [attendingEvents, setAttendingEvents] = useState<any[]>([]);
@@ -117,7 +119,7 @@ const Home = () => {
         
       } catch (error: any) {
         console.error("Error fetching events:", error);
-        toast.error("Failed to load events");
+        toast.error(t('home.failedLoad'));
       } finally {
         setLoading(false);
       }
@@ -166,7 +168,7 @@ const Home = () => {
 
       if (deleteError) throw deleteError;
 
-      toast.success("You've left the event");
+      toast.success(t('home.leftEvent'));
       
       // Refresh the events list
       setAttendingEvents(prev => prev.filter(e => e.id !== selectedEventToLeave.id));
@@ -175,7 +177,7 @@ const Home = () => {
       setLeaveReason("");
     } catch (error: any) {
       console.error("Error leaving event:", error);
-      toast.error("Failed to leave event");
+      toast.error(t('home.failedLeave'));
     }
   };
 
@@ -269,10 +271,10 @@ const Home = () => {
       setHiddenEventIds(prev => new Set([...prev, ...eventsToHide]));
       setSelectedEvents(new Set());
       setSelectionMode(false);
-      toast.success(`Hidden ${eventsToHide.length} event(s)`);
+      toast.success(t('home.hiddenEvents', { count: eventsToHide.length }));
     } catch (error: any) {
       console.error("Error hiding events:", error);
-      toast.error("Failed to hide events");
+      toast.error(t('home.failedHide'));
     }
   };
 
@@ -296,10 +298,10 @@ const Home = () => {
       });
       setSelectedEvents(new Set());
       setSelectionMode(false);
-      toast.success(`Unhidden ${eventsToUnhide.length} event(s)`);
+      toast.success(t('home.unhiddenEvents', { count: eventsToUnhide.length }));
     } catch (error: any) {
       console.error("Error unhiding events:", error);
-      toast.error("Failed to unhide events");
+      toast.error(t('home.failedUnhide'));
     }
   };
 
@@ -324,7 +326,7 @@ const Home = () => {
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
           <KonfettiLogo className="w-32 h-auto mb-1" />
-          <p className="text-sm text-subtitle">Find your perfect match at every celebration</p>
+          <p className="text-sm text-subtitle">{t('home.tagline')}</p>
         </div>
       </div>
 
@@ -341,7 +343,7 @@ const Home = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
-              I'm Attending ({visibleAttendingEvents.length})
+              {t('home.attending')} ({visibleAttendingEvents.length})
             </button>
             <button
               onClick={() => setActiveTab("hosting")}
@@ -352,7 +354,7 @@ const Home = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
-              I'm Hosting ({visibleHostingEvents.length})
+              {t('home.hosting')} ({visibleHostingEvents.length})
             </button>
           </div>
         </Card>
@@ -367,7 +369,7 @@ const Home = () => {
               setSelectedEvents(new Set());
             }}
           >
-            {selectionMode ? "Cancel" : "Select"}
+            {selectionMode ? t('common.cancel') : t('common.select')}
           </Button>
           
           {selectionMode && selectedEvents.size > 0 && (
@@ -379,7 +381,7 @@ const Home = () => {
                   onClick={handleHideSelected}
                 >
                   <EyeOff className="w-4 h-4 mr-2" />
-                  Hide ({selectedEvents.size})
+                  {t('common.hide')} ({selectedEvents.size})
                 </Button>
               ) : (
                 <Button
@@ -388,7 +390,7 @@ const Home = () => {
                   onClick={handleUnhideSelected}
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Unhide ({selectedEvents.size})
+                  {t('common.unhide')} ({selectedEvents.size})
                 </Button>
               )}
             </>
@@ -408,12 +410,12 @@ const Home = () => {
             {showHidden ? (
               <>
                 <Eye className="w-4 h-4 mr-2" />
-                Show Active
+                {t('home.showActive')}
               </>
             ) : (
               <>
                 <EyeOff className="w-4 h-4 mr-2" />
-                Show Hidden ({currentTabHiddenCount})
+                {t('home.showHidden')} ({currentTabHiddenCount})
               </>
             )}
           </Button>

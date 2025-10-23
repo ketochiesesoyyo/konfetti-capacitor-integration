@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 
 const Profile = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -61,7 +63,7 @@ const Profile = () => {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast.error("Failed to load profile");
+        toast.error(t('profile.failedLoad'));
         return;
       }
 
@@ -80,7 +82,7 @@ const Profile = () => {
         
         if (insertError) {
           console.error("Error creating profile:", insertError);
-          toast.error("Failed to create profile");
+          toast.error(t('profile.failedCreate'));
           return;
         }
         
@@ -112,7 +114,7 @@ const Profile = () => {
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to load profile");
+      toast.error(t('profile.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading profile...</p>
+        <p className="text-muted-foreground">{t('profile.loadingProfile')}</p>
       </div>
     );
   }
@@ -141,15 +143,15 @@ const Profile = () => {
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-1 text-[hsl(var(--title))]">{user.name}'s Profile</h1>
-            <p className="text-sm text-subtitle">Your dating profile for all weddings</p>
+            <h1 className="text-2xl font-bold mb-1 text-[hsl(var(--title))]">{t('profile.title', { name: user.name })}</h1>
+            <p className="text-sm text-subtitle">{t('profile.subtitle')}</p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowPreview(true)}
-              title="Preview your profile"
+              title={t('profile.preview')}
               className="hover-scale"
             >
               <Eye className="w-5 h-5" />
@@ -158,7 +160,7 @@ const Profile = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/settings")}
-              title="Settings"
+              title={t('profile.settings')}
               className="hover-scale"
             >
               <SettingsIcon className="w-5 h-5" />
