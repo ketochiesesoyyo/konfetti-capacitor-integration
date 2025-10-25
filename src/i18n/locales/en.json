@@ -404,6 +404,8 @@
     "emailPlaceholder": "you@example.com",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "language": "Language",
+    "selectLanguage": "Select your language",
     "ageTerms": "I confirm I am 18+ and agree to the Terms of Service",
     "signIn": "Sign In",
     "createAccount": "Create Account",
