@@ -455,7 +455,7 @@ const Matchmaking = () => {
           "w-full p-4 rounded-xl border-2 transition-all text-left space-y-2 hover:scale-[1.02]",
           isSelected 
             ? "border-primary bg-primary/10" 
-            : "border-border bg-card hover:bg-accent hover:border-primary/50"
+            : "border-border bg-card hover:bg-accent"
         )}
       >
         <div className="flex items-start justify-between gap-2">
@@ -476,12 +476,6 @@ const Matchmaking = () => {
         <div className="text-sm text-muted-foreground">
           {formatDateRange(event.matchmaking_start_date || event.date, event.close_date)}
         </div>
-        {event.profileCount !== undefined && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Users className="w-3 h-3" />
-            {event.profileCount} guest{event.profileCount !== 1 ? "s" : ""}
-          </div>
-        )}
       </button>
     );
   };
