@@ -138,6 +138,9 @@ export type Database = {
           id: string
           image_url: string | null
           invite_code: string
+          matchmaking_close_date: string | null
+          matchmaking_start_date: string | null
+          matchmaking_start_time: string | null
           name: string
           plan: string
           status: string
@@ -152,6 +155,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           invite_code: string
+          matchmaking_close_date?: string | null
+          matchmaking_start_date?: string | null
+          matchmaking_start_time?: string | null
           name: string
           plan?: string
           status?: string
@@ -166,6 +172,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           invite_code?: string
+          matchmaking_close_date?: string | null
+          matchmaking_start_date?: string | null
+          matchmaking_start_time?: string | null
           name?: string
           plan?: string
           status?: string
@@ -298,6 +307,38 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_logs: {
+        Row: {
+          event_id: string
+          id: string
+          notification_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          notification_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          notification_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -575,18 +616,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_join_event: {
-        Args: { _event_id: string }
-        Returns: boolean
-      }
-      get_event_guest_count: {
-        Args: { _event_id: string }
-        Returns: number
-      }
-      has_active_premium: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      can_join_event: { Args: { _event_id: string }; Returns: boolean }
+      get_event_guest_count: { Args: { _event_id: string }; Returns: number }
+      has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
