@@ -1,18 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { Resend } from "npm:resend@4.0.0";
-import React from "npm:react@18.3.1";
-import { renderAsync } from "npm:@react-email/components@0.0.22";
-import { GuestWelcomeEmail } from "./_templates/guest-welcome.tsx";
-import { Guest24hBeforeOpenEmail } from "./_templates/guest-24h-before-open.tsx";
-import { GuestMatchmakingOpenEmail } from "./_templates/guest-matchmaking-open.tsx";
-import { Guest24hBeforeCloseEmail } from "./_templates/guest-24h-before-close.tsx";
-import { GuestMatchmakingClosedEmail } from "./_templates/guest-matchmaking-closed.tsx";
-import { HostEventLiveEmail } from "./_templates/host-event-live.tsx";
-import { Host24hBeforeOpenEmail } from "./_templates/host-24h-before-open.tsx";
-import { HostMatchmakingOpenEmail } from "./_templates/host-matchmaking-open.tsx";
-import { Host24hBeforeCloseEmail } from "./_templates/host-24h-before-close.tsx";
-import { HostMatchmakingClosedEmail } from "./_templates/host-matchmaking-closed.tsx";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,14 +52,12 @@ serve(async (req) => {
           const { data: authUser } = await supabase.auth.admin.getUserById(attendee.user_id);
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(Guest24hBeforeOpenEmail, {
-              guestName: attendee.profiles.name,
-              eventName: event.name,
-              hostName: event.profiles.name,
-              language: userLang,
-              eventId: event.id,
-            })
+          const html = createGuest24hBeforeOpenEmail(
+            attendee.profiles[0]?.name || 'Guest',
+            event.name,
+            event.profiles[0]?.name || 'Host',
+            userLang,
+            event.id
           );
 
           await sendEmail(resend, authUser?.user?.email!, html, event.name, userLang, "24h_before_open");
@@ -85,13 +71,11 @@ serve(async (req) => {
           const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
           const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(Host24hBeforeOpenEmail, {
-              hostName: event.profiles.name,
-              eventName: event.name,
-              language: hostLang,
-              eventId: event.id,
-            })
+          const html = createHost24hBeforeOpenEmail(
+            event.profiles[0]?.name || 'Host',
+            event.name,
+            hostLang,
+            event.id
           );
 
           await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_open");
@@ -125,14 +109,12 @@ serve(async (req) => {
           const { data: authUser } = await supabase.auth.admin.getUserById(attendee.user_id);
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(GuestMatchmakingOpenEmail, {
-              guestName: attendee.profiles.name,
-              eventName: event.name,
-              hostName: event.profiles.name,
-              language: userLang,
-              eventId: event.id,
-            })
+          const html = createGuestMatchmakingOpenEmail(
+            attendee.profiles[0]?.name || 'Guest',
+            event.name,
+            event.profiles[0]?.name || 'Host',
+            userLang,
+            event.id
           );
 
           await sendEmail(resend, authUser?.user?.email!, html, event.name, userLang, "matchmaking_open");
@@ -146,13 +128,11 @@ serve(async (req) => {
           const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
           const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(HostMatchmakingOpenEmail, {
-              hostName: event.profiles.name,
-              eventName: event.name,
-              language: hostLang,
-              eventId: event.id,
-            })
+          const html = createHostMatchmakingOpenEmail(
+            event.profiles[0]?.name || 'Host',
+            event.name,
+            hostLang,
+            event.id
           );
 
           await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_matchmaking_open");
@@ -186,14 +166,12 @@ serve(async (req) => {
           const { data: authUser } = await supabase.auth.admin.getUserById(attendee.user_id);
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(Guest24hBeforeCloseEmail, {
-              guestName: attendee.profiles.name,
-              eventName: event.name,
-              hostName: event.profiles.name,
-              language: userLang,
-              eventId: event.id,
-            })
+          const html = createGuest24hBeforeCloseEmail(
+            attendee.profiles[0]?.name || 'Guest',
+            event.name,
+            event.profiles[0]?.name || 'Host',
+            userLang,
+            event.id
           );
 
           await sendEmail(resend, authUser?.user?.email!, html, event.name, userLang, "24h_before_close");
@@ -207,13 +185,11 @@ serve(async (req) => {
           const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
           const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(Host24hBeforeCloseEmail, {
-              hostName: event.profiles.name,
-              eventName: event.name,
-              language: hostLang,
-              eventId: event.id,
-            })
+          const html = createHost24hBeforeCloseEmail(
+            event.profiles[0]?.name || 'Host',
+            event.name,
+            hostLang,
+            event.id
           );
 
           await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_close");
@@ -247,13 +223,11 @@ serve(async (req) => {
           const { data: authUser } = await supabase.auth.admin.getUserById(attendee.user_id);
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(GuestMatchmakingClosedEmail, {
-              guestName: attendee.profiles.name,
-              eventName: event.name,
-              hostName: event.profiles.name,
-              language: userLang,
-            })
+          const html = createGuestMatchmakingClosedEmail(
+            attendee.profiles[0]?.name || 'Guest',
+            event.name,
+            event.profiles[0]?.name || 'Host',
+            userLang
           );
 
           await sendEmail(resend, authUser?.user?.email!, html, event.name, userLang, "matchmaking_closed");
@@ -267,12 +241,10 @@ serve(async (req) => {
           const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
           const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          const html = await renderAsync(
-            React.createElement(HostMatchmakingClosedEmail, {
-              hostName: event.profiles.name,
-              eventName: event.name,
-              language: hostLang,
-            })
+          const html = createHostMatchmakingClosedEmail(
+            event.profiles[0]?.name || 'Host',
+            event.name,
+            hostLang
           );
 
           await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_matchmaking_closed");
@@ -310,7 +282,7 @@ async function checkIfSent(supabase: any, eventId: string, userId: string, notif
     .eq("event_id", eventId)
     .eq("user_id", userId)
     .eq("notification_type", notificationType)
-    .single();
+    .maybeSingle();
   
   return !!data;
 }
@@ -374,4 +346,313 @@ async function sendEmail(
     subject: subjects[type]?.[language] || subjects[type]?.["en"] || `Update for ${eventName}`,
     html,
   });
+}
+
+// HTML Email Templates
+function createGuest24hBeforeOpenEmail(guestName: string, eventName: string, hostName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `¡Faltan 24 horas! Tu matchmaking de ${eventName} abre pronto en konfetti.app`,
+    p1: `¡Ya casi es hora! El matchmaking para ${eventName} abrirá en solo 24 horas.`,
+    p2: `Prepárate para conocer a otros invitados increíbles y comenzar a conectar.`,
+    p3: `Cuando llegue el momento, solo entra a konfetti.app para unirte a la diversión.`,
+    cta: `Ir a konfetti.app`,
+    closing: `Nos vemos pronto,`,
+    signature: `${hostName} y konfetti.app`,
+  } : {
+    heading: `24 hours left! Your ${eventName} matchmaking opens soon on konfetti.app`,
+    p1: `The wait is almost over — matchmaking for ${eventName} opens in just 24 hours!`,
+    p2: `Get ready to meet other amazing guests and start connecting.`,
+    p3: `When the time comes, simply log in to konfetti.app to join the fun.`,
+    cta: `Go to konfetti.app`,
+    closing: `See you soon,`,
+    signature: `${hostName} & konfetti.app`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">⏰ ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${guestName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createGuestMatchmakingOpenEmail(guestName: string, eventName: string, hostName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `¡Es hora! El matchmaking de ${eventName} ya está abierto en konfetti.app`,
+    p1: `¡El matchmaking para ${eventName} está oficialmente abierto!`,
+    p2: `Empieza a descubrir quiénes asistirán y encuentra tu match perfecto antes del evento.`,
+    p3: `Entra ahora a konfetti.app y deja que comience la magia.`,
+    cta: `Empezar a Hacer Match`,
+    closing: `Con cariño,`,
+    signature: `${hostName} y konfetti.app`,
+  } : {
+    heading: `It's time! Matchmaking for ${eventName} is now open on konfetti.app`,
+    p1: `The matchmaking for ${eventName} is officially open!`,
+    p2: `Start discovering who's attending and find your perfect match before the event begins.`,
+    p3: `Join now on konfetti.app and let the magic begin!`,
+    cta: `Start Matching Now`,
+    closing: `Warm wishes,`,
+    signature: `${hostName} & konfetti.app`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">💫 ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${guestName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createGuest24hBeforeCloseEmail(guestName: string, eventName: string, hostName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `¡Última oportunidad para hacer match antes de ${eventName}!`,
+    p1: `Tu matchmaking para ${eventName} cerrará en 24 horas — ¡es tu última oportunidad para conectar antes del gran día!`,
+    p2: `Revisa tus matches, envía tus últimos mensajes o descubre si hay alguien nuevo que te gustaría conocer.`,
+    p3: `Entra ahora a konfetti.app y aprovecha al máximo esta oportunidad.`,
+    cta: `Ir al Matchmaking`,
+    closing: `¡Nos vemos en el evento!`,
+    signature: `${hostName} y konfetti.app`,
+  } : {
+    heading: `Last chance to match before ${eventName}!`,
+    p1: `Your matchmaking for ${eventName} will close in 24 hours — this is your final chance to connect before the big day!`,
+    p2: `Check your matches, send your last messages, or see if there's someone new you'd like to meet.`,
+    p3: `Join now on konfetti.app and make the most of it!`,
+    cta: `Go to Matchmaking`,
+    closing: `See you at the event,`,
+    signature: `${hostName} & konfetti.app`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">⏰ ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${guestName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createGuestMatchmakingClosedEmail(guestName: string, eventName: string, hostName: string, lang: string): string {
+  const content = lang === "es" ? {
+    heading: `El matchmaking de ${eventName} ha cerrado — ¡gracias por participar!`,
+    p1: `El matchmaking para ${eventName} ha cerrado.`,
+    p2: `Esperamos que hayas disfrutado de conocer nuevas personas y crear conexiones antes de la celebración.`,
+    p3: `Aún puedes ver tus matches anteriores desde tu perfil, y estaremos aquí para que tus próximos eventos sean igual de emocionantes.`,
+    closing: `Gracias por ser parte de konfetti.app, donde cada evento comienza con una chispa.`,
+    signature: `Con cariño, ${hostName} y konfetti.app`,
+  } : {
+    heading: `Matchmaking for ${eventName} has closed — thank you for joining!`,
+    p1: `The matchmaking for ${eventName} is now closed.`,
+    p2: `We hope you enjoyed discovering new people and making connections ahead of the celebration.`,
+    p3: `You can still access your past matches from your profile, and we'll be here to help you make future events just as exciting.`,
+    closing: `Thanks for being part of konfetti.app — where every event starts with a spark.`,
+    signature: `With love, ${hostName} & konfetti.app`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">💫 ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${guestName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 16px;">${content.p3}</p>
+      <p style="margin-bottom: 16px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createHost24hBeforeOpenEmail(hostName: string, eventName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `Recordatorio: el matchmaking de ${eventName} abrirá en 24 horas`,
+    p1: `Este es un recordatorio amistoso de que el matchmaking para tu evento ${eventName} abrirá en 24 horas.`,
+    p2: `Puedes iniciar sesión en konfetti.app para hacer ajustes de último momento o simplemente ver cómo tus invitados se preparan para conectar.`,
+    cta: `Ver Panel`,
+    closing: `Saludos,`,
+    team: `El equipo de konfetti.app`,
+  } : {
+    heading: `Reminder: matchmaking for ${eventName} opens in 24 hours`,
+    p1: `This is a friendly reminder that matchmaking for your event ${eventName} opens in 24 hours.`,
+    p2: `You can log in to konfetti.app to make any last-minute edits or simply watch your guests get ready to mingle.`,
+    cta: `View Dashboard`,
+    closing: `Cheers,`,
+    team: `The konfetti.app team`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">⏰ ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${hostName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 24px;">${content.p2}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.team}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createHostMatchmakingOpenEmail(hostName: string, eventName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `¡Ya está activo! Los invitados ya pueden comenzar a hacer match en ${eventName}`,
+    p1: `¡El matchmaking para tu evento ${eventName} ya está abierto!`,
+    p2: `Tus invitados ya pueden explorar perfiles, deslizar y comenzar a conectar antes del gran día.`,
+    p3: `Puedes monitorear la participación o revisar la actividad desde tu panel de anfitrión en konfetti.app.`,
+    cta: `Ver Panel`,
+    closing: `Gracias nuevamente por confiar en nosotros,`,
+    team: `El equipo de konfetti.app`,
+  } : {
+    heading: `It's live! Guests can now start matching for ${eventName}`,
+    p1: `The matchmaking for your event ${eventName} is now open!`,
+    p2: `Your guests can now explore profiles, swipe, and start connecting before the big day.`,
+    p3: `You can monitor engagement or check activity from your host dashboard on konfetti.app.`,
+    cta: `View Dashboard`,
+    closing: `Thanks again for hosting with us!`,
+    team: `The konfetti.app team`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">💫 ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${hostName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.team}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createHost24hBeforeCloseEmail(hostName: string, eventName: string, lang: string, eventId: string): string {
+  const content = lang === "es" ? {
+    heading: `Recordatorio: el matchmaking de ${eventName} cierra en 24 horas`,
+    p1: `El matchmaking de ${eventName} cerrará en 24 horas.`,
+    p2: `Tus invitados aún tienen tiempo para enviar sus últimos mensajes y matches antes del evento.`,
+    p3: `Puedes revisar tu panel en konfetti.app para ver la participación y actividad de los invitados.`,
+    cta: `Ver Panel`,
+    closing: `Saludos,`,
+    team: `El equipo de konfetti.app`,
+  } : {
+    heading: `Reminder: matchmaking for ${eventName} closes in 24 hours`,
+    p1: `Matchmaking for ${eventName} will close in 24 hours.`,
+    p2: `Your guests still have time to send their final messages and matches before the event begins.`,
+    p3: `You can check your dashboard on konfetti.app to view engagement and see how active your guests have been.`,
+    cta: `View Dashboard`,
+    closing: `Best,`,
+    team: `The konfetti.app team`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">⏰ ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${hostName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.team}</p>
+    </body>
+    </html>
+  `;
+}
+
+function createHostMatchmakingClosedEmail(hostName: string, eventName: string, lang: string): string {
+  const content = lang === "es" ? {
+    heading: `El matchmaking de ${eventName} ha cerrado — gracias por organizar con konfetti.app`,
+    p1: `El matchmaking para ${eventName} ha cerrado oficialmente.`,
+    p2: `Esperamos que tus invitados hayan disfrutado de conectar antes del gran día y que konfetti.app haya hecho tu evento aún más especial.`,
+    closing: `Gracias por confiar en nosotros para ser parte de tu celebración. Esperamos ayudarte a organizar tu próximo evento inolvidable.`,
+    signature: `Gracias por tu confianza! El equipo de konfetti.app`,
+  } : {
+    heading: `Matchmaking for ${eventName} is now closed — thank you for hosting with konfetti.app`,
+    p1: `The matchmaking for ${eventName} has officially closed.`,
+    p2: `We hope your guests had fun connecting before the big day and that konfetti.app helped make your event even more special.`,
+    closing: `Thank you for trusting us to be part of your celebration. We look forward to helping you host your next unforgettable event.`,
+    signature: `With gratitude, The konfetti.app team`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">💫 ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${hostName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 16px;">${content.p2}</p>
+      <p style="margin-bottom: 16px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+    </body>
+    </html>
+  `;
 }
