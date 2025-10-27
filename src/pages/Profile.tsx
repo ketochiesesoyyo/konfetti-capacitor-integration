@@ -326,7 +326,7 @@ const Profile = () => {
             </div>
 
             {/* Profile Content */}
-            <div className="p-6 space-y-4 bg-background">
+            <div className="p-6 space-y-6 bg-background">
             {/* Bio */}
             {user?.bio && (
               <div>
