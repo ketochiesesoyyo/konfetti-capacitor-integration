@@ -3,8 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Heart, Info, Undo, Menu } from "lucide-react";
+import { X, Heart, Undo, Menu, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
@@ -12,6 +11,7 @@ import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { swipeSchema, matchSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { format, isBefore, isAfter } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Profile = {
   id: string;
@@ -71,6 +78,10 @@ const Matchmaking = () => {
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [showUndo, setShowUndo] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [showAllLive, setShowAllLive] = useState(false);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
+  const [showAllPast, setShowAllPast] = useState(false);
+  const [timeUntilStart, setTimeUntilStart] = useState<string>("");
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -83,10 +94,10 @@ const Matchmaking = () => {
       }
       setUserId(session.user.id);
 
-      // Fetch all events user is attending
+      // Fetch all events user is attending with complete data
       const { data: attendeeData, error: attendeeError } = await supabase
         .from("event_attendees")
-        .select("event_id, events(id, name, date)")
+        .select("event_id, events(id, name, date, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date)")
         .eq("user_id", session.user.id)
         .order("events(date)", { ascending: true });
 
@@ -98,7 +109,19 @@ const Matchmaking = () => {
       }
 
       const userEvents = attendeeData?.map((a: any) => a.events).filter(Boolean) || [];
-      setEvents(userEvents);
+      
+      // Fetch profile counts for each event
+      const eventsWithCounts = await Promise.all(
+        userEvents.map(async (event: Event) => {
+          const { count } = await supabase
+            .from("event_attendees")
+            .select("*", { count: "exact", head: true })
+            .eq("event_id", event.id);
+          return { ...event, profileCount: count || 0 };
+        })
+      );
+      
+      setEvents(eventsWithCounts);
 
       // Prioritize URL eventId, then saved eventId, then nearest upcoming event
       let defaultEventId = eventId && userEvents.find((e: Event) => e.id === eventId)?.id;
@@ -123,6 +146,31 @@ const Matchmaking = () => {
 
     loadEvents();
   }, [navigate, eventId]);
+
+  // Countdown timer for upcoming events
+  useEffect(() => {
+    if (matchmakingStartDate && matchmakingStartTime) {
+      const interval = setInterval(() => {
+        const startDateTime = new Date(`${matchmakingStartDate}T${matchmakingStartTime}`);
+        const now = new Date();
+        const diff = startDateTime.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          setTimeUntilStart("Starting now!");
+          clearInterval(interval);
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          
+          setTimeUntilStart(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        }
+      }, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [matchmakingStartDate, matchmakingStartTime]);
 
   useEffect(() => {
     if (!selectedEventId || !userId) return;
@@ -344,6 +392,100 @@ const Matchmaking = () => {
       : []
     : [];
 
+  // Helper functions for event categorization
+  const categorizeEvents = () => {
+    const now = new Date();
+    const live: Event[] = [];
+    const upcoming: Event[] = [];
+    const past: Event[] = [];
+
+    events.forEach((event) => {
+      // Past: matchmaking closed or event closed
+      if (
+        event.status === "closed" ||
+        (event.matchmaking_close_date && isAfter(now, new Date(event.matchmaking_close_date)))
+      ) {
+        past.push(event);
+      }
+      // Upcoming: matchmaking hasn't started yet
+      else if (
+        event.matchmaking_start_date &&
+        event.matchmaking_start_time &&
+        isBefore(now, new Date(`${event.matchmaking_start_date}T${event.matchmaking_start_time}`))
+      ) {
+        upcoming.push(event);
+      }
+      // Live: matchmaking is currently active
+      else {
+        live.push(event);
+      }
+    });
+
+    return { live, upcoming, past };
+  };
+
+  const { live: liveEvents, upcoming: upcomingEvents, past: pastEvents } = categorizeEvents();
+
+  const formatDateRange = (startDate?: string, endDate?: string) => {
+    if (!startDate) return "Date TBD";
+    const start = format(new Date(startDate), "MMM d");
+    const end = endDate ? format(new Date(endDate), "MMM d, yyyy") : "";
+    return end ? `${start} - ${end}` : start;
+  };
+
+  const formatDateTime = (date: Date) => {
+    return format(date, "MMMM d, yyyy • h:mm a");
+  };
+
+  const handleEventSelect = (eventId: string) => {
+    setSelectedEventId(eventId);
+    setIsEventDialogOpen(false);
+    setShowAllLive(false);
+    setShowAllUpcoming(false);
+    setShowAllPast(false);
+  };
+
+  const EventCard = ({ event, status }: { event: Event; status: "live" | "upcoming" | "past" }) => {
+    const isSelected = event.id === selectedEventId;
+    
+    return (
+      <button
+        onClick={() => handleEventSelect(event.id)}
+        className={cn(
+          "w-full p-4 rounded-xl border-2 transition-all text-left space-y-2 hover:scale-[1.02]",
+          isSelected 
+            ? "border-primary bg-primary/10" 
+            : "border-border bg-card hover:bg-accent hover:border-primary/50"
+        )}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-bold text-base">{event.name}</div>
+          {status === "live" && (
+            <Badge variant="default" className="shrink-0 bg-green-500 hover:bg-green-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse" />
+              Live
+            </Badge>
+          )}
+          {status === "upcoming" && (
+            <Badge variant="secondary" className="shrink-0">
+              <Clock className="w-3 h-3 mr-1" />
+              Soon
+            </Badge>
+          )}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {formatDateRange(event.matchmaking_start_date || event.date, event.close_date)}
+        </div>
+        {event.profileCount !== undefined && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="w-3 h-3" />
+            {event.profileCount} guest{event.profileCount !== 1 ? "s" : ""}
+          </div>
+        )}
+      </button>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -557,33 +699,107 @@ const Matchmaking = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader>
-                    <DialogTitle className="text-center">Select your event</DialogTitle>
+                    <DialogTitle>Browse Your Events</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-sm text-center text-muted-foreground">
-                      Choose the event you want to find matches for
-                    </p>
-                    <Select 
-                      value={selectedEventId || ""} 
-                      onValueChange={(value) => {
-                        setSelectedEventId(value);
-                        setIsEventDialogOpen(false);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Event to find matches" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.name} - {new Date(event.date).toLocaleDateString()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
+                  <ScrollArea className="flex-1 pr-4">
+                    <Accordion type="multiple" defaultValue={["live"]} className="space-y-4">
+                      {/* Live Events Section */}
+                      {liveEvents.length > 0 && (
+                        <AccordionItem value="live" className="border rounded-xl px-4">
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                                <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse" />
+                                Live
+                              </Badge>
+                              <span className="font-semibold">Live Events</span>
+                              <span className="text-sm text-muted-foreground">({liveEvents.length})</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                              {(showAllLive ? liveEvents : liveEvents.slice(0, 5)).map((event) => (
+                                <EventCard key={event.id} event={event} status="live" />
+                              ))}
+                              {liveEvents.length > 5 && !showAllLive && (
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full text-sm"
+                                  onClick={() => setShowAllLive(true)}
+                                >
+                                  View All {liveEvents.length} Events
+                                </Button>
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Upcoming Events Section */}
+                      {upcomingEvents.length > 0 && (
+                        <AccordionItem value="upcoming" className="border rounded-xl px-4">
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Upcoming
+                              </Badge>
+                              <span className="font-semibold">Upcoming Events</span>
+                              <span className="text-sm text-muted-foreground">({upcomingEvents.length})</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                              {(showAllUpcoming ? upcomingEvents : upcomingEvents.slice(0, 5)).map((event) => (
+                                <EventCard key={event.id} event={event} status="upcoming" />
+                              ))}
+                              {upcomingEvents.length > 5 && !showAllUpcoming && (
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full text-sm"
+                                  onClick={() => setShowAllUpcoming(true)}
+                                >
+                                  View All {upcomingEvents.length} Events
+                                </Button>
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+
+                      {/* Past Events Section */}
+                      {pastEvents.length > 0 && (
+                        <AccordionItem value="past" className="border rounded-xl px-4">
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">Past</Badge>
+                              <span className="font-semibold">Past Events</span>
+                              <span className="text-sm text-muted-foreground">({pastEvents.length})</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                              {(showAllPast ? pastEvents : pastEvents.slice(0, 5)).map((event) => (
+                                <EventCard key={event.id} event={event} status="past" />
+                              ))}
+                              {pastEvents.length > 5 && !showAllPast && (
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full text-sm"
+                                  onClick={() => setShowAllPast(true)}
+                                >
+                                  View All {pastEvents.length} Events
+                                </Button>
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )}
+                    </Accordion>
+                  </ScrollArea>
                 </DialogContent>
               </Dialog>
               <KonfettiLogo className="w-32 h-auto" />
@@ -606,17 +822,13 @@ const Matchmaking = () => {
               </>
             ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}`) ? (
               <>
-                <h2 className="text-2xl font-bold mb-2">Matchmaking Hasn't Started</h2>
+                <h2 className="text-2xl font-bold mb-2">Matchmaking Opens Soon</h2>
+                <div className="text-4xl font-bold text-primary mb-4 font-mono">
+                  {timeUntilStart}
+                </div>
                 <p className="text-muted-foreground mb-4">
-                  Matchmaking will open on{" "}
-                  {new Date(`${matchmakingStartDate}T${matchmakingStartTime}`).toLocaleString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                  . Check back then!
+                  Matchmaking opens on{" "}
+                  {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}`))}
                 </p>
                 <Button onClick={() => navigate("/")}>Go Home</Button>
               </>
@@ -669,36 +881,107 @@ const Matchmaking = () => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
                 <DialogHeader>
-                  <DialogTitle className="text-center">Select your event</DialogTitle>
+                  <DialogTitle>Browse Your Events</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <p className="text-sm text-center text-muted-foreground">
-                    Choose the event you want to find matches for
-                  </p>
-                  <Select 
-                    value={selectedEventId || ""} 
-                    onValueChange={(value) => {
-                      setSelectedEventId(value);
-                      setIsEventDialogOpen(false);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Event to find matches" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...events].sort((a, b) => a.name.localeCompare(b.name)).map((event) => (
-                        <SelectItem key={event.id} value={event.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{event.name}</span>
-                            <span className="text-xs">{new Date(event.date).toLocaleDateString()}</span>
+                
+                <ScrollArea className="flex-1 pr-4">
+                  <Accordion type="multiple" defaultValue={["live"]} className="space-y-4">
+                    {/* Live Events Section */}
+                    {liveEvents.length > 0 && (
+                      <AccordionItem value="live" className="border rounded-xl px-4">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                              <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse" />
+                              Live
+                            </Badge>
+                            <span className="font-semibold">Live Events</span>
+                            <span className="text-sm text-muted-foreground">({liveEvents.length})</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pt-2">
+                            {(showAllLive ? liveEvents : liveEvents.slice(0, 5)).map((event) => (
+                              <EventCard key={event.id} event={event} status="live" />
+                            ))}
+                            {liveEvents.length > 5 && !showAllLive && (
+                              <Button 
+                                variant="ghost" 
+                                className="w-full text-sm"
+                                onClick={() => setShowAllLive(true)}
+                              >
+                                View All {liveEvents.length} Events
+                              </Button>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+
+                    {/* Upcoming Events Section */}
+                    {upcomingEvents.length > 0 && (
+                      <AccordionItem value="upcoming" className="border rounded-xl px-4">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Upcoming
+                            </Badge>
+                            <span className="font-semibold">Upcoming Events</span>
+                            <span className="text-sm text-muted-foreground">({upcomingEvents.length})</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pt-2">
+                            {(showAllUpcoming ? upcomingEvents : upcomingEvents.slice(0, 5)).map((event) => (
+                              <EventCard key={event.id} event={event} status="upcoming" />
+                            ))}
+                            {upcomingEvents.length > 5 && !showAllUpcoming && (
+                              <Button 
+                                variant="ghost" 
+                                className="w-full text-sm"
+                                onClick={() => setShowAllUpcoming(true)}
+                              >
+                                View All {upcomingEvents.length} Events
+                              </Button>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+
+                    {/* Past Events Section */}
+                    {pastEvents.length > 0 && (
+                      <AccordionItem value="past" className="border rounded-xl px-4">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">Past</Badge>
+                            <span className="font-semibold">Past Events</span>
+                            <span className="text-sm text-muted-foreground">({pastEvents.length})</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pt-2">
+                            {(showAllPast ? pastEvents : pastEvents.slice(0, 5)).map((event) => (
+                              <EventCard key={event.id} event={event} status="past" />
+                            ))}
+                            {pastEvents.length > 5 && !showAllPast && (
+                              <Button 
+                                variant="ghost" 
+                                className="w-full text-sm"
+                                onClick={() => setShowAllPast(true)}
+                              >
+                                View All {pastEvents.length} Events
+                              </Button>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                  </Accordion>
+                </ScrollArea>
               </DialogContent>
             </Dialog>
             <KonfettiLogo className="w-32 h-auto" />
