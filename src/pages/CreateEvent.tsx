@@ -47,6 +47,9 @@ const CreateEvent = () => {
     coupleName1: "",
     coupleName2: "",
     eventDate: "",
+    matchmakingStartDate: "",
+    matchmakingStartTime: "09:00",
+    matchmakingCloseDate: "",
     theme: "sunset",
     agreedToTerms: false,
     plan: "free" as "free" | "premium",
@@ -135,6 +138,9 @@ const CreateEvent = () => {
           coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
           coupleName2: nameParts[1] || "",
           eventDate: draft.date || "",
+          matchmakingStartDate: draft.matchmaking_start_date || "",
+          matchmakingStartTime: draft.matchmaking_start_time || "09:00",
+          matchmakingCloseDate: draft.matchmaking_close_date || "",
           theme: "sunset",
           agreedToTerms: true,
           plan: (draft.plan as "free" | "premium") || "free",
@@ -177,6 +183,9 @@ const CreateEvent = () => {
           coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
           coupleName2: nameParts[1] || "",
           eventDate: event.date || "",
+          matchmakingStartDate: event.matchmaking_start_date || "",
+          matchmakingStartTime: event.matchmaking_start_time || "09:00",
+          matchmakingCloseDate: event.matchmaking_close_date || "",
           theme: "sunset",
           agreedToTerms: true,
           plan: (event.plan as "free" | "premium") || "free",
@@ -483,6 +492,9 @@ const CreateEvent = () => {
             image_url: imageUrl,
             status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
             plan: eventData.plan,
+            matchmaking_start_date: eventData.matchmakingStartDate || null,
+            matchmaking_start_time: eventData.matchmakingStartTime || null,
+            matchmaking_close_date: eventData.matchmakingCloseDate || null,
           })
           .eq("id", eventIdToUpdate)
           .eq("created_by", userId);
@@ -644,9 +656,54 @@ const CreateEvent = () => {
                 />
                 <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
+            </div>
+
+            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+              <Label className="text-base font-semibold">Matchmaking Schedule (Optional)</Label>
               <p className="text-sm text-muted-foreground">
-                Matchmaking will remain active for 3 days after your event to allow guests to finish conversations and complete their matches.
+                Control when guests can start swiping. If not set, matchmaking opens immediately.
               </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="matchmakingStartDate">Start Date</Label>
+                <Input
+                  id="matchmakingStartDate"
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={eventData.matchmakingStartDate}
+                  onChange={(e) =>
+                    setEventData({ ...eventData, matchmakingStartDate: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="matchmakingStartTime">Start Time</Label>
+                <Input
+                  id="matchmakingStartTime"
+                  type="time"
+                  value={eventData.matchmakingStartTime}
+                  onChange={(e) =>
+                    setEventData({ ...eventData, matchmakingStartTime: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="matchmakingCloseDate">Close Date</Label>
+                <Input
+                  id="matchmakingCloseDate"
+                  type="date"
+                  min={eventData.eventDate || new Date().toISOString().split('T')[0]}
+                  value={eventData.matchmakingCloseDate}
+                  onChange={(e) =>
+                    setEventData({ ...eventData, matchmakingCloseDate: e.target.value })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  When matchmaking ends. Chats remain active until event close date.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">

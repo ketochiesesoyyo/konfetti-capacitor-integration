@@ -715,6 +715,40 @@ const EventDashboard = () => {
                   </p>
                 </div>
                 
+                {/* Matchmaking Schedule */}
+                <div className="pt-4 border-t">
+                  <h4 className="font-semibold mb-3">Matchmaking Schedule</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Start Date & Time</Label>
+                      <p className="text-sm mt-1">
+                        {event.matchmaking_start_date && event.matchmaking_start_time
+                          ? new Date(`${event.matchmaking_start_date}T${event.matchmaking_start_time}`).toLocaleString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })
+                          : 'Immediately (not scheduled)'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Close Date</Label>
+                      <p className="text-sm mt-1">
+                        {event.matchmaking_close_date
+                          ? format(new Date(event.matchmaking_close_date), "MMMM d, yyyy")
+                          : 'Not set (closes with event)'}
+                      </p>
+                    </div>
+                    {event.matchmaking_start_date && (
+                      <p className="text-xs text-muted-foreground bg-muted/30 p-3 rounded">
+                        💡 Guests can join anytime, but won't see profiles until matchmaking starts
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
                 {/* Event Image */}
                 <div>
                   <Label>Event Image</Label>

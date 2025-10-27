@@ -37,6 +37,9 @@ type Event = {
   date: string;
   status?: string;
   close_date?: string;
+  matchmaking_start_date?: string;
+  matchmaking_start_time?: string;
+  matchmaking_close_date?: string;
   profileCount?: number;
 };
 
@@ -52,6 +55,9 @@ const Matchmaking = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedEventStatus, setSelectedEventStatus] = useState<string | null>(null);
   const [selectedEventCloseDate, setSelectedEventCloseDate] = useState<string | null>(null);
+  const [matchmakingStartDate, setMatchmakingStartDate] = useState<string | null>(null);
+  const [matchmakingStartTime, setMatchmakingStartTime] = useState<string | null>(null);
+  const [matchmakingCloseDate, setMatchmakingCloseDate] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [showMatchDialog, setShowMatchDialog] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<{
@@ -125,10 +131,10 @@ const Matchmaking = () => {
       setLoading(true);
       setCurrentIndex(0);
 
-      // Get event details including status
+      // Get event details including status and matchmaking schedule
       const { data: eventData } = await supabase
         .from("events")
-        .select("created_by, status, close_date")
+        .select("created_by, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date")
         .eq("id", selectedEventId)
         .single();
 
@@ -136,9 +142,32 @@ const Matchmaking = () => {
       const eventStatus = eventData?.status;
       const closeDate = eventData?.close_date;
 
-      // Store event status
+      // Store event status and matchmaking schedule
       setSelectedEventStatus(eventStatus || null);
       setSelectedEventCloseDate(closeDate || null);
+      setMatchmakingStartDate(eventData?.matchmaking_start_date || null);
+      setMatchmakingStartTime(eventData?.matchmaking_start_time || null);
+      setMatchmakingCloseDate(eventData?.matchmaking_close_date || null);
+
+      // Check if matchmaking has started
+      if (eventData?.matchmaking_start_date && eventData?.matchmaking_start_time) {
+        const startDateTime = new Date(`${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}`);
+        if (new Date() < startDateTime) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Check if matchmaking has closed
+      if (eventData?.matchmaking_close_date) {
+        const closeDateObj = new Date(eventData.matchmaking_close_date);
+        if (new Date() > closeDateObj) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+      }
 
       // If event is closed, show message and don't load profiles
       if (eventStatus === "closed") {
@@ -574,6 +603,30 @@ const Matchmaking = () => {
                 <h2 className="text-2xl font-bold mb-2">Enter event code</h2>
                 <p className="text-muted-foreground mb-4">Join an event to start matching with other guests.</p>
                 <Button onClick={() => navigate("/join-event")}>Join Event</Button>
+              </>
+            ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}`) ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">Matchmaking Hasn't Started</h2>
+                <p className="text-muted-foreground mb-4">
+                  Matchmaking will open on{" "}
+                  {new Date(`${matchmakingStartDate}T${matchmakingStartTime}`).toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                  . Check back then!
+                </p>
+                <Button onClick={() => navigate("/")}>Go Home</Button>
+              </>
+            ) : matchmakingCloseDate && new Date() > new Date(matchmakingCloseDate) ? (
+              <>
+                <h2 className="text-2xl font-bold mb-2">Matchmaking Has Closed</h2>
+                <p className="text-muted-foreground mb-4">
+                  Matchmaking ended on {new Date(matchmakingCloseDate).toLocaleDateString()}. Your chats remain active!
+                </p>
+                <Button onClick={() => navigate("/chats")}>View Chats</Button>
               </>
             ) : selectedEventStatus === "closed" ? (
               <>
