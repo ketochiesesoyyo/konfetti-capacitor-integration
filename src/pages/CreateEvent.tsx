@@ -664,22 +664,46 @@ const CreateEvent = () => {
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
               <Label className="text-base font-semibold">Matchmaking Schedule (Optional)</Label>
               <p className="text-sm text-muted-foreground">
-                Control when guests can start swiping. If not set, matchmaking opens immediately.
+                Control when guests can start swiping.
               </p>
               
               <div className="space-y-2">
-                <Label htmlFor="matchmakingStartDate">Start Date</Label>
-                <Input
-                  id="matchmakingStartDate"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
+                <Label htmlFor="matchmakingSchedule">When should matchmaking open?</Label>
+                <Select
                   value={eventData.matchmakingStartDate}
-                  onChange={(e) =>
-                    setEventData({ ...eventData, matchmakingStartDate: e.target.value })
-                  }
-                />
+                  onValueChange={(value) => {
+                    let calculatedDate = "";
+                    if (eventData.eventDate && value !== "immediately") {
+                      const eventDate = new Date(eventData.eventDate);
+                      if (value === "1_week_before") {
+                        const startDate = new Date(eventDate);
+                        startDate.setDate(startDate.getDate() - 7);
+                        calculatedDate = startDate.toISOString().split('T')[0];
+                      } else if (value === "2_weeks_before") {
+                        const startDate = new Date(eventDate);
+                        startDate.setDate(startDate.getDate() - 14);
+                        calculatedDate = startDate.toISOString().split('T')[0];
+                      } else if (value === "day_of_event") {
+                        calculatedDate = eventData.eventDate;
+                      }
+                    }
+                    setEventData({ ...eventData, matchmakingStartDate: calculatedDate });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Immediately / Inmediatamente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="immediately">Immediately / Inmediatamente</SelectItem>
+                    <SelectItem value="day_of_event">The day of the event / El día del evento</SelectItem>
+                    <SelectItem value="1_week_before">1 week before the event / 1 semana antes del evento</SelectItem>
+                    <SelectItem value="2_weeks_before">2 weeks before / 2 semanas antes del evento</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 We recommend setting it to 1 week before to make matchmaking more fun and increase anticipation for the wedding.
+                </p>
               </div>
-
 
               <div className="space-y-2">
                 <div className="rounded-lg bg-muted/50 p-4 border border-border/50">
