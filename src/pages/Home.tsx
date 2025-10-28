@@ -78,10 +78,10 @@ const Home = () => {
         if (hiddenError) throw hiddenError;
         setHiddenEventIds(new Set(hiddenData?.map(h => h.event_id) || []));
         
-        // Fetch events user is hosting
+        // Fetch events user is hosting with guest counts
         const { data: hosting, error: hostingError } = await supabase
           .from("events")
-          .select("*")
+          .select("*, event_attendees(count)")
           .eq("created_by", session.user.id)
           .order("date", { ascending: true });
 
@@ -717,6 +717,12 @@ const Home = () => {
                         {getEventStatus(event) !== 'draft' && (
                           <div className="text-xs text-muted-foreground mt-1">
                             Code: <span className="font-mono font-semibold">{event.invite_code}</span>
+                            {activeTab === 'hosting' && (
+                              <div className="mt-0.5 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>{event.event_attendees?.[0]?.count || 0} {event.event_attendees?.[0]?.count === 1 ? 'guest' : 'guests'}</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
