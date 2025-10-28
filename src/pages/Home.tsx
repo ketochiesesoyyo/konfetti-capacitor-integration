@@ -139,6 +139,22 @@ const Home = () => {
     return themes[theme as keyof typeof themes] || themes.sunset;
   };
 
+  const getEventStatus = (event: any): 'draft' | 'closed' | 'active' => {
+    if (event.status === 'draft') return 'draft';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check if close_date has passed
+    if (event.close_date) {
+      const closeDate = new Date(event.close_date);
+      closeDate.setHours(0, 0, 0, 0);
+      if (closeDate < today) return 'closed';
+    }
+    
+    return 'active';
+  };
+
   const handleCreateEvent = () => {
     // Show paywall modal - will be implemented with real payment flow
     navigate("/create-event");
@@ -187,7 +203,7 @@ const Home = () => {
 
     // Apply status filter
     if (filterStatus !== "all") {
-      filtered = filtered.filter(event => event.status === filterStatus);
+      filtered = filtered.filter(event => getEventStatus(event) === filterStatus);
     }
 
     // Apply sorting
@@ -198,7 +214,7 @@ const Home = () => {
         case "date":
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         case "status":
-          return (a.status || "active").localeCompare(b.status || "active");
+          return getEventStatus(a).localeCompare(getEventStatus(b));
         default:
           return 0;
       }
@@ -214,11 +230,11 @@ const Home = () => {
     let filtered = attendingEvents;
 
     // Filter out draft events - attendees should never see drafts
-    filtered = filtered.filter(event => event.status !== 'draft');
+    filtered = filtered.filter(event => getEventStatus(event) !== 'draft');
 
     // Apply status filter (no draft option for attending)
     if (attendingFilterStatus !== "all") {
-      filtered = filtered.filter(event => event.status === attendingFilterStatus);
+      filtered = filtered.filter(event => getEventStatus(event) === attendingFilterStatus);
     }
 
     // Apply sorting
@@ -229,7 +245,7 @@ const Home = () => {
         case "date":
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         case "status":
-          return (a.status || "active").localeCompare(b.status || "active");
+          return getEventStatus(a).localeCompare(getEventStatus(b));
         default:
           return 0;
       }
@@ -522,11 +538,11 @@ const Home = () => {
                         <div className="flex flex-col items-center gap-1">
                           <Badge 
                             variant="outline"
-                            className={event.status === 'closed' 
+                            className={getEventStatus(event) === 'closed' 
                               ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
                               : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
                           >
-                            {event.status === 'closed' ? 'Closed' : 'Active'}
+                            {getEventStatus(event) === 'closed' ? 'Closed' : 'Active'}
                           </Badge>
                           
                           {!selectionMode && (
@@ -691,14 +707,14 @@ const Home = () => {
                     <div className="flex items-start justify-between">
                       <div 
                         className="flex-1 cursor-pointer" 
-                        onClick={() => !selectionMode && (event.status === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
+                        onClick={() => !selectionMode && (getEventStatus(event) === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
                       >
                         <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                           <Calendar className="w-4 h-4" />
                           <span>{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
                         </div>
-                        {event.status !== 'draft' && (
+                        {getEventStatus(event) !== 'draft' && (
                           <div className="text-xs text-muted-foreground mt-1">
                             Code: <span className="font-mono font-semibold">{event.invite_code}</span>
                           </div>
@@ -708,14 +724,14 @@ const Home = () => {
                         <Badge 
                           variant="outline"
                           className={
-                            event.status === 'draft'
+                            getEventStatus(event) === 'draft'
                               ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
-                              : event.status === 'closed' 
+                              : getEventStatus(event) === 'closed' 
                                 ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
                                 : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
                           }
                         >
-                          {event.status === 'draft' ? 'Draft' : event.status === 'closed' ? 'Closed' : 'Active'}
+                          {getEventStatus(event) === 'draft' ? 'Draft' : getEventStatus(event) === 'closed' ? 'Closed' : 'Active'}
                         </Badge>
                         
                         {!selectionMode && (
@@ -726,7 +742,7 @@ const Home = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              {event.status === 'draft' ? (
+                              {getEventStatus(event) === 'draft' ? (
                                 <DropdownMenuItem onClick={() => navigate(`/create-event?edit=${event.id}`)}>
                                   Complete Draft
                                 </DropdownMenuItem>
@@ -793,7 +809,7 @@ const Home = () => {
                 </div>
                 
                 {/* Upgrade Button - Full Width Below */}
-                {event.status !== 'draft' && event.plan === 'free' && event.status === 'active' && (
+                {getEventStatus(event) !== 'draft' && event.plan === 'free' && getEventStatus(event) === 'active' && (
                   <div className="px-3 pb-3">
                     <Button
                       size="sm"
