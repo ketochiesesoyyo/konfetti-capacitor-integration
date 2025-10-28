@@ -48,7 +48,7 @@ const CreateEvent = () => {
     coupleName2: "",
     eventDate: "",
     matchmakingStartDate: "",
-    matchmakingStartTime: "09:00",
+    matchmakingStartTime: "00:00",
     theme: "sunset",
     agreedToTerms: false,
     plan: "free" as "free" | "premium",
@@ -138,7 +138,7 @@ const CreateEvent = () => {
           coupleName2: nameParts[1] || "",
           eventDate: draft.date || "",
           matchmakingStartDate: draft.matchmaking_start_date || "",
-          matchmakingStartTime: draft.matchmaking_start_time || "09:00",
+          matchmakingStartTime: draft.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
           plan: (draft.plan as "free" | "premium") || "free",
@@ -182,7 +182,7 @@ const CreateEvent = () => {
           coupleName2: nameParts[1] || "",
           eventDate: event.date || "",
           matchmakingStartDate: event.matchmaking_start_date || "",
-          matchmakingStartTime: event.matchmaking_start_time || "09:00",
+          matchmakingStartTime: event.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
           plan: (event.plan as "free" | "premium") || "free",
@@ -595,7 +595,13 @@ const CreateEvent = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/")}
+              onClick={() => {
+                if (step > 1) {
+                  setStep(step - 1);
+                } else {
+                  navigate("/");
+                }
+              }}
               className="shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -605,7 +611,7 @@ const CreateEvent = () => {
             </div>
           </div>
           <p className="text-sm text-subtitle">
-            Step {step} of 2 • {eventData.plan === "premium" ? "Premium Plan" : "Free Plan"}
+            Step {step} of 3
           </p>
         </div>
       </div>
@@ -673,17 +679,6 @@ const CreateEvent = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="matchmakingStartTime">Start Time</Label>
-                <Input
-                  id="matchmakingStartTime"
-                  type="time"
-                  value={eventData.matchmakingStartTime}
-                  onChange={(e) =>
-                    setEventData({ ...eventData, matchmakingStartTime: e.target.value })
-                  }
-                />
-              </div>
 
               <div className="space-y-2">
                 <div className="rounded-lg bg-muted/50 p-4 border border-border/50">
@@ -766,73 +761,6 @@ const CreateEvent = () => {
               </Select>
             </div> */}
 
-            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-              <Label className="text-base font-semibold">Select Your Plan</Label>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEventData({ ...eventData, plan: 'free' })}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    eventData.plan === 'free'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-muted-foreground/20 hover:border-primary/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-lg">Free Plan</h3>
-                    {eventData.plan === 'free' && <Check className="w-5 h-5 text-primary" />}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Perfect for intimate gatherings
-                  </p>
-                  <ul className="text-sm space-y-1">
-                    <li>✓ Up to 10 guests</li>
-                    <li>✓ Full matchmaking features</li>
-                    <li>✓ Event management dashboard</li>
-                  </ul>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setEventData({ ...eventData, plan: 'premium' })}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    eventData.plan === 'premium'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-muted-foreground/20 hover:border-primary/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-lg">Premium Plan</h3>
-                      <p className="text-2xl font-bold text-primary mt-1">$299</p>
-                    </div>
-                    {eventData.plan === 'premium' && <Check className="w-5 h-5 text-primary" />}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    For larger celebrations
-                  </p>
-                  <ul className="text-sm space-y-1">
-                    <li>✓ Unlimited guests</li>
-                    <li>✓ Full matchmaking features</li>
-                    <li>✓ Event management dashboard</li>
-                    <li>✓ Priority support</li>
-                  </ul>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="terms"
-                checked={eventData.agreedToTerms}
-                onCheckedChange={(checked) =>
-                  setEventData({ ...eventData, agreedToTerms: checked as boolean })
-                }
-              />
-              <Label htmlFor="terms" className="text-sm leading-tight">
-                I confirm all guests will be 18+ and agree to the Terms of Service
-              </Label>
-            </div>
 
             <Button
               variant="gradient"
@@ -843,14 +771,13 @@ const CreateEvent = () => {
                 !eventData.coupleName1 ||
                 !eventData.coupleName2 ||
                 !eventData.eventDate ||
-                !eventData.agreedToTerms ||
-                !eventImage
+                (!eventImage && !imagePreview)
               }
             >
               Next
             </Button>
           </Card>
-        ) : (
+        ) : step === 2 ? (
           <Card className="p-6 space-y-6 animate-fade-in">
             <h2 className="text-xl font-bold">Review Your Event</h2>
             
@@ -886,37 +813,101 @@ const CreateEvent = () => {
                   (3 days after event)
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Plan</p>
-                <p className="font-medium capitalize">
-                  {eventData.plan} Plan {eventData.plan === 'free' ? '(Max 10 guests)' : '(Unlimited guests)'}
-                </p>
-              </div>
-              {/* Theme display hidden for future use */}
-              {/* <div>
-                <p className="text-sm text-muted-foreground">Theme</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div
-                    className={`h-12 w-full rounded-lg ${
-                      themes.find((t) => t.id === eventData.theme)?.gradient
-                    }`}
-                  />
+              {eventData.matchmakingStartDate && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Matchmaking Starts</p>
+                  <p className="font-medium">
+                    {new Date(eventData.matchmakingStartDate).toLocaleDateString()} at 00:00 UK Time
+                  </p>
                 </div>
-              </div> */}
+              )}
+            </div>
+
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={eventData.agreedToTerms}
+                onCheckedChange={(checked) =>
+                  setEventData({ ...eventData, agreedToTerms: checked as boolean })
+                }
+              />
+              <Label htmlFor="terms" className="text-sm leading-tight">
+                I confirm all guests will be 18+ and agree to the Terms of Service
+              </Label>
+            </div>
+
+            <Button
+              variant="gradient"
+              onClick={() => setStep(3)}
+              className="w-full"
+              size="lg"
+              disabled={!eventData.agreedToTerms}
+            >
+              Select Event Plan
+            </Button>
+          </Card>
+        ) : (
+          <Card className="p-6 space-y-6 animate-fade-in">
+            <h2 className="text-xl font-bold">Select Your Plan</h2>
+            
+            <div className="grid gap-3">
+              <button
+                type="button"
+                onClick={() => setEventData({ ...eventData, plan: 'free' })}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  eventData.plan === 'free'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/20 hover:border-primary/50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">Free Plan</h3>
+                  {eventData.plan === 'free' && <Check className="w-5 h-5 text-primary" />}
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Perfect for intimate gatherings
+                </p>
+                <ul className="text-sm space-y-1">
+                  <li>✓ Up to 10 guests</li>
+                  <li>✓ Full matchmaking features</li>
+                  <li>✓ Event management dashboard</li>
+                </ul>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEventData({ ...eventData, plan: 'premium' })}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  eventData.plan === 'premium'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/20 hover:border-primary/50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold text-lg">Premium Plan</h3>
+                    <p className="text-2xl font-bold text-primary mt-1">$299</p>
+                  </div>
+                  {eventData.plan === 'premium' && <Check className="w-5 h-5 text-primary" />}
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  For larger celebrations
+                </p>
+                <ul className="text-sm space-y-1">
+                  <li>✓ Unlimited guests</li>
+                  <li>✓ Full matchmaking features</li>
+                  <li>✓ Event management dashboard</li>
+                  <li>✓ Priority support</li>
+                </ul>
+              </button>
             </div>
 
             <Button
               variant="gradient"
               onClick={handleCreateEvent}
               className="w-full"
-              disabled={
-                isCreating ||
-                !eventData.coupleName1 ||
-                !eventData.coupleName2 ||
-                !eventData.eventDate ||
-                !eventData.agreedToTerms ||
-                (!eventImage && !imagePreview)
-              }
+              size="lg"
+              disabled={isCreating}
             >
               {isCreating ? "Creating..." : eventData.plan === "premium" ? "Continue to Payment ($299)" : "Create Event"}
             </Button>
