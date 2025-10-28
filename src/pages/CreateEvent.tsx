@@ -24,8 +24,10 @@ import { Calendar, ArrowLeft, Check, Camera, X } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 import { eventSchema } from "@/lib/validation";
+import { useTranslation } from "react-i18next";
 
 const CreateEvent = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editEventId = searchParams.get('edit');
@@ -662,13 +664,13 @@ const CreateEvent = () => {
             </div>
 
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-              <Label className="text-base font-semibold">Matchmaking Schedule (Optional)</Label>
+              <Label className="text-base font-semibold">{t('createEvent.matchmakingSchedule')}</Label>
               <p className="text-sm text-muted-foreground">
-                Control when guests can start swiping.
+                {t('createEvent.matchmakingScheduleDesc')}
               </p>
               
               <div className="space-y-2">
-                <Label htmlFor="matchmakingSchedule">When should matchmaking open?</Label>
+                <Label htmlFor="matchmakingSchedule">{t('createEvent.matchmakingScheduleWhen')}</Label>
                 <Select
                   value={eventData.matchmakingStartDate}
                   onValueChange={(value) => {
@@ -691,17 +693,17 @@ const CreateEvent = () => {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Immediately / Inmediatamente" />
+                    <SelectValue placeholder={t('createEvent.matchmakingImmediately')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediately">Immediately / Inmediatamente</SelectItem>
-                    <SelectItem value="day_of_event">The day of the event / El día del evento</SelectItem>
-                    <SelectItem value="1_week_before">1 week before the event / 1 semana antes del evento</SelectItem>
-                    <SelectItem value="2_weeks_before">2 weeks before / 2 semanas antes del evento</SelectItem>
+                    <SelectItem value="immediately">{t('createEvent.matchmakingImmediately')}</SelectItem>
+                    <SelectItem value="day_of_event">{t('createEvent.matchmakingDayOf')}</SelectItem>
+                    <SelectItem value="1_week_before">{t('createEvent.matchmaking1WeekBefore')}</SelectItem>
+                    <SelectItem value="2_weeks_before">{t('createEvent.matchmaking2WeeksBefore')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-2">
-                  💡 We recommend setting it to 1 week before to make matchmaking more fun and increase anticipation for the wedding.
+                  {t('createEvent.matchmakingRecommendation')}
                 </p>
               </div>
 
