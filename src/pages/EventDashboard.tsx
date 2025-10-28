@@ -694,6 +694,7 @@ const EventDashboard = () => {
                       type="date"
                       value={editedEvent.date}
                       onChange={(e) => setEditedEvent({ ...editedEvent, date: e.target.value })}
+                      min={format(new Date(), "yyyy-MM-dd")}
                       className="mt-1"
                     />
                   ) : (
