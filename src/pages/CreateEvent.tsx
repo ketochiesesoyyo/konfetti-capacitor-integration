@@ -491,6 +491,7 @@ const CreateEvent = () => {
             plan: eventData.plan,
             matchmaking_start_date: eventData.matchmakingStartDate || null,
             matchmaking_start_time: eventData.matchmakingStartTime || null,
+            matchmaking_close_date: null,
           })
           .eq("id", eventIdToUpdate)
           .eq("created_by", userId);
