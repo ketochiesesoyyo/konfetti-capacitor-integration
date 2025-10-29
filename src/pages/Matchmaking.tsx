@@ -1006,7 +1006,7 @@ const Matchmaking = () => {
             )}
           >
             {/* Entire card content is now scrollable */}
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 pb-40">
               {/* Photo Section */}
               <div className="relative h-[450px] gradient-sunset overflow-hidden">
                 <img
