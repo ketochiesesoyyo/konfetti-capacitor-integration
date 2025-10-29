@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Heart, Undo, Menu, Users, Clock } from "lucide-react";
+import { X, Heart, Undo, Menu, Users, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
@@ -82,6 +82,7 @@ const Matchmaking = () => {
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [showAllPast, setShowAllPast] = useState(false);
   const [timeUntilStart, setTimeUntilStart] = useState<string>("");
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -384,6 +385,13 @@ const Matchmaking = () => {
 
   const currentProfile = profiles[currentIndex];
   const hasMoreProfiles = currentIndex < profiles.length - 1;
+  const currentPhotos = currentProfile?.photos || [];
+  const hasMultiplePhotos = currentPhotos.length > 1;
+
+  // Reset photo index when profile changes
+  useEffect(() => {
+    setCurrentPhotoIndex(0);
+  }, [currentIndex]);
 
   // Parse prompts safely
   const parsedPrompts = currentProfile?.prompts
@@ -981,16 +989,10 @@ const Matchmaking = () => {
             <KonfettiLogo className="w-32 h-auto" />
           </div>
           {selectedEventId && (
-            <p className="text-lg font-bold text-foreground text-center mb-2">
+            <p className="text-lg font-bold text-foreground text-center">
               {events.find(e => e.id === selectedEventId)?.name}
             </p>
           )}
-          {/* Profile count badge */}
-          <div className="text-center">
-            <Badge variant="secondary">
-              {profiles.length - currentIndex} profile{profiles.length - currentIndex !== 1 ? "s" : ""} left
-            </Badge>
-          </div>
         </div>
       </div>
 
@@ -1010,10 +1012,48 @@ const Matchmaking = () => {
               {/* Photo Section */}
               <div className="relative h-[450px] gradient-sunset overflow-hidden">
                 <img
-                  src={currentProfile.photos?.[0] || "/placeholder.svg"}
+                  src={currentPhotos[currentPhotoIndex] || "/placeholder.svg"}
                   alt={currentProfile.name}
                   className="w-full h-full object-cover"
                 />
+                
+                {/* Photo navigation buttons */}
+                {hasMultiplePhotos && (
+                  <>
+                    {currentPhotoIndex > 0 && (
+                      <button
+                        onClick={() => setCurrentPhotoIndex(prev => prev - 1)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                    )}
+                    {currentPhotoIndex < currentPhotos.length - 1 && (
+                      <button
+                        onClick={() => setCurrentPhotoIndex(prev => prev + 1)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    )}
+                    
+                    {/* Photo indicators */}
+                    <div className="absolute top-4 left-0 right-0 flex justify-center gap-1.5 px-4">
+                      {currentPhotos.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "h-1 rounded-full transition-all flex-1 max-w-20",
+                            idx === currentPhotoIndex
+                              ? "bg-white"
+                              : "bg-white/40"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <div className="absolute bottom-0 left-0 right-0 glass-medium p-8 text-white border-t border-white/20">
                   <h2 className="text-3xl font-bold mb-1 drop-shadow-lg">
                     {currentProfile.name}, {currentProfile.age || "?"}
