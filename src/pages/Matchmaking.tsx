@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Heart, Undo, Menu, Users, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Heart, Undo, Menu, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
@@ -82,7 +82,6 @@ const Matchmaking = () => {
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [showAllPast, setShowAllPast] = useState(false);
   const [timeUntilStart, setTimeUntilStart] = useState<string>("");
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -386,12 +385,6 @@ const Matchmaking = () => {
   const currentProfile = profiles[currentIndex];
   const hasMoreProfiles = currentIndex < profiles.length - 1;
   const currentPhotos = currentProfile?.photos || [];
-  const hasMultiplePhotos = currentPhotos.length > 1;
-
-  // Reset photo index when profile changes
-  useEffect(() => {
-    setCurrentPhotoIndex(0);
-  }, [currentIndex]);
 
   // Parse prompts safely
   const parsedPrompts = currentProfile?.prompts
@@ -1012,48 +1005,10 @@ const Matchmaking = () => {
               {/* Photo Section */}
               <div className="relative h-[450px] gradient-sunset overflow-hidden">
                 <img
-                  src={currentPhotos[currentPhotoIndex] || "/placeholder.svg"}
+                  src={currentPhotos[0] || "/placeholder.svg"}
                   alt={currentProfile.name}
                   className="w-full h-full object-cover"
                 />
-                
-                {/* Photo navigation buttons */}
-                {hasMultiplePhotos && (
-                  <>
-                    {currentPhotoIndex > 0 && (
-                      <button
-                        onClick={() => setCurrentPhotoIndex(prev => prev - 1)}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all"
-                      >
-                        <ChevronLeft className="w-6 h-6" />
-                      </button>
-                    )}
-                    {currentPhotoIndex < currentPhotos.length - 1 && (
-                      <button
-                        onClick={() => setCurrentPhotoIndex(prev => prev + 1)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all"
-                      >
-                        <ChevronRight className="w-6 h-6" />
-                      </button>
-                    )}
-                    
-                    {/* Photo indicators */}
-                    <div className="absolute top-4 left-0 right-0 flex justify-center gap-1.5 px-4">
-                      {currentPhotos.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={cn(
-                            "h-1 rounded-full transition-all flex-1 max-w-20",
-                            idx === currentPhotoIndex
-                              ? "bg-white"
-                              : "bg-white/40"
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-
                 <div className="absolute bottom-0 left-0 right-0 glass-medium p-8 text-white border-t border-white/20">
                   <h2 className="text-3xl font-bold mb-1 drop-shadow-lg">
                     {currentProfile.name}, {currentProfile.age || "?"}
@@ -1071,12 +1026,35 @@ const Matchmaking = () => {
                   </div>
                 )}
 
+                {/* Second photo after bio */}
+                {currentPhotos[1] && (
+                  <div className="rounded-3xl overflow-hidden">
+                    <img
+                      src={currentPhotos[1]}
+                      alt={`${currentProfile.name} photo 2`}
+                      className="w-full h-[400px] object-cover"
+                    />
+                  </div>
+                )}
+
                 {/* Prompts */}
                 {parsedPrompts.length > 0 &&
                   parsedPrompts.map((prompt: any, idx: number) => (
-                    <div key={idx} className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
-                      <h3 className="font-semibold text-sm text-primary mb-2">{prompt.question}</h3>
-                      <p className="text-foreground leading-relaxed">{prompt.answer}</p>
+                    <div key={idx}>
+                      <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                        <h3 className="font-semibold text-sm text-primary mb-2">{prompt.question}</h3>
+                        <p className="text-foreground leading-relaxed">{prompt.answer}</p>
+                      </div>
+                      {/* Show photo after first prompt if available */}
+                      {idx === 0 && currentPhotos[2] && (
+                        <div className="rounded-3xl overflow-hidden mt-6">
+                          <img
+                            src={currentPhotos[2]}
+                            alt={`${currentProfile.name} photo 3`}
+                            className="w-full h-[400px] object-cover"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
 
@@ -1093,6 +1071,17 @@ const Matchmaking = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Remaining photos after interests */}
+                {currentPhotos.slice(3).map((photo, idx) => (
+                  <div key={idx + 3} className="rounded-3xl overflow-hidden">
+                    <img
+                      src={photo}
+                      alt={`${currentProfile.name} photo ${idx + 4}`}
+                      className="w-full h-[400px] object-cover"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </Card>
