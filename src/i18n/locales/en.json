@@ -245,6 +245,10 @@
   "createEvent": {
     "title": "Create Event",
     "editTitle": "Edit Event",
+    "hostMatchmakingInfo": {
+      "title": "Matchmaking Participation",
+      "description": "As the wedding host, you won't be able to matchmake by default. If you'd like to participate in matchmaking, simply join your own event using the invite code after creating it."
+    },
     "partner1": "Partner 1's First Name",
     "partner1Placeholder": "e.g., Sarah",
     "partner2": "Partner 2's First Name",
@@ -306,6 +310,11 @@
     "copyLink": "Copy Event Link",
     "eventCode": "Event Code",
     "upgradePremium": "Upgrade to Premium",
+    "joinYourEvent": {
+      "title": "Join Your Event",
+      "description": "Want to participate in matchmaking? Join your own event using the invite code below.",
+      "button": "Join Event to Matchmake"
+    },
     "guests": "Guests",
     "stats": "Stats",
     "settings": "Settings",
@@ -393,7 +402,8 @@
     "welcomeToast": "🥂 Welcome to the wedding!",
     "joinedCelebration": "You've joined {{name}}'s celebration",
     "failedJoin": "Failed to join event",
-    "completeProfileFirst": "Please complete your profile first"
+    "completeProfileFirst": "Please complete your profile first",
+    "hostAlreadyParticipating": "You're already participating in matchmaking!"
   },
   "likedYou": {
     "title": "Your Likes",

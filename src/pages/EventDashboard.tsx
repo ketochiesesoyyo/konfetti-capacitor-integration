@@ -74,6 +74,7 @@ const EventDashboard = () => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
+  const [isHostAttendee, setIsHostAttendee] = useState(false);
 
   useEffect(() => {
     fetchEventData();
@@ -176,6 +177,16 @@ const EventDashboard = () => {
       if (eventData.image_url) {
         setImagePreview(eventData.image_url);
       }
+      
+      // Check if host has joined as attendee
+      const { data: hostAttendeeCheck } = await supabase
+        .from("event_attendees")
+        .select("id")
+        .eq("event_id", eventId || "")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setIsHostAttendee(!!hostAttendeeCheck);
 
       // Fetch guests (attendees with their profiles)
       const { data: attendeesData, error: attendeesError } = await supabase
@@ -626,6 +637,18 @@ const EventDashboard = () => {
 
         {activeTab === "settings" && (
           <div className="space-y-4 pb-6">
+            {!isHostAttendee && (
+              <Card className="p-6 bg-accent/5 border-accent">
+                <h3 className="font-semibold mb-2">Join Your Event</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Want to participate in matchmaking? Join your own event using the invite code below.
+                </p>
+                <Button onClick={() => navigate(`/join/${event.invite_code}`)}>
+                  Join Event to Matchmake
+                </Button>
+              </Card>
+            )}
+            
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Event Settings</h3>

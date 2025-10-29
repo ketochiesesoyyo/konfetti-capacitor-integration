@@ -238,8 +238,8 @@ const Matchmaking = () => {
         return;
       }
 
-      // Filter out the host from attendees
-      const attendeeIds = eventAttendees?.map((a) => a.user_id).filter((id) => id !== hostId) || [];
+      // Filter out the host from attendees - Don't filter! If host joined via invite, they should be matchable
+      const attendeeIds = eventAttendees?.map((a) => a.user_id) || [];
 
       if (attendeeIds.length === 0) {
         setProfiles([]);

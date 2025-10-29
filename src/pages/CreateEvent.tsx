@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ArrowLeft, Check, Camera, X } from "lucide-react";
+import { Calendar, ArrowLeft, Check, Camera, X, Info as InfoIcon } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 import { eventSchema } from "@/lib/validation";
@@ -434,7 +435,7 @@ const CreateEvent = () => {
     
     // Validate all required fields
     if (!eventData.coupleName1 || !eventData.coupleName2 || !eventData.eventDate || !eventData.agreedToTerms) {
-      toast.error("Please complete all required fields");
+      toast.error(t("createEvent.completeRequired"));
       return;
     }
     
@@ -551,27 +552,18 @@ const CreateEvent = () => {
         // If Premium plan selected, redirect to payment
         if (eventData.plan === 'premium') {
           await handlePaymentCheckout(event.id);
-          toast.info("Complete payment to activate Premium features");
+          toast.info(t("createEvent.completePayment"));
           setIsCreating(false);
           return;
         }
 
-        // Auto-join creator to the event
-        const { error: attendeeError } = await supabase
-          .from("event_attendees")
-          .insert({
-            event_id: event.id,
-            user_id: userId,
-          });
-
-        if (attendeeError) throw attendeeError;
-
-        toast.success("Event created! 🎊", {
-          description: `Share code: ${inviteCode}`,
+        toast.success(t("createEvent.eventCreated"), {
+          description: t("createEvent.shareCode"),
         });
       }
       
-      navigate("/");
+      // Redirect to event dashboard, not home
+      navigate(`/event-dashboard/${createdEventId}`);
     } catch (error: any) {
       toast.error("Failed to create event", {
         description: error.message,
@@ -621,6 +613,16 @@ const CreateEvent = () => {
 
 
       <div className="max-w-lg mx-auto px-4 py-6">
+        {!editEventId && step === 1 && (
+          <Alert className="mb-6">
+            <InfoIcon className="h-4 w-4" />
+            <AlertTitle>{t('createEvent.hostMatchmakingInfo.title')}</AlertTitle>
+            <AlertDescription>
+              {t('createEvent.hostMatchmakingInfo.description')}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {step === 1 ? (
           <Card className="p-6 space-y-6 animate-fade-in">
             <div className="space-y-2">

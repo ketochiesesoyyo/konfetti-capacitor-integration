@@ -245,6 +245,10 @@
   "createEvent": {
     "title": "Crear evento",
     "editTitle": "Editar evento",
+    "hostMatchmakingInfo": {
+      "title": "Participación en matchmaking",
+      "description": "Como anfitrión de la boda, no podrás hacer matchmaking por defecto. Si deseas participar en el matchmaking, simplemente únete a tu propio evento usando el código de invitación después de crearlo."
+    },
     "partner1": "Nombre de la pareja 1",
     "partner1Placeholder": "por ejemplo, Sarah",
     "partner2": "Nombre del socio 2",
@@ -306,6 +310,11 @@
     "copyLink": "Copiar enlace de evento",
     "eventCode": "Código de evento",
     "upgradePremium": "Actualizar a Premium",
+    "joinYourEvent": {
+      "title": "Únete a tu evento",
+      "description": "¿Quieres participar en el matchmaking? Únete a tu propio evento usando el código de invitación a continuación.",
+      "button": "Unirse al evento para hacer matchmaking"
+    },
     "guests": "Invitados",
     "stats": "Estadísticas",
     "settings": "Configuración",
@@ -393,7 +402,8 @@
     "welcomeToast": "¡🥂 Bienvenidos a la boda!",
     "joinedCelebration": "Te has unido a la celebración de {{name}}",
     "failedJoin": "No se pudo unir al evento",
-    "completeProfileFirst": "Por favor, complete su perfil primero"
+    "completeProfileFirst": "Por favor, complete su perfil primero",
+    "hostAlreadyParticipating": "¡Ya estás participando en el matchmaking!"
   },
   "likedYou": {
     "title": "Tus gustos",

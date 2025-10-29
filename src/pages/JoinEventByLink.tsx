@@ -13,8 +13,10 @@ import {
 import { Calendar, MapPin, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const JoinEventByLink = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { code } = useParams();
   const [side, setSide] = useState("");
@@ -131,7 +133,20 @@ const JoinEventByLink = () => {
         .single();
 
       if (existing) {
-        toast.info("You've already joined this event!");
+        // Check if user is the host
+        const { data: eventDetails } = await supabase
+          .from("events")
+          .select("created_by")
+          .eq("id", event.id)
+          .single();
+        
+        const isHost = eventDetails?.created_by === userId;
+        
+        if (isHost) {
+          toast.success(t('joinEventByLink.hostAlreadyParticipating'));
+        } else {
+          toast.info(t('joinEventByLink.alreadyJoined'));
+        }
         localStorage.removeItem("pendingInvite"); // Clear pending invite
         navigate("/");
         return;
