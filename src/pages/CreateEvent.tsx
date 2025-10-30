@@ -46,6 +46,22 @@ const CreateEvent = () => {
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
   
+  const [matchmakingOption, setMatchmakingOption] = useState<string>("immediately");
+  
+  // Helper function to determine matchmaking option from dates
+  const determineMatchmakingOption = (eventDate: string, startDate: string | null): string => {
+    if (!startDate || startDate === "") return "immediately";
+    
+    const event = new Date(eventDate);
+    const start = new Date(startDate);
+    const daysDiff = Math.round((event.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff === 0) return "day_of_event";
+    if (daysDiff === 7) return "1_week_before";
+    if (daysDiff === 14) return "2_weeks_before";
+    return "immediately";
+  };
+  
   const [eventData, setEventData] = useState({
     coupleName1: "",
     coupleName2: "",
@@ -136,7 +152,7 @@ const CreateEvent = () => {
         
         // Parse event name to extract couple names
         const nameParts = draft.name.split(" & ");
-        setEventData({
+        const loadedEventData = {
           coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
           coupleName2: nameParts[1] || "",
           eventDate: draft.date || "",
@@ -146,7 +162,15 @@ const CreateEvent = () => {
           agreedToTerms: true,
           plan: (draft.plan as "free" | "premium") || "free",
           expectedGuests: 0,
-        });
+        };
+        
+        setEventData(loadedEventData);
+        
+        // Determine and set the matchmaking option
+        if (draft.date) {
+          const option = determineMatchmakingOption(draft.date, draft.matchmaking_start_date);
+          setMatchmakingOption(option);
+        }
 
         // Set image preview if exists
         if (draft.image_url) {
@@ -180,7 +204,7 @@ const CreateEvent = () => {
         
         // Parse event name to extract couple names
         const nameParts = event.name.split(" & ");
-        setEventData({
+        const loadedEventData = {
           coupleName1: nameParts[0] === "Draft Event" ? "" : nameParts[0] || "",
           coupleName2: nameParts[1] || "",
           eventDate: event.date || "",
@@ -190,7 +214,15 @@ const CreateEvent = () => {
           agreedToTerms: true,
           plan: (event.plan as "free" | "premium") || "free",
           expectedGuests: 0,
-        });
+        };
+        
+        setEventData(loadedEventData);
+        
+        // Determine and set the matchmaking option
+        if (event.date) {
+          const option = determineMatchmakingOption(event.date, event.matchmaking_start_date);
+          setMatchmakingOption(option);
+        }
 
         // Set image preview if exists
         if (event.image_url) {
@@ -674,10 +706,17 @@ const CreateEvent = () => {
               <div className="space-y-2">
                 <Label htmlFor="matchmakingSchedule">{t('createEvent.matchmakingScheduleWhen')}</Label>
                 <Select
-                  value={eventData.matchmakingStartDate}
+                  value={matchmakingOption}
                   onValueChange={(value) => {
+                    setMatchmakingOption(value);
                     let calculatedDate = "";
-                    if (eventData.eventDate && value !== "immediately") {
+                    let calculatedTime = "00:00";
+                    
+                    if (value === "immediately") {
+                      // Set to current date and time if immediately
+                      calculatedDate = "";
+                      calculatedTime = "00:00";
+                    } else if (eventData.eventDate) {
                       const eventDate = new Date(eventData.eventDate);
                       if (value === "1_week_before") {
                         const startDate = new Date(eventDate);
@@ -691,19 +730,29 @@ const CreateEvent = () => {
                         calculatedDate = eventData.eventDate;
                       }
                     }
-                    setEventData({ ...eventData, matchmakingStartDate: calculatedDate });
+                    
+                    setEventData({ 
+                      ...eventData, 
+                      matchmakingStartDate: calculatedDate,
+                      matchmakingStartTime: calculatedTime
+                    });
                   }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('createEvent.matchmakingImmediately')} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background z-50">
                     <SelectItem value="immediately">{t('createEvent.matchmakingImmediately')}</SelectItem>
                     <SelectItem value="day_of_event">{t('createEvent.matchmakingDayOf')}</SelectItem>
                     <SelectItem value="1_week_before">{t('createEvent.matchmaking1WeekBefore')}</SelectItem>
                     <SelectItem value="2_weeks_before">{t('createEvent.matchmaking2WeeksBefore')}</SelectItem>
                   </SelectContent>
                 </Select>
+                {matchmakingOption !== "immediately" && eventData.matchmakingStartDate && (
+                  <p className="text-xs text-primary font-medium">
+                    Will open on {new Date(eventData.matchmakingStartDate).toLocaleDateString()}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground mt-2">
                   {t('createEvent.matchmakingRecommendation')}
                 </p>
