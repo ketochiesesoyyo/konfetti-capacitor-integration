@@ -46,7 +46,7 @@ const CreateEvent = () => {
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
   
-  const [matchmakingOption, setMatchmakingOption] = useState<string>("immediately");
+  const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
   
   // Helper function to determine matchmaking option from dates
   const determineMatchmakingOption = (eventDate: string, startDate: string | null): string => {
@@ -759,6 +759,17 @@ const CreateEvent = () => {
               </div>
 
               <div className="space-y-2">
+                {eventData.matchmakingStartDate && eventData.eventDate && (
+                  <div className="rounded-lg bg-primary/10 p-4 border border-primary/30 mb-3">
+                    <p className="text-sm font-medium mb-1 text-primary">Matchmaking Opens</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(eventData.matchmakingStartDate).toLocaleDateString()} at {eventData.matchmakingStartTime || '00:00'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      All guests and the host will be notified about the matchmaking page opening.
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-lg bg-muted/50 p-4 border border-border/50">
                   <p className="text-sm font-medium mb-1">Close Date</p>
                   <p className="text-sm text-muted-foreground">
