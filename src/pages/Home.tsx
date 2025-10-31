@@ -458,7 +458,7 @@ const Home = () => {
           ) : activeTab === "attending" ? (
             <>
               {/* Sort and Filter Controls for Attending */}
-              {!showHidden && visibleAttendingEvents.length > 0 && (
+              {!showHidden && (
                 <div className="flex gap-2 mb-4">
                   <div className="flex-1">
                     <Select value={attendingSortBy} onValueChange={(value: any) => setAttendingSortBy(value)}>
