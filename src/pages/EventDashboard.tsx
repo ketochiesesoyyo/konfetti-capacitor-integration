@@ -477,7 +477,7 @@ const EventDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background p-6 border-b">
+      <div className="sticky top-0 z-50 bg-background p-6 border-b" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <Button
