@@ -849,11 +849,11 @@ const Matchmaking = () => {
               </>
             ) : (
               <>
-                <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
+                <h2 className="text-2xl font-bold mb-2">{t('matchmaking.noMoreProfiles')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  You've seen everyone at this event. Check back later when more guests join!
+                  {t('matchmaking.noMoreDesc')}
                 </p>
-                <Button onClick={() => navigate("/")}>Go Home</Button>
+                <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>
             )}
           </Card>
