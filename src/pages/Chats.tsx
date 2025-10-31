@@ -225,9 +225,19 @@ const Chats = () => {
       )
       .subscribe();
 
+    // Reload chats when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadMatches();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(messagesChannel);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [navigate]);
 
