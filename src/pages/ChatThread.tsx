@@ -280,7 +280,7 @@ const ChatThread = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background p-4 flex-shrink-0 border-b" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="sticky top-0 z-50 bg-background p-4 flex-shrink-0 border-b">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <Button
             variant="ghost"
