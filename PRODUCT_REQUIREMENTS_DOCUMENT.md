@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 ## Event-Based Matchmaking Platform
 
-**Last Updated:** 2025-10-28  
-**Version:** 3.0 - Major Feature Expansion  
+**Last Updated:** 2025-10-31  
+**Version:** 3.1 - Matchmaking UX & Date Format Updates  
 **Status:** Pre-Launch Ready
 
 ---
@@ -79,9 +79,14 @@ An event-based matchmaking platform that enables hosts to create exclusive datin
 - **Event cover image** with upload and crop functionality
 - Event date (cannot be set to past dates)
 - **Matchmaking scheduling:**
-  - Matchmaking start date
-  - Matchmaking start time
+  - "When should matchmaking open?" dropdown with options:
+    - Opens when event is created (default: "1 week before")
+    - 1 day before event
+    - 1 week before event
+    - 2 weeks before event
+    - Custom date and time
   - Matchmaking close date (separate from event close date)
+  - **Matchmaking Open Date Display:** Shows calculated opening date/time with notification reminder
 - Close date (auto-calculated: 3 days after event date)
 - Invite code generation (unique per event)
 - Status management (draft/active/closed via date-based calculation)
@@ -512,8 +517,13 @@ An event-based matchmaking platform that enables hosts to create exclusive datin
 - Event description textarea
 - Event date picker (min: today)
 - Event image upload area
-- Matchmaking start date picker
-- Matchmaking start time picker
+- "When should matchmaking open?" dropdown (default: "1 week before")
+  - Opens when event is created
+  - 1 day before event
+  - 1 week before event
+  - 2 weeks before event
+  - Custom date and time (shows date/time pickers)
+- Matchmaking open date display (calculated, with notification text)
 - Matchmaking close date picker
 - Plan selection (Free/Premium)
 - "Create Event" / "Save Changes" button
@@ -554,10 +564,13 @@ An event-based matchmaking platform that enables hosts to create exclusive datin
    - Error: "Cannot set event date in the past"
 
 5. **Set Matchmaking Schedule:**
-   - Input: Set start date, time, and close date
+   - Input: Select option from "When should matchmaking open?" dropdown
+   - Options: Event creation / 1 day before / 1 week before / 2 weeks before / Custom
+   - Default: "1 week before"
+   - Result: Calculate and display matchmaking start date/time, show notification text
+   - Custom: Reveals date/time pickers for manual selection
    - Validation: Start < Close, logical ordering
-   - Result: Set matchmaking window
-   - UI: Date/time pickers with validation
+   - UI: Dropdown with conditional date/time pickers, calculated date display
 
 6. **Select Plan:**
    - Input: Click Free or Premium card
@@ -3958,6 +3971,34 @@ body {
 - Medium: `font-medium` (500)
 - Semibold: `font-semibold` (600)
 - Bold: `font-bold` (700)
+
+### Date & Time Formatting
+
+**Standard Format:**
+All dates across the application use a consistent format: `dd / MMM / yyyy`
+
+**Examples:**
+- `15 / Jan / 2025`
+- `28 / Oct / 2024`
+- `03 / Dec / 2025`
+
+**Implementation:**
+```tsx
+import { format } from 'date-fns';
+
+// Date only
+format(new Date(date), 'dd / MMM / yyyy')
+
+// Date with time
+format(new Date(date), 'dd / MMM / yyyy • h:mm a')
+```
+
+**Used in:**
+- Event dates on Home page
+- Event creation/edit dates
+- Matchmaking dates
+- Event dashboard dates
+- Join event preview dates
 
 ### Component Variants
 
