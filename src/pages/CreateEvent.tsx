@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { eventSchema } from "@/lib/validation";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
+import { handleError, getErrorMessage } from "@/lib/errorHandling";
 
 const CreateEvent = () => {
   const { t } = useTranslation();
@@ -289,19 +290,31 @@ const CreateEvent = () => {
       
       // Upload event image if provided and not already uploaded
       if (eventImage && !imagePreview.startsWith('http')) {
-        const fileExt = eventImage.name.split('.').pop();
-        const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(fileName, eventImage);
-        
-        if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('event-photos')
-            .getPublicUrl(fileName);
+        try {
+          const fileExt = eventImage.name.split('.').pop() || 'jpg';
+          const fileName = `${userId}/draft_${Date.now()}.${fileExt}`;
           
-          imageUrl = publicUrl;
+          const { error: uploadError } = await supabase.storage
+            .from('event-photos')
+            .upload(fileName, eventImage, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: eventImage.type || 'image/jpeg'
+            });
+          
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('event-photos')
+              .getPublicUrl(fileName);
+            
+            imageUrl = publicUrl;
+          } else {
+            console.error("Auto-save image upload error:", uploadError);
+            // Continue without image - don't fail the whole auto-save
+          }
+        } catch (imageError) {
+          console.error("Auto-save image error:", imageError);
+          // Continue without image
         }
       }
       
@@ -328,11 +341,16 @@ const CreateEvent = () => {
             description: `Wedding celebration for ${eventName}`,
             invite_code: inviteCode,
             image_url: imageUrl || null,
+            matchmaking_start_date: eventData.matchmakingStartDate || null,
+            matchmaking_start_time: eventData.matchmakingStartTime || null,
           })
           .eq("id", draftEventId)
           .eq("created_by", userId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Error updating draft:", updateError);
+          // Don't throw - allow silent failure for auto-save
+        }
       } else {
         // Create new draft (should happen via initializeDraft now, but keeping as fallback)
         await initializeDraft();
@@ -343,6 +361,7 @@ const CreateEvent = () => {
       }
     } catch (error: any) {
       console.error("Error auto-saving draft:", error);
+      // Silent failure for auto-save - don't disturb user experience
     } finally {
       if (!synchronous) setAutoSaving(false);
     }
@@ -402,27 +421,67 @@ const CreateEvent = () => {
   };
 
   const handleCropComplete = async (croppedBlob: Blob) => {
-    if (!tempImageFile) return;
+    try {
+      if (!tempImageFile) {
+        throw new Error("No image file selected");
+      }
 
-    setCropDialogOpen(false);
-    
-    // Convert blob to file and set as event image
-    const file = new File([croppedBlob], tempImageFile.name, { type: croppedBlob.type });
-    setEventImage(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    
-    // Clean up temp URL
-    URL.revokeObjectURL(tempImageUrl);
-    setTempImageUrl("");
-    setTempImageFile(null);
-    
-    toast.success("Photo ready!");
+      // Validate blob
+      if (!croppedBlob || croppedBlob.size === 0) {
+        throw new Error("Invalid cropped image");
+      }
+
+      // Validate size (5MB)
+      if (croppedBlob.size > 5242880) {
+        throw new Error("Cropped image is too large (max 5MB)");
+      }
+
+      setCropDialogOpen(false);
+      
+      // Convert blob to file with proper type detection for iOS
+      const mimeType = croppedBlob.type || 'image/jpeg';
+      const fileExtension = mimeType.split('/')[1] || 'jpg';
+      const fileName = `event_${Date.now()}.${fileExtension}`;
+      
+      const file = new File([croppedBlob], fileName, { type: mimeType });
+      
+      // Validate the file was created successfully
+      if (!file || file.size === 0) {
+        throw new Error("Failed to process image");
+      }
+      
+      setEventImage(file);
+      
+      // Create preview with error handling
+      const reader = new FileReader();
+      reader.onerror = () => {
+        throw new Error("Failed to read image file");
+      };
+      reader.onloadend = () => {
+        if (reader.result) {
+          setImagePreview(reader.result as string);
+          toast.success("Photo ready!");
+        } else {
+          handleError(new Error("Failed to create preview"), "Failed to process image", "handleCropComplete");
+        }
+      };
+      reader.readAsDataURL(file);
+      
+      // Clean up temp URL
+      URL.revokeObjectURL(tempImageUrl);
+      setTempImageUrl("");
+      setTempImageFile(null);
+      
+    } catch (error: any) {
+      handleError(error, "Failed to process image. Please try again.", "handleCropComplete");
+      setCropDialogOpen(false);
+      // Clean up
+      if (tempImageUrl) {
+        URL.revokeObjectURL(tempImageUrl);
+      }
+      setTempImageUrl("");
+      setTempImageFile(null);
+    }
   };
 
   const handleTakePhoto = () => {
@@ -464,43 +523,96 @@ const CreateEvent = () => {
   };
 
   const handleCreateEvent = async () => {
-    if (!userId) return;
-    
-    // Validate all required fields
-    if (!eventData.coupleName1 || !eventData.coupleName2 || !eventData.eventDate || !eventData.agreedToTerms) {
-      toast.error(t("createEvent.completeRequired"));
+    if (!userId) {
+      handleError(new Error("No user session"), "Please log in to create an event", "handleCreateEvent");
+      navigate("/auth");
       return;
     }
     
-    // Check if we have an image
-    if (!eventImage && !imagePreview) {
-      toast.error("Please add an event image");
+    // PRE-FLIGHT VALIDATION - Check all required fields before starting
+    const validationErrors: string[] = [];
+    
+    if (!eventData.coupleName1?.trim()) validationErrors.push("First person's name is required");
+    if (!eventData.coupleName2?.trim()) validationErrors.push("Second person's name is required");
+    if (!eventData.eventDate) validationErrors.push("Event date is required");
+    if (!eventData.agreedToTerms) validationErrors.push("You must agree to the terms");
+    if (!eventImage && !imagePreview) validationErrors.push("Event image is required");
+    
+    // Show all validation errors at once
+    if (validationErrors.length > 0) {
+      toast.error("Please complete all required fields", {
+        description: validationErrors[0],
+      });
       return;
     }
     
     setIsCreating(true);
+    
     try {
       const inviteCode = generateInviteCode();
-      const eventName = `${eventData.coupleName1} & ${eventData.coupleName2}`;
+      const eventName = `${eventData.coupleName1.trim()} & ${eventData.coupleName2.trim()}`;
       
       let imageUrl = imagePreview; // Use existing preview if editing draft
       
-      // Upload new event image if provided
+      // Upload new event image if provided - with iOS-specific handling
       if (eventImage) {
-        const fileExt = eventImage.name.split('.').pop();
-        const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('event-photos')
-          .upload(fileName, eventImage);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-photos')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
+        try {
+          // Validate image before upload
+          if (eventImage.size === 0) {
+            throw new Error("Image file is empty");
+          }
+          
+          if (eventImage.size > 5242880) {
+            throw new Error("Image must be less than 5MB");
+          }
+          
+          const fileExt = eventImage.name.split('.').pop() || 'jpg';
+          const fileName = `${userId}/${Date.now()}.${fileExt}`;
+          
+          console.log(`Uploading image: ${fileName}, size: ${eventImage.size} bytes, type: ${eventImage.type}`);
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('event-photos')
+            .upload(fileName, eventImage, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: eventImage.type || 'image/jpeg'
+            });
+          
+          if (uploadError) {
+            console.error("Image upload error:", uploadError);
+            throw new Error(`Failed to upload image: ${uploadError.message}`);
+          }
+          
+          if (!uploadData) {
+            throw new Error("Image upload succeeded but no data returned");
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('event-photos')
+            .getPublicUrl(fileName);
+          
+          if (!publicUrl) {
+            throw new Error("Failed to get image URL");
+          }
+          
+          imageUrl = publicUrl;
+          console.log("Image uploaded successfully:", imageUrl);
+        } catch (imageError: any) {
+          // Image upload failed - show specific error and stop
+          handleError(
+            imageError, 
+            "Failed to upload event image. Please try again or choose a different image.", 
+            "handleCreateEvent-imageUpload"
+          );
+          setIsCreating(false);
+          return;
+        }
+      }
+      
+      // Validate we have an image URL at this point
+      if (!imageUrl) {
+        throw new Error("No image available for event");
       }
       
       // Calculate close date (3 days after event date)
@@ -513,38 +625,53 @@ const CreateEvent = () => {
       let createdEventId = eventIdToUpdate;
       
       if (eventIdToUpdate) {
-        // Update existing draft event
-        const { error: updateError } = await supabase
-          .from("events")
-          .update({
-            name: eventName,
-            date: eventData.eventDate,
-            close_date: closeDate.toISOString().split('T')[0],
-            description: `Wedding celebration for ${eventName}`,
-            invite_code: inviteCode,
-            image_url: imageUrl,
-            status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
-            plan: eventData.plan,
-            matchmaking_start_date: eventData.matchmakingStartDate || null,
-            matchmaking_start_time: eventData.matchmakingStartTime || null,
-            matchmaking_close_date: null,
-          })
-          .eq("id", eventIdToUpdate)
-          .eq("created_by", userId);
+        // Update existing draft event - ONLY set to active after successful completion
+        try {
+          const { error: updateError } = await supabase
+            .from("events")
+            .update({
+              name: eventName,
+              date: eventData.eventDate,
+              close_date: closeDate.toISOString().split('T')[0],
+              description: `Wedding celebration for ${eventName}`,
+              invite_code: inviteCode,
+              image_url: imageUrl,
+              status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
+              plan: eventData.plan,
+              matchmaking_start_date: eventData.matchmakingStartDate || null,
+              matchmaking_start_time: eventData.matchmakingStartTime || null,
+              matchmaking_close_date: null,
+            })
+            .eq("id", eventIdToUpdate)
+            .eq("created_by", userId);
 
-        if (updateError) throw updateError;
+          if (updateError) {
+            throw new Error(`Failed to update event: ${updateError.message}`);
+          }
 
-        // If Premium plan selected, redirect to payment
-        if (eventData.plan === 'premium') {
-          await handlePaymentCheckout(eventIdToUpdate);
-          toast.info("Complete payment to activate Premium features");
+          // If Premium plan selected, redirect to payment
+          if (eventData.plan === 'premium') {
+            await handlePaymentCheckout(eventIdToUpdate);
+            toast.info("Complete payment to activate Premium features");
+            setIsCreating(false);
+            return;
+          }
+
+          // Clear draft ID only after successful creation
+          setDraftEventId(null);
+
+          toast.success("Event published! 🎊", {
+            description: `Share code: ${inviteCode}`,
+          });
+        } catch (dbError: any) {
+          handleError(
+            dbError,
+            "Failed to save event. Your draft has been saved.",
+            "handleCreateEvent-updateDraft"
+          );
           setIsCreating(false);
           return;
         }
-
-        toast.success("Event published! 🎊", {
-          description: `Share code: ${inviteCode}`,
-        });
       } else {
         // Validate event data before creating
         const validationResult = eventSchema.safeParse({
@@ -563,44 +690,79 @@ const CreateEvent = () => {
         const validated = validationResult.data;
 
         // Create new event (shouldn't happen with auto-save, but keeping as fallback)
-        const { data: event, error: eventError } = await supabase
-          .from("events")
-          .insert({
-            name: validated.name,
-            date: validated.date,
-            close_date: closeDate.toISOString().split('T')[0],
-            description: validated.description,
-            invite_code: inviteCode,
-            created_by: userId,
-            image_url: imageUrl,
-            status: 'active',
-            plan: eventData.plan,
-          })
-          .select()
-          .single();
+        try {
+          const { data: event, error: eventError } = await supabase
+            .from("events")
+            .insert({
+              name: validated.name,
+              date: validated.date,
+              close_date: closeDate.toISOString().split('T')[0],
+              description: validated.description,
+              invite_code: inviteCode,
+              created_by: userId,
+              image_url: imageUrl,
+              status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
+              plan: eventData.plan,
+              matchmaking_start_date: eventData.matchmakingStartDate || null,
+              matchmaking_start_time: eventData.matchmakingStartTime || null,
+            })
+            .select()
+            .single();
 
-        if (eventError) throw eventError;
-        createdEventId = event.id;
-        
-        // If Premium plan selected, redirect to payment
-        if (eventData.plan === 'premium') {
-          await handlePaymentCheckout(event.id);
-          toast.info(t("createEvent.completePayment"));
+          if (eventError) {
+            throw new Error(`Failed to create event: ${eventError.message}`);
+          }
+          
+          if (!event) {
+            throw new Error("Event created but no data returned");
+          }
+          
+          createdEventId = event.id;
+          
+          // Auto-join creator to the event
+          const { error: attendeeError } = await supabase
+            .from("event_attendees")
+            .insert({
+              event_id: event.id,
+              user_id: userId,
+            });
+            
+          if (attendeeError) {
+            console.error("Failed to auto-join creator:", attendeeError);
+            // Don't fail the whole operation for this
+          }
+          
+          // If Premium plan selected, redirect to payment
+          if (eventData.plan === 'premium') {
+            await handlePaymentCheckout(event.id);
+            toast.info(t("createEvent.completePayment"));
+            setIsCreating(false);
+            return;
+          }
+
+          toast.success(t("createEvent.eventCreated"), {
+            description: t("createEvent.shareCode"),
+          });
+        } catch (dbError: any) {
+          handleError(
+            dbError,
+            "Failed to create event. Please try again.",
+            "handleCreateEvent-createNew"
+          );
           setIsCreating(false);
           return;
         }
-
-        toast.success(t("createEvent.eventCreated"), {
-          description: t("createEvent.shareCode"),
-        });
       }
       
       // Redirect to event dashboard, not home
       navigate(`/event-dashboard/${createdEventId}`);
     } catch (error: any) {
-      toast.error("Failed to create event", {
-        description: error.message,
-      });
+      // Catch-all for any unexpected errors
+      handleError(
+        error,
+        getErrorMessage(error, "Failed to create event. Your progress has been saved as a draft."),
+        "handleCreateEvent"
+      );
     } finally {
       setIsCreating(false);
     }
