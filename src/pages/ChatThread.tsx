@@ -293,10 +293,10 @@ const ChatThread = () => {
             className="flex-1 min-w-0 cursor-pointer"
             onClick={() => setShowProfileDialog(true)}
           >
-            <h1 className="text-2xl font-bold text-[hsl(var(--title))] hover:underline truncate">
+            <h1 className="text-3xl font-bold text-[hsl(var(--title))] hover:underline truncate">
               {chatDetails.name}
             </h1>
-            <p className="text-sm text-subtitle truncate">{chatDetails.eventName}</p>
+            <p className="text-sm mt-1 text-subtitle truncate">{chatDetails.eventName}</p>
           </div>
           
           <DropdownMenu>

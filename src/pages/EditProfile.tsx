@@ -516,8 +516,8 @@ const EditProfile = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[hsl(var(--title))]">Edit Profile</h1>
-            <p className="text-sm text-subtitle">Update your information</p>
+            <h1 className="text-3xl font-bold text-[hsl(var(--title))]">Edit Profile</h1>
+            <p className="text-sm mt-1 text-subtitle">Update your information</p>
           </div>
         </div>
       </div>
