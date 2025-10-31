@@ -280,8 +280,8 @@ const ChatThread = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background p-4 flex-shrink-0 border-b">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
+      <div className="sticky top-0 z-50 bg-background p-6 border-b">
+        <div className="max-w-lg mx-auto flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -289,17 +289,14 @@ const ChatThread = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="w-10 h-10 rounded-full overflow-hidden gradient-ocean flex-shrink-0">
-            <img src={chatDetails.photo} alt={chatDetails.name} className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 
-              className="font-semibold truncate cursor-pointer hover:underline text-[hsl(var(--title))]" 
-              onClick={() => setShowProfileDialog(true)}
-            >
+          <div 
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => setShowProfileDialog(true)}
+          >
+            <h1 className="text-2xl font-bold text-[hsl(var(--title))] hover:underline truncate">
               {chatDetails.name}
-            </h2>
-            <p className="text-xs truncate text-subtitle">{chatDetails.eventName}</p>
+            </h1>
+            <p className="text-sm text-subtitle truncate">{chatDetails.eventName}</p>
           </div>
           
           <DropdownMenu>
@@ -307,7 +304,6 @@ const ChatThread = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/20"
               >
                 <MoreVertical className="w-5 h-5" />
               </Button>
