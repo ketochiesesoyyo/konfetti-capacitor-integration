@@ -458,8 +458,7 @@ const Home = () => {
           ) : activeTab === "attending" ? (
             <>
               {/* Sort and Filter Controls for Attending */}
-              {!showHidden && (
-                <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-4">
                   <div className="flex-1">
                     <Select value={attendingSortBy} onValueChange={(value: any) => setAttendingSortBy(value)}>
                       <SelectTrigger className="w-full">
@@ -491,7 +490,6 @@ const Home = () => {
                     </Select>
                   </div>
                 </div>
-              )}
 
               {visibleAttendingEvents.length > 0 ? (
               visibleAttendingEvents.map((event, index) => (
