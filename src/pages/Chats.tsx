@@ -291,7 +291,7 @@ const Chats = () => {
                 </span>
                 {chat.unread > 0 && (
                   <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5 animate-bounce-in">
-                    {chat.unread}
+                    {chat.unread > 9 ? '9+' : chat.unread}
                   </Badge>
                 )}
               </div>
@@ -338,7 +338,7 @@ const Chats = () => {
               </span>
               {chat.unread > 0 && (
                 <Badge className="h-5 min-w-[20px] flex items-center justify-center px-1.5">
-                  {chat.unread}
+                  {chat.unread > 9 ? '9+' : chat.unread}
                 </Badge>
               )}
             </div>
