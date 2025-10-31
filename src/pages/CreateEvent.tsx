@@ -26,6 +26,7 @@ import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 import { eventSchema } from "@/lib/validation";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
 
 const CreateEvent = () => {
   const { t } = useTranslation();
@@ -750,7 +751,7 @@ const CreateEvent = () => {
                 </Select>
                 {matchmakingOption !== "immediately" && eventData.matchmakingStartDate && (
                   <p className="text-xs text-primary font-medium">
-                    Will open on {new Date(eventData.matchmakingStartDate).toLocaleDateString()}
+                    Will open on {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">
@@ -763,7 +764,7 @@ const CreateEvent = () => {
                   <div className="rounded-lg bg-primary/10 p-4 border border-primary/30 mb-3">
                     <p className="text-sm font-medium mb-1 text-primary">Matchmaking Opens</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(eventData.matchmakingStartDate).toLocaleDateString()} at {eventData.matchmakingStartTime || '00:00'}
+                      {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at {eventData.matchmakingStartTime || '00:00'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       All guests and the host will be notified about the matchmaking page opening.
@@ -773,7 +774,7 @@ const CreateEvent = () => {
                 <div className="rounded-lg bg-muted/50 p-4 border border-border/50">
                   <p className="text-sm font-medium mb-1">Close Date</p>
                   <p className="text-sm text-muted-foreground">
-                    Matchmaking automatically closes 3 days after the wedding date{eventData.eventDate && ` (${new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()})`}.
+                    Matchmaking automatically closes 3 days after the wedding date{eventData.eventDate && ` (${format(new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000), 'dd / MMM / yyyy')})`}.
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
                     Chats remain active after matchmaking closes.
@@ -890,13 +891,13 @@ const CreateEvent = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Event Date</p>
                 <p className="font-medium">
-                  {new Date(eventData.eventDate).toLocaleDateString()}
+                  {format(new Date(eventData.eventDate), 'dd / MMM / yyyy')}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Matchmaking Active Until</p>
                 <p className="font-medium">
-                  {new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {format(new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000), 'dd / MMM / yyyy')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   (3 days after event)
@@ -906,7 +907,7 @@ const CreateEvent = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Matchmaking Starts</p>
                   <p className="font-medium">
-                    {new Date(eventData.matchmakingStartDate).toLocaleDateString()} at 00:00 UK Time
+                    {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at 00:00 UK Time
                   </p>
                 </div>
               )}

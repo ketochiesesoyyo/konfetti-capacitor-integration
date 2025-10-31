@@ -569,7 +569,7 @@ const EventDashboard = () => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Joined {format(new Date(guest.joined_at), "MMM d, yyyy")}
+                      Joined {format(new Date(guest.joined_at), "dd / MMM / yyyy")}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -722,7 +722,7 @@ const EventDashboard = () => {
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {format(new Date(event.date), "MMMM d, yyyy")}
+                      {format(new Date(event.date), "dd / MMM / yyyy")}
                     </p>
                   )}
                 </div>
@@ -747,13 +747,7 @@ const EventDashboard = () => {
                       <Label className="text-xs text-muted-foreground">Start Date & Time</Label>
                       <p className="text-sm mt-1">
                         {event.matchmaking_start_date && event.matchmaking_start_time
-                          ? new Date(`${event.matchmaking_start_date}T${event.matchmaking_start_time}`).toLocaleString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })
+                          ? format(new Date(`${event.matchmaking_start_date}T${event.matchmaking_start_time}`), "dd / MMM / yyyy • h:mm a")
                           : 'Immediately (not scheduled)'}
                       </p>
                     </div>
@@ -761,7 +755,7 @@ const EventDashboard = () => {
                       <Label className="text-xs text-muted-foreground">Close Date</Label>
                       <p className="text-sm mt-1">
                         {event.matchmaking_close_date
-                          ? format(new Date(event.matchmaking_close_date), "MMMM d, yyyy")
+                          ? format(new Date(event.matchmaking_close_date), "dd / MMM / yyyy")
                           : 'Not set (closes with event)'}
                       </p>
                     </div>

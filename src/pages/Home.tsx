@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import { format } from "date-fns";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
@@ -532,7 +533,7 @@ const Home = () => {
                           <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                             <Calendar className="w-4 h-4" />
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                            <span>{format(new Date(event.date), 'dd / MMM / yyyy')}</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-1">
@@ -712,7 +713,7 @@ const Home = () => {
                         <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{event.date ? new Date(event.date).toLocaleDateString() : 'No date set'}</span>
+                          <span>{event.date ? format(new Date(event.date), 'dd / MMM / yyyy') : 'No date set'}</span>
                         </div>
                         {getEventStatus(event) !== 'draft' && (
                           <div className="text-xs text-muted-foreground mt-1">

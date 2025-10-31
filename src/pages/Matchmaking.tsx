@@ -429,13 +429,13 @@ const Matchmaking = () => {
 
   const formatDateRange = (startDate?: string, endDate?: string) => {
     if (!startDate) return "Date TBD";
-    const start = format(new Date(startDate), "MMM d");
-    const end = endDate ? format(new Date(endDate), "MMM d, yyyy") : "";
+    const start = format(new Date(startDate), "dd / MMM");
+    const end = endDate ? format(new Date(endDate), "dd / MMM / yyyy") : "";
     return end ? `${start} - ${end}` : start;
   };
 
   const formatDateTime = (date: Date) => {
-    return format(date, "MMMM d, yyyy • h:mm a");
+    return format(date, "dd / MMM / yyyy • h:mm a");
   };
 
   const handleEventSelect = (eventId: string) => {
@@ -831,7 +831,7 @@ const Matchmaking = () => {
               <>
                 <h2 className="text-2xl font-bold mb-2">Matchmaking Has Closed</h2>
                 <p className="text-muted-foreground mb-4">
-                  Matchmaking ended on {new Date(matchmakingCloseDate).toLocaleDateString()}. Your chats remain active!
+                  Matchmaking ended on {format(new Date(matchmakingCloseDate), 'dd / MMM / yyyy')}. Your chats remain active!
                 </p>
                 <Button onClick={() => navigate("/chats")}>View Chats</Button>
               </>
@@ -841,7 +841,7 @@ const Matchmaking = () => {
                 <p className="text-muted-foreground mb-4">
                   This event is now closed and no new matches will appear here. However, your chats remain active until{" "}
                   {selectedEventCloseDate
-                    ? new Date(selectedEventCloseDate).toLocaleDateString()
+                    ? format(new Date(selectedEventCloseDate), 'dd / MMM / yyyy')
                     : "3 days after the event was closed"}
                   .
                 </p>

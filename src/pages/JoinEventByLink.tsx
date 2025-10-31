@@ -14,6 +14,7 @@ import { Calendar, MapPin, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
 
 const JoinEventByLink = () => {
   const { t } = useTranslation();
@@ -231,12 +232,7 @@ const JoinEventByLink = () => {
               <div>
                 <p className="text-sm font-medium text-foreground">Wedding Date</p>
                 <p className="text-sm">
-                  {event?.eventDate && new Date(event.eventDate).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {event?.eventDate && format(new Date(event.eventDate), 'EEEE, dd / MMM / yyyy')}
                 </p>
               </div>
             </div>
