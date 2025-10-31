@@ -10,6 +10,7 @@ import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 import { ReportDialog } from "@/components/ReportDialog";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +43,7 @@ const ChatThread = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id: matchId } = useParams();
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -83,7 +85,7 @@ const ChatThread = () => {
         const recipientIdFromState = chatDetails.userId || location.state?.userId;
         
         if (!eventIdFromState || !recipientIdFromState) {
-          toast.error("Invalid chat");
+          toast.error(t('chatThread.invalidChat'));
           navigate("/chats");
           return;
         }
@@ -116,7 +118,7 @@ const ChatThread = () => {
       } else {
         // Match-based messaging
         if (!matchId) {
-          toast.error("Invalid chat");
+          toast.error(t('chatThread.invalidChat'));
           navigate("/chats");
           return;
         }
@@ -263,7 +265,7 @@ const ChatThread = () => {
 
       if (error) throw error;
 
-      toast.success("Unmatched successfully");
+      toast.success(t('chatThread.unmatchedSuccess'));
       navigate("/chats");
     } catch (error) {
       handleError(error, "Failed to unmatch", "Unmatch");
@@ -313,7 +315,7 @@ const ChatThread = () => {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setShowUnmatchDialog(true)}>
                 <UserX className="w-4 h-4 mr-2" />
-                Unmatch
+                {t('chatThread.unmatch')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -321,7 +323,7 @@ const ChatThread = () => {
                 className="text-destructive focus:text-destructive"
               >
                 <Flag className="w-4 h-4 mr-2" />
-                Report & Unmatch
+                {t('chats.reportAndUnmatch')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -332,11 +334,11 @@ const ChatThread = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-lg mx-auto w-full">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Loading messages...</p>
+            <p className="text-muted-foreground">{t('chatThread.loadingMessages')}</p>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">No messages yet. Say hi! 👋</p>
+            <p className="text-muted-foreground">{t('chatThread.noMessages')}</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -374,7 +376,7 @@ const ChatThread = () => {
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={t('chatThread.typeMessage')}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             className="flex-1"
           />
@@ -412,15 +414,15 @@ const ChatThread = () => {
       <AlertDialog open={showUnmatchDialog} onOpenChange={setShowUnmatchDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unmatch {chatDetails.name}?</AlertDialogTitle>
+            <AlertDialogTitle>{t('chatThread.unmatchTitle', { name: chatDetails.name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove your match with {chatDetails.name}. You won't be able to message each other anymore. This action cannot be undone.
+              {t('chatThread.unmatchDesc', { name: chatDetails.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('chatThread.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleUnmatch} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Unmatch
+              {t('chatThread.unmatch')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

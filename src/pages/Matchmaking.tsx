@@ -464,13 +464,13 @@ const Matchmaking = () => {
           {status === "live" && (
             <Badge variant="default" className="shrink-0 bg-green-500 hover:bg-green-600">
               <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse" />
-              Live
+              {t('matchmaking.live')}
             </Badge>
           )}
           {status === "upcoming" && (
             <Badge variant="secondary" className="shrink-0">
               <Clock className="w-3 h-3 mr-1" />
-              Soon
+              {t('matchmaking.soon')}
             </Badge>
           )}
         </div>
@@ -696,7 +696,7 @@ const Matchmaking = () => {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader>
-                    <DialogTitle>Browse Your Events</DialogTitle>
+                    <DialogTitle>{t('matchmaking.browseYourEvents')}</DialogTitle>
                   </DialogHeader>
                   
                   <ScrollArea className="flex-1 pr-4">
@@ -708,9 +708,9 @@ const Matchmaking = () => {
                             <div className="flex items-center gap-2">
                               <Badge variant="default" className="bg-green-500 hover:bg-green-600">
                                 <div className="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse" />
-                                Live
+                                {t('matchmaking.live')}
                               </Badge>
-                              <span className="font-semibold">Live Events</span>
+                              <span className="font-semibold">{t('matchmaking.live')} {t('common.select')}</span>
                               <span className="text-sm text-muted-foreground">({liveEvents.length})</span>
                             </div>
                           </AccordionTrigger>
@@ -725,7 +725,7 @@ const Matchmaking = () => {
                                   className="w-full text-sm"
                                   onClick={() => setShowAllLive(true)}
                                 >
-                                  View All {liveEvents.length} Events
+                                  {t('matchmaking.viewAllEvents', { count: liveEvents.length })}
                                 </Button>
                               )}
                             </div>
@@ -740,9 +740,9 @@ const Matchmaking = () => {
                             <div className="flex items-center gap-2">
                               <Badge variant="secondary">
                                 <Clock className="w-3 h-3 mr-1" />
-                                Upcoming
+                                {t('matchmaking.upcoming')}
                               </Badge>
-                              <span className="font-semibold">Upcoming Events</span>
+                              <span className="font-semibold">{t('matchmaking.upcomingEvents')}</span>
                               <span className="text-sm text-muted-foreground">({upcomingEvents.length})</span>
                             </div>
                           </AccordionTrigger>
@@ -757,7 +757,7 @@ const Matchmaking = () => {
                                   className="w-full text-sm"
                                   onClick={() => setShowAllUpcoming(true)}
                                 >
-                                  View All {upcomingEvents.length} Events
+                                  {t('matchmaking.viewAllEvents', { count: upcomingEvents.length })}
                                 </Button>
                               )}
                             </div>
@@ -770,8 +770,8 @@ const Matchmaking = () => {
                         <AccordionItem value="past" className="border rounded-xl px-4">
                           <AccordionTrigger className="hover:no-underline">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline">Past</Badge>
-                              <span className="font-semibold">Past Events</span>
+                              <Badge variant="outline">{t('matchmaking.past')}</Badge>
+                              <span className="font-semibold">{t('matchmaking.pastEvents')}</span>
                               <span className="text-sm text-muted-foreground">({pastEvents.length})</span>
                             </div>
                           </AccordionTrigger>
@@ -786,7 +786,7 @@ const Matchmaking = () => {
                                   className="w-full text-sm"
                                   onClick={() => setShowAllPast(true)}
                                 >
-                                  View All {pastEvents.length} Events
+                                  {t('matchmaking.viewAllEvents', { count: pastEvents.length })}
                                 </Button>
                               )}
                             </div>
@@ -811,41 +811,41 @@ const Matchmaking = () => {
           <Card className="p-8 text-center max-w-md">
             {!selectedEventId || events.length === 0 ? (
               <>
-                <h2 className="text-2xl font-bold mb-2">Enter event code</h2>
-                <p className="text-muted-foreground mb-4">Join an event to start matching with other guests.</p>
-                <Button onClick={() => navigate("/join-event")}>Join Event</Button>
+                <h2 className="text-2xl font-bold mb-2">{t('matchmaking.enterEventCode')}</h2>
+                <p className="text-muted-foreground mb-4">{t('matchmaking.joinEventDesc')}</p>
+                <Button onClick={() => navigate("/join-event")}>{t('matchmaking.joinEvent')}</Button>
               </>
             ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}`) ? (
               <>
-                <h2 className="text-2xl font-bold mb-2">Matchmaking Opens Soon</h2>
+                <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingOpensSoon')}</h2>
                 <div className="text-4xl font-bold text-primary mb-4 font-mono">
                   {timeUntilStart}
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  Matchmaking opens on{" "}
+                  {t('matchmaking.matchmakingOpensOn')}{" "}
                   {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}`))}
                 </p>
-                <Button onClick={() => navigate("/")}>Go Home</Button>
+                <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>
             ) : matchmakingCloseDate && new Date() > new Date(matchmakingCloseDate) ? (
               <>
-                <h2 className="text-2xl font-bold mb-2">Matchmaking Has Closed</h2>
+                <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingClosed')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  Matchmaking ended on {format(new Date(matchmakingCloseDate), 'dd / MMM / yyyy')}. Your chats remain active!
+                  {t('matchmaking.matchmakingClosedDesc', { date: format(new Date(matchmakingCloseDate), 'dd / MMM / yyyy') })}
                 </p>
-                <Button onClick={() => navigate("/chats")}>View Chats</Button>
+                <Button onClick={() => navigate("/chats")}>{t('matchmaking.viewChats')}</Button>
               </>
             ) : selectedEventStatus === "closed" ? (
               <>
-                <h2 className="text-2xl font-bold mb-2">Event Closed</h2>
+                <h2 className="text-2xl font-bold mb-2">{t('matchmaking.eventClosedTitle')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  This event is now closed and no new matches will appear here. However, your chats remain active until{" "}
-                  {selectedEventCloseDate
-                    ? format(new Date(selectedEventCloseDate), 'dd / MMM / yyyy')
-                    : "3 days after the event was closed"}
-                  .
+                  {t('matchmaking.eventClosedMessage', { 
+                    date: selectedEventCloseDate
+                      ? format(new Date(selectedEventCloseDate), 'dd / MMM / yyyy')
+                      : "3 days after the event was closed"
+                  })}
                 </p>
-                <Button onClick={() => navigate("/chats")}>View Chats</Button>
+                <Button onClick={() => navigate("/chats")}>{t('matchmaking.viewChats')}</Button>
               </>
             ) : (
               <>

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
+import { useTranslation } from "react-i18next";
 
 type ProfileWithEvent = {
   id: string;
@@ -25,6 +26,7 @@ type ProfileWithEvent = {
 
 const LikedYou = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"new" | "passed" | "all-likes">("new");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -282,8 +284,8 @@ const LikedYou = () => {
           .single();
 
         if (newMatch) {
-          toast("It's a Match! 🎉", {
-            description: `You and ${profile.name} liked each other!`,
+          toast(t('likedYou.itsAMatch'), {
+            description: t('likedYou.youAndXLiked', { name: profile.name }),
           });
           
           setTimeout(() => {
@@ -292,8 +294,8 @@ const LikedYou = () => {
         }
       } else {
         // Match already exists, just navigate to it
-        toast("It's a Match! 🎉", {
-          description: `You and ${profile.name} liked each other!`,
+        toast(t('likedYou.itsAMatch'), {
+          description: t('likedYou.youAndXLiked', { name: profile.name }),
         });
         
         setTimeout(() => {
@@ -321,12 +323,12 @@ const LikedYou = () => {
         direction: "left",
       });
 
-      toast(`Passed on ${profile.name}`);
+      toast(t('likedYou.passedOn', { name: profile.name }));
       setNewLikes(prev => prev.filter(p => p.id !== profile.id));
       setPassedLikes(prev => [...prev, profile]);
     } catch (error) {
       console.error("Error passing:", error);
-      toast.error("Failed to pass");
+      toast.error(t('likedYou.failedPass'));
     }
   };
 
@@ -342,11 +344,11 @@ const LikedYou = () => {
 
       if (error) throw error;
 
-      toast(`Unliked ${profile.name}`);
+      toast(t('likedYou.unliked', { name: profile.name }));
       setAllLikes(prev => prev.filter(p => p.swipeId !== profile.swipeId));
     } catch (error) {
       console.error("Error unliking:", error);
-      toast.error("Failed to unlike");
+      toast.error(t('likedYou.failedUnlike'));
     }
   };
 
@@ -393,7 +395,7 @@ const LikedYou = () => {
                   onClick={() => handleLike(profile)}
                 >
                   <Heart className="w-4 h-4 mr-2" />
-                  Like
+                  {t('likedYou.like')}
                 </Button>
               ) : (
                 <>
@@ -404,7 +406,7 @@ const LikedYou = () => {
                     onClick={() => handlePass(profile)}
                   >
                     <X className="w-4 h-4 mr-2" />
-                    Pass
+                    {t('likedYou.pass')}
                   </Button>
                   <Button
                     size="sm"
@@ -413,7 +415,7 @@ const LikedYou = () => {
                     onClick={() => handleLike(profile)}
                   >
                     <Heart className="w-4 h-4 mr-2" />
-                    Like
+                    {t('likedYou.like')}
                   </Button>
                 </>
               )}
@@ -429,7 +431,7 @@ const LikedYou = () => {
                   onClick={() => navigate(`/chat/${profile.matchId}`)}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Go Chat
+                  {t('likedYou.goChat')}
                 </Button>
               ) : (
                 <Button
@@ -439,7 +441,7 @@ const LikedYou = () => {
                   onClick={() => handleUnlike(profile)}
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Unlike
+                  {t('likedYou.unlike')}
                 </Button>
               )}
             </div>
@@ -454,8 +456,8 @@ const LikedYou = () => {
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Your Likes</h1>
-          <p className="text-sm text-subtitle">People you've shown interest in</p>
+          <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">{t('likedYou.title')}</h1>
+          <p className="text-sm text-subtitle">{t('likedYou.subtitle')}</p>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ChatActionsMenu } from "@/components/ChatActionsMenu";
 import { ReportDialog } from "@/components/ReportDialog";
 import { UnmatchDialog } from "@/components/UnmatchDialog";
+import { useTranslation } from "react-i18next";
 
 type MatchChat = {
   matchId: string;
@@ -35,6 +36,7 @@ type HostChat = {
 
 const Chats = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"matches" | "hosts">("matches");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -107,7 +109,7 @@ const Chats = () => {
           userId: otherUserId,
           name: otherUser.name,
           photo: otherUser.photos?.[0] || "/placeholder.svg",
-          lastMessage: lastMsg?.content || "Say hi! 👋",
+          lastMessage: lastMsg?.content || t('chats.sayHi'),
           timestamp: timeAgo,
           unread: unreadCount || 0,
           eventName: match.events.name,
@@ -231,13 +233,13 @@ const Chats = () => {
 
   const getTimeAgo = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return 'Just now';
+    if (seconds < 60) return t('chats.justNow');
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return t('chats.minutesAgo', { count: minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t('chats.hoursAgo', { count: hours });
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return t('chats.daysAgo', { count: days });
   };
 
   const handleReportAndUnmatch = (chat: MatchChat) => {
@@ -352,8 +354,8 @@ const Chats = () => {
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">Chats</h1>
-          <p className="text-sm text-subtitle">Your conversations and connections</p>
+          <h1 className="text-3xl font-bold mb-1 text-[hsl(var(--title))]">{t('chats.title')}</h1>
+          <p className="text-sm text-subtitle">{t('chats.subtitle')}</p>
         </div>
       </div>
 
@@ -370,7 +372,7 @@ const Chats = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
-              Matches ({matchChats.length})
+              {t('chats.matches')} ({matchChats.length})
             </button>
             <button
               onClick={() => setActiveTab("hosts")}
@@ -381,7 +383,7 @@ const Chats = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
               )}
             >
-              Hosts ({hostChats.length})
+              {t('chats.hosts')} ({hostChats.length})
             </button>
           </div>
         </Card>
@@ -409,9 +411,9 @@ const Chats = () => {
             ) : (
               <Card className="p-8 text-center">
                 <MessageCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-2">No matches yet</p>
+                <p className="text-muted-foreground mb-2">{t('chats.noMatches')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Start swiping to find your perfect match!
+                  {t('chats.noMatchesDesc')}
                 </p>
               </Card>
             )
@@ -421,9 +423,9 @@ const Chats = () => {
             ) : (
               <Card className="p-8 text-center">
                 <MessageCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-2">No host messages yet</p>
+                <p className="text-muted-foreground mb-2">{t('chats.noHosts')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Event hosts can send you messages directly
+                  {t('chats.noHostsDesc')}
                 </p>
               </Card>
             )
