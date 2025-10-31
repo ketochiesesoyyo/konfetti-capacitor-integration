@@ -515,9 +515,9 @@ const LikedYou = () => {
             ))
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No likes yet</p>
+              <p className="text-muted-foreground">{t('likedYou.noLikes')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Start swiping to build your list!
+                {t('likedYou.noLikesDesc')}
               </p>
             </Card>
           )}
