@@ -685,7 +685,7 @@ const Matchmaking = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header with Event Selector */}
-        <div className="bg-background p-4 border-b">
+        <div className="sticky top-0 z-10 bg-background p-4 border-b">
           <div className="max-w-lg mx-auto">
             <div className="flex items-center justify-center relative mb-3">
               <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
