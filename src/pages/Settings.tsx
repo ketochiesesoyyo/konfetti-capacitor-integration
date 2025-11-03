@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,21 @@ import { useTranslation } from "react-i18next";
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const [currentEmail, setCurrentEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCurrentEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setCurrentEmail(user.email);
+      }
+    };
+    fetchCurrentEmail();
+  }, []);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -104,6 +115,11 @@ const Settings = () => {
             <h2 className="text-xl font-semibold">{t('settings.changeEmail')}</h2>
           </div>
           <div className="space-y-4">
+            {currentEmail && (
+              <div className="p-3 rounded-xl bg-muted/50">
+                <p className="text-sm text-muted-foreground">Email: <span className="font-medium text-foreground">{currentEmail}</span></p>
+              </div>
+            )}
             <div>
               <Label htmlFor="new-email" className="text-sm font-medium mb-2 block">{t('settings.newEmail')}</Label>
               <Input
