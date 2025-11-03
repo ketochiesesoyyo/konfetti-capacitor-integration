@@ -151,7 +151,7 @@ const Matchmaking = () => {
   useEffect(() => {
     if (matchmakingStartDate && matchmakingStartTime) {
       const interval = setInterval(() => {
-        const startDateTime = new Date(`${matchmakingStartDate}T${matchmakingStartTime}`);
+        const startDateTime = new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`);
         const now = new Date();
         const diff = startDateTime.getTime() - now.getTime();
         
@@ -197,10 +197,21 @@ const Matchmaking = () => {
       setMatchmakingStartTime(eventData?.matchmaking_start_time || null);
       setMatchmakingCloseDate(eventData?.matchmaking_close_date || null);
 
-      // Check if matchmaking has started
+      // Check if matchmaking has started (with proper timezone handling)
       if (eventData?.matchmaking_start_date && eventData?.matchmaking_start_time) {
-        const startDateTime = new Date(`${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}`);
-        if (new Date() < startDateTime) {
+        // Create a proper datetime string with explicit timezone
+        const startDateTimeStr = `${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}:00`;
+        const startDateTime = new Date(startDateTimeStr);
+        const now = new Date();
+        
+        console.log('Matchmaking check:', {
+          startDateTime: startDateTime.toISOString(),
+          now: now.toISOString(),
+          hasNotStarted: now < startDateTime
+        });
+        
+        if (now < startDateTime) {
+          console.log('Matchmaking has not started yet');
           setProfiles([]);
           setLoading(false);
           return;
@@ -817,7 +828,7 @@ const Matchmaking = () => {
                 <p className="text-muted-foreground mb-4">{t('matchmaking.joinEventDesc')}</p>
                 <Button onClick={() => navigate("/join-event")}>{t('matchmaking.joinEvent')}</Button>
               </>
-            ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}`) ? (
+            ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`) ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingOpensSoon')}</h2>
                 <div className="text-4xl font-bold text-primary mb-4 font-mono">
@@ -825,7 +836,7 @@ const Matchmaking = () => {
                 </div>
                 <p className="text-muted-foreground mb-4">
                   {t('matchmaking.matchmakingOpensOn')}{" "}
-                  {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}`))}
+                  {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`))}
                 </p>
                 <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>

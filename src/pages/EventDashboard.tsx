@@ -420,25 +420,52 @@ const EventDashboard = () => {
 
   const handleCloseEvent = async () => {
     try {
+      // Get current user to verify ownership
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Authentication required");
+        return;
+      }
+
       // Calculate new close date: 3 days from now
       const newCloseDate = format(addDays(new Date(), 3), "yyyy-MM-dd");
       
-      const { error } = await supabase
+      console.log('Closing event:', {
+        eventId,
+        userId: user.id,
+        status: "closed",
+        newCloseDate
+      });
+
+      const { data, error } = await supabase
         .from("events")
         .update({ 
           status: "closed",
           close_date: newCloseDate
         })
-        .eq("id", eventId || "");
+        .eq("id", eventId || "")
+        .eq("created_by", user.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error closing event:", error);
+        throw error;
+      }
 
+      if (!data || data.length === 0) {
+        console.error("No event was updated - user may not own this event");
+        throw new Error("Failed to update event. You may not have permission.");
+      }
+
+      console.log('Event closed successfully:', data);
       toast.success("Event closed successfully");
       setCloseEventDialogOpen(false);
-      navigate("/");
+      
+      // Refresh event data to show updated status
+      await fetchEventData();
     } catch (error: any) {
       console.error("Error closing event:", error);
-      toast.error("Failed to close event");
+      toast.error(error.message || "Failed to close event");
     }
   };
 
