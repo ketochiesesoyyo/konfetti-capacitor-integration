@@ -333,8 +333,8 @@ serve(async (req) => {
     const hostLang = hostAuth?.user?.user_metadata?.language || "en";
 
     // Build URLs
-    const conversationUrl = `https://konfetti-capacitor-integration.lovable.app/chat/${conversationId}`;
-    const hostMessageUrl = `https://konfetti-capacitor-integration.lovable.app/chats?tab=hosts&conversation=${conversationId}`;
+    const conversationUrl = `https://konfetti.app/chat/${conversationId}`;
+    const hostMessageUrl = `https://konfetti.app/chats?tab=hosts&conversation=${conversationId}`;
 
     // Rate-limit and send email to recipient (guest)
     const canSendGuest = await canSendNewMessageEmail(
