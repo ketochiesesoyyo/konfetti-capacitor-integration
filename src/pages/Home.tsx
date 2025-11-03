@@ -813,22 +813,6 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Upgrade Button - Full Width Below */}
-                {getEventStatus(event) !== 'draft' && event.plan === 'free' && getEventStatus(event) === 'active' && (
-                  <div className="px-3 pb-3">
-                    <Button
-                      size="sm"
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/event-dashboard/${event.id}?tab=settings`);
-                      }}
-                    >
-                      Upgrade to Premium - $299
-                    </Button>
-                  </div>
-                )}
               </Card>
                 ))
               ) : showHidden ? (

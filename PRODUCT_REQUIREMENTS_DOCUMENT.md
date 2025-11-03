@@ -4546,6 +4546,125 @@ toast({
   - User analytics
   - A/B testing
 
+### Phase 9: Admin Analytics Dashboard (Future Project - Separate App)
+
+**Overview:** A dedicated dashboard application for monitoring platform health, growth, and engagement metrics.
+
+#### I. Growth & Acquisition
+**KPIs:**
+- New hosts created (daily, weekly, monthly)
+- New events created
+- Event creation funnel: visits → signups → event creation
+- Invitations sent per host/event
+- Guest invitations accepted (% acceptance rate)
+- New guests registered
+- Geographic distribution (events by city, country)
+
+**Dashboard Visuals:**
+- Time-series line chart (hosts/events over time)
+- Funnel chart (from invite sent → accepted → signed up)
+- Map heatmap (locations of weddings/events)
+
+**Menu Section:** `/growth`
+
+#### II. Engagement & Usage
+**KPIs:**
+- Active hosts (7-day, 30-day)
+- Active guests (7-day, 30-day)
+- Avg. guests per event
+- Avg. matchmaking interactions per guest (likes/swipes)
+- Avg. matches per event
+- Avg. chats per event or per guest
+- Event duration (days active)
+- Features used (matchmaking, chat, VIP badges, etc.)
+
+**Dashboard Visuals:**
+- Engagement line charts (DAU/WAU/MAU)
+- Distribution of matches per event
+- Heatmap of daily activity (hours of day)
+
+**Menu Section:** `/engagement`
+
+#### III. Conversion & Revenue
+**KPIs:**
+- Paid vs free events (count & %)
+- Revenue by plan/tier (Free / Premium / VIP / VIP+)
+- Avg. revenue per event
+- Avg. revenue per active host
+- Lifetime value (LTV) of a host
+- Payment source (Stripe vs IAP)
+- Refund or failed payment rates
+
+**Dashboard Visuals:**
+- Bar chart: revenue per plan
+- Line chart: revenue over time
+- Pie chart: distribution of payment methods
+
+**Menu Section:** `/revenue`
+
+#### IV. Matchmaking Outcomes
+**KPIs:**
+- Total matches created
+- Match success rate (matches that led to chats)
+- Avg. messages per match
+- Match-to-chat conversion rate (%)
+- Avg. time from match to first message
+- Reported/unmatched users count
+- Top reasons for unmatch/report
+
+**Dashboard Visuals:**
+- Funnel: match → chat → unmatch/report
+- Histogram of messages per match
+- Word cloud of report reasons (moderation insights)
+
+**Menu Section:** `/matchmaking`
+
+#### V. Quality & Retention
+**KPIs:**
+- Returning hosts (created >1 event)
+- Returning guests (joined >1 event)
+- Churn rate (hosts inactive >90 days)
+- Session length avg. (per user type)
+- Ratings/NPS (if applicable)
+- % of positive vs negative feedback (from post-event survey)
+- Feature adoption (% using matchmaking, chat, VIP upgrades)
+
+**Dashboard Visuals:**
+- Cohort retention curves
+- Bar chart of feature adoption
+- NPS trend
+
+**Menu Section:** `/retention`
+
+#### VI. System Health & Moderation
+**KPIs:**
+- Total reports filed
+- Avg. response/resolution time (if moderation workflow exists)
+- Server errors / latency
+- Chat message volume over time
+- API response time avg.
+- User verification rate (if implemented)
+
+**Dashboard Visuals:**
+- Alerts / red-flag overview
+- Trendline of moderation cases
+- System uptime chart
+
+**Menu Section:** `/system-health`
+
+#### Suggested Navigation Layout
+
+| Menu Section | Description | Example Visuals |
+|--------------|-------------|-----------------|
+| Overview | Executive summary combining highlights from all sections | KPIs cards: Total Events, Active Guests, Total Revenue, Avg. Matches per Event |
+| Growth | Host, guest, and event creation metrics | Line & funnel charts |
+| Engagement | User activity and usage patterns | Heatmaps & histograms |
+| Revenue | Monetization insights | Bar & pie charts |
+| Matchmaking | Success and quality of matches | Funnels & distribution charts |
+| Retention | Repeat usage and satisfaction | Cohort curves |
+| System Health | Operational & moderation metrics | Status indicators |
+| Settings / Account | Profile, API keys, logout | N/A |
+
 ---
 
 ## Security Considerations

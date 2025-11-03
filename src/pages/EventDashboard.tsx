@@ -873,36 +873,6 @@ const EventDashboard = () => {
               onCropComplete={handleCropComplete}
             />
 
-            {/* Upgrade to Premium */}
-            {event.plan === 'free' && event.status === 'active' && (
-              <Card className="p-6 border-primary/50 bg-primary/5">
-                <h3 className="font-semibold mb-2">Upgrade to Premium</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Unlock unlimited guests and premium features for your event.
-                </p>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-primary">✓</span>
-                    <span>Unlimited guests (currently limited to 10)</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-primary">✓</span>
-                    <span>Priority support</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-primary">✓</span>
-                    <span>Advanced analytics</span>
-                  </div>
-                </div>
-                <Button 
-                  className="w-full"
-                  onClick={handleUpgradeToPremium}
-                >
-                  Upgrade to Premium - $299
-                </Button>
-              </Card>
-            )}
-
             {event.status === 'closed' ? (
               <Card className="p-6 bg-muted">
                 <h3 className="font-semibold mb-2">Event Closed</h3>
