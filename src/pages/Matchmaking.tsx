@@ -151,7 +151,7 @@ const Matchmaking = () => {
   useEffect(() => {
     if (matchmakingStartDate && matchmakingStartTime) {
       const interval = setInterval(() => {
-        const startDateTime = new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`);
+        const startDateTime = new Date(`${matchmakingStartDate}T${matchmakingStartTime}`);
         const now = new Date();
         const diff = startDateTime.getTime() - now.getTime();
         
@@ -212,7 +212,7 @@ const Matchmaking = () => {
         
         if (hasMatchmakingDates) {
           // Create a proper datetime string with explicit timezone
-          const startDateTimeStr = `${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}:00`;
+          const startDateTimeStr = `${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}`;
           const startDateTime = new Date(startDateTimeStr);
           
           console.log('Matchmaking check:', {
@@ -852,7 +852,7 @@ const Matchmaking = () => {
                 <p className="text-muted-foreground mb-4">{t('matchmaking.joinEventDesc')}</p>
                 <Button onClick={() => navigate("/join-event")}>{t('matchmaking.joinEvent')}</Button>
               </>
-            ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`) ? (
+            ) : matchmakingStartDate && matchmakingStartTime && new Date() < new Date(`${matchmakingStartDate}T${matchmakingStartTime}`) ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingOpensSoon')}</h2>
                 <div className="text-4xl font-bold text-primary mb-4 font-mono">
@@ -860,7 +860,7 @@ const Matchmaking = () => {
                 </div>
                 <p className="text-muted-foreground mb-4">
                   {t('matchmaking.matchmakingOpensOn')}{" "}
-                  {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}:00`))}
+                  {formatDateTime(new Date(`${matchmakingStartDate}T${matchmakingStartTime}`))}
                 </p>
                 <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>
