@@ -34,6 +34,7 @@ type HostChat = {
   eventName: string;
 };
 
+// Chats page component
 const Chats = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
