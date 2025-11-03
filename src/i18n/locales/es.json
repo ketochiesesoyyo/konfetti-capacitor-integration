@@ -266,7 +266,7 @@
     "editTitle": "Editar evento",
     "hostMatchmakingInfo": {
       "title": "Participación en matchmaking",
-      "description": "Como anfitrión de la boda, no podrás hacer matchmaking por defecto. Si deseas participar en el matchmaking, simplemente únete a tu propio evento usando el código de invitación después de crearlo."
+      "description": "Como anfitrión de la boda, no podrás hacer matchmaking por defecto."
     },
     "partner1": "Nombre de la pareja 1",
     "partner1Placeholder": "por ejemplo, Sarah",

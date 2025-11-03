@@ -266,7 +266,7 @@
     "editTitle": "Edit Event",
     "hostMatchmakingInfo": {
       "title": "Matchmaking Participation",
-      "description": "As the wedding host, you won't be able to matchmake by default. If you'd like to participate in matchmaking, simply join your own event using the invite code after creating it."
+      "description": "As the wedding host, you won't be able to matchmake by default."
     },
     "partner1": "Partner 1's First Name",
     "partner1Placeholder": "e.g., Sarah",
