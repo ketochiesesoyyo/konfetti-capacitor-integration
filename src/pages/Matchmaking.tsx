@@ -176,220 +176,244 @@ const Matchmaking = () => {
     if (!selectedEventId || !userId) return;
 
     const loadProfiles = async () => {
-      setLoading(true);
-      setCurrentIndex(0);
+      try {
+        setLoading(true);
+        setCurrentIndex(0);
 
-      // Get event details including status and matchmaking schedule
-      const { data: eventData } = await supabase
-        .from("events")
-        .select("created_by, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date")
-        .eq("id", selectedEventId)
-        .single();
-
-      const hostId = eventData?.created_by;
-      const eventStatus = eventData?.status;
-      const closeDate = eventData?.close_date;
-
-      // Store event status and matchmaking schedule
-      setSelectedEventStatus(eventStatus || null);
-      setSelectedEventCloseDate(closeDate || null);
-      setMatchmakingStartDate(eventData?.matchmaking_start_date || null);
-      setMatchmakingStartTime(eventData?.matchmaking_start_time || null);
-      setMatchmakingCloseDate(eventData?.matchmaking_close_date || null);
-
-      // Check if matchmaking has started (with proper timezone handling)
-      if (eventData?.matchmaking_start_date && eventData?.matchmaking_start_time) {
-        // Create a proper datetime string with explicit timezone
-        const startDateTimeStr = `${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}:00`;
-        const startDateTime = new Date(startDateTimeStr);
-        const now = new Date();
-        
-        console.log('Matchmaking check:', {
-          startDateTime: startDateTime.toISOString(),
-          now: now.toISOString(),
-          hasNotStarted: now < startDateTime
-        });
-        
-        if (now < startDateTime) {
-          console.log('Matchmaking has not started yet');
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Check if matchmaking has closed
-      if (eventData?.matchmaking_close_date) {
-        const closeDateObj = new Date(eventData.matchmaking_close_date);
-        if (new Date() > closeDateObj) {
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // If event is closed, show message and don't load profiles
-      if (eventStatus === "closed") {
-        setProfiles([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch profiles of users in the selected event only (excluding current user and host)
-      const { data: eventAttendees, error: attendeesError } = await supabase
-        .from("event_attendees")
-        .select("user_id")
-        .eq("event_id", selectedEventId)
-        .neq("user_id", userId);
-
-      if (attendeesError) {
-        console.error("Error loading attendees:", attendeesError);
-        toast.error(t('matchmaking.failedLoadProfiles'));
-        setLoading(false);
-        return;
-      }
-
-      // Explicitly filter out both current user and host from matchmaking pool
-      const attendeeIds = eventAttendees
-        ?.map((a) => a.user_id)
-        .filter((id) => id !== userId && id !== hostId) || [];
-
-      if (attendeeIds.length === 0) {
-        setProfiles([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch profiles for these attendees
-      const { data, error } = await supabase.from("profiles").select("*").in("user_id", attendeeIds);
-
-      if (error) {
-        toast.error(t('matchmaking.failedLoadProfiles'));
-        console.error(error);
-        setProfiles([]);
-      } else {
-        // Fetch current user's profile to get their gender preferences
-        const { data: currentUserProfile } = await supabase
-          .from("profiles")
-          .select("gender, interested_in, age, age_min, age_max")
-          .eq("user_id", userId)
+        // Get event details including status and matchmaking schedule
+        const { data: eventData, error: eventError } = await supabase
+          .from("events")
+          .select("created_by, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date")
+          .eq("id", selectedEventId)
           .single();
 
-        // Only require current user to have preferences set
-        // Don't block if other users haven't completed their profiles yet
-        if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
-          toast.error(t('matchmaking.completeProfile'));
-          navigate("/edit-profile");
+        if (eventError) {
+          console.error("Error loading event details:", eventError);
+          toast.error(t('matchmaking.failedLoadEvent'));
+          setProfiles([]);
           setLoading(false);
           return;
         }
 
-        // Filter profiles based on swipe history with second chance logic
-        const { data: existingSwipes } = await supabase
-          .from("swipes")
-          .select("swiped_user_id, direction, created_at")
-          .eq("user_id", userId)
-          .eq("event_id", selectedEventId)
-          .order("created_at", { ascending: false });
+        const hostId = eventData?.created_by;
+        const eventStatus = eventData?.status;
+        const closeDate = eventData?.close_date;
 
-        // Group swipes by user
-        const swipesByUser = new Map<string, Array<{ direction: string; created_at: string }>>();
-        existingSwipes?.forEach((swipe) => {
-          if (!swipesByUser.has(swipe.swiped_user_id)) {
-            swipesByUser.set(swipe.swiped_user_id, []);
-          }
-          swipesByUser.get(swipe.swiped_user_id)!.push({
-            direction: swipe.direction,
-            created_at: swipe.created_at,
+        // Store event status and matchmaking schedule
+        setSelectedEventStatus(eventStatus || null);
+        setSelectedEventCloseDate(closeDate || null);
+        setMatchmakingStartDate(eventData?.matchmaking_start_date || null);
+        setMatchmakingStartTime(eventData?.matchmaking_start_time || null);
+        setMatchmakingCloseDate(eventData?.matchmaking_close_date || null);
+
+        // Check if matchmaking has started (with proper timezone handling)
+        const hasMatchmakingDates = eventData?.matchmaking_start_date && eventData?.matchmaking_start_time;
+        const now = new Date();
+        
+        if (hasMatchmakingDates) {
+          // Create a proper datetime string with explicit timezone
+          const startDateTimeStr = `${eventData.matchmaking_start_date}T${eventData.matchmaking_start_time}:00`;
+          const startDateTime = new Date(startDateTimeStr);
+          
+          console.log('Matchmaking check:', {
+            startDateTime: startDateTime.toISOString(),
+            now: now.toISOString(),
+            hasNotStarted: now < startDateTime
           });
-        });
+          
+          if (now < startDateTime) {
+            console.log('Matchmaking has not started yet - upcoming event');
+            setProfiles([]);
+            setLoading(false);
+            return;
+          }
+        } else {
+          // If event doesn't have matchmaking dates but might be upcoming
+          // Still set loading to false to show appropriate UI
+          console.log('Event has no matchmaking dates configured');
+        }
 
-        // Filter profiles based on gender compatibility (only current user's preference matters)
-        const genderCompatibleProfiles = (data || []).filter((profile) => {
-          // If profile hasn't set gender, still show them
-          if (!profile.gender) {
-            return true; // Show incomplete profiles
+        // Check if matchmaking has closed
+        if (eventData?.matchmaking_close_date) {
+          const closeDateObj = new Date(eventData.matchmaking_close_date);
+          if (new Date() > closeDateObj) {
+            setProfiles([]);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // If event is closed, show message and don't load profiles
+        if (eventStatus === "closed") {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch profiles of users in the selected event only (excluding current user and host)
+        const { data: eventAttendees, error: attendeesError } = await supabase
+          .from("event_attendees")
+          .select("user_id")
+          .eq("event_id", selectedEventId)
+          .neq("user_id", userId);
+
+        if (attendeesError) {
+          console.error("Error loading attendees:", attendeesError);
+          toast.error(t('matchmaking.failedLoadProfiles'));
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Explicitly filter out both current user and host from matchmaking pool
+        const attendeeIds = eventAttendees
+          ?.map((a) => a.user_id)
+          .filter((id) => id !== userId && id !== hostId) || [];
+
+        if (attendeeIds.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch profiles for these attendees
+        const { data, error } = await supabase.from("profiles").select("*").in("user_id", attendeeIds);
+
+        if (error) {
+          toast.error(t('matchmaking.failedLoadProfiles'));
+          console.error(error);
+          setProfiles([]);
+          setLoading(false);
+          return;
+        } else {
+          // Fetch current user's profile to get their gender preferences
+          const { data: currentUserProfile } = await supabase
+            .from("profiles")
+            .select("gender, interested_in, age, age_min, age_max")
+            .eq("user_id", userId)
+            .single();
+
+          // Only require current user to have preferences set
+          // Don't block if other users haven't completed their profiles yet
+          if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
+            toast.error(t('matchmaking.completeProfile'));
+            navigate("/edit-profile");
+            setLoading(false);
+            return;
           }
 
-          // Check if current user is interested in this profile's gender
-          // Only the current user's preference matters (unidirectional)
-          const userInterestedInProfile =
-            currentUserProfile.interested_in === "both" ||
-            (currentUserProfile.interested_in === "men" && profile.gender === "man") ||
-            (currentUserProfile.interested_in === "women" && profile.gender === "woman");
+          // Filter profiles based on swipe history with second chance logic
+          const { data: existingSwipes } = await supabase
+            .from("swipes")
+            .select("swiped_user_id, direction, created_at")
+            .eq("user_id", userId)
+            .eq("event_id", selectedEventId)
+            .order("created_at", { ascending: false });
 
-          return userInterestedInProfile;
-        });
+          // Group swipes by user
+          const swipesByUser = new Map<string, Array<{ direction: string; created_at: string }>>();
+          existingSwipes?.forEach((swipe) => {
+            if (!swipesByUser.has(swipe.swiped_user_id)) {
+              swipesByUser.set(swipe.swiped_user_id, []);
+            }
+            swipesByUser.get(swipe.swiped_user_id)!.push({
+              direction: swipe.direction,
+              created_at: swipe.created_at,
+            });
+          });
 
-        // Apply age range filters (only check current user's preferences)
-        const ageCompatibleProfiles = genderCompatibleProfiles.filter((profile) => {
-          // If either user doesn't have age, show the profile (don't exclude)
-          if (!profile.age || !currentUserProfile.age) {
+          // Filter profiles based on gender compatibility (only current user's preference matters)
+          const genderCompatibleProfiles = (data || []).filter((profile) => {
+            // If profile hasn't set gender, still show them
+            if (!profile.gender) {
+              return true; // Show incomplete profiles
+            }
+
+            // Check if current user is interested in this profile's gender
+            // Only the current user's preference matters (unidirectional)
+            const userInterestedInProfile =
+              currentUserProfile.interested_in === "both" ||
+              (currentUserProfile.interested_in === "men" && profile.gender === "man") ||
+              (currentUserProfile.interested_in === "women" && profile.gender === "woman");
+
+            return userInterestedInProfile;
+          });
+
+          // Apply age range filters (only check current user's preferences)
+          const ageCompatibleProfiles = genderCompatibleProfiles.filter((profile) => {
+            // If either user doesn't have age, show the profile (don't exclude)
+            if (!profile.age || !currentUserProfile.age) {
+              return true;
+            }
+
+            const profileAge = profile.age;
+
+            // Get current user's age preferences with defaults
+            const userAgeMin = currentUserProfile.age_min || 18;
+            const userAgeMax = currentUserProfile.age_max || 99;
+
+            // Check if profile's age is within current user's preference range
+            // We only check one direction - if the current user wants to see them
+            return profileAge >= userAgeMin && profileAge <= userAgeMax;
+          });
+
+          // Fetch unmatches to exclude users who have been unmatched
+          const { data: unmatchedUsers } = await supabase
+            .from("unmatches")
+            .select("unmatched_user_id")
+            .eq("unmatcher_id", userId)
+            .eq("event_id", selectedEventId);
+
+          const unmatchedUserIds = new Set(unmatchedUsers?.map(u => u.unmatched_user_id) || []);
+
+          // Filter out unmatched users
+          const nonUnmatchedProfiles = ageCompatibleProfiles.filter((profile) => {
+            return !unmatchedUserIds.has(profile.user_id);
+          });
+
+          // Filter profiles with second chance logic
+          const filteredProfiles = nonUnmatchedProfiles.filter((profile) => {
+            const userSwipes = swipesByUser.get(profile.user_id);
+
+            // Never swiped = show
+            if (!userSwipes || userSwipes.length === 0) {
+              return true;
+            }
+
+            // Hit 3 swipes limit = don't show
+            if (userSwipes.length >= 3) {
+              return false;
+            }
+
+            const mostRecentSwipe = userSwipes[0];
+
+            // Already liked = don't show again
+            if (mostRecentSwipe.direction === "right") {
+              return false;
+            }
+
+            // Recently passed (< 24h) = don't show yet
+            const hoursSinceSwipe = (Date.now() - new Date(mostRecentSwipe.created_at).getTime()) / (1000 * 60 * 60);
+            if (hoursSinceSwipe < 24) {
+              return false;
+            }
+
+            // Passed but 24h+ elapsed = show for second chance
             return true;
-          }
+          });
 
-          const profileAge = profile.age;
+          setProfiles(filteredProfiles);
+        }
+        setLoading(false);
 
-          // Get current user's age preferences with defaults
-          const userAgeMin = currentUserProfile.age_min || 18;
-          const userAgeMax = currentUserProfile.age_max || 99;
-
-          // Check if profile's age is within current user's preference range
-          // We only check one direction - if the current user wants to see them
-          return profileAge >= userAgeMin && profileAge <= userAgeMax;
-        });
-
-        // Fetch unmatches to exclude users who have been unmatched
-        const { data: unmatchedUsers } = await supabase
-          .from("unmatches")
-          .select("unmatched_user_id")
-          .eq("unmatcher_id", userId)
-          .eq("event_id", selectedEventId);
-
-        const unmatchedUserIds = new Set(unmatchedUsers?.map(u => u.unmatched_user_id) || []);
-
-        // Filter out unmatched users
-        const nonUnmatchedProfiles = ageCompatibleProfiles.filter((profile) => {
-          return !unmatchedUserIds.has(profile.user_id);
-        });
-
-        // Filter profiles with second chance logic
-        const filteredProfiles = nonUnmatchedProfiles.filter((profile) => {
-          const userSwipes = swipesByUser.get(profile.user_id);
-
-          // Never swiped = show
-          if (!userSwipes || userSwipes.length === 0) {
-            return true;
-          }
-
-          // Hit 3 swipes limit = don't show
-          if (userSwipes.length >= 3) {
-            return false;
-          }
-
-          const mostRecentSwipe = userSwipes[0];
-
-          // Already liked = don't show again
-          if (mostRecentSwipe.direction === "right") {
-            return false;
-          }
-
-          // Recently passed (< 24h) = don't show yet
-          const hoursSinceSwipe = (Date.now() - new Date(mostRecentSwipe.created_at).getTime()) / (1000 * 60 * 60);
-          if (hoursSinceSwipe < 24) {
-            return false;
-          }
-
-          // Passed but 24h+ elapsed = show for second chance
-          return true;
-        });
-
-        setProfiles(filteredProfiles);
+        // Save selection
+        localStorage.setItem("matchmaking_selected_event", selectedEventId);
+      } catch (error) {
+        console.error("Error in loadProfiles:", error);
+        toast.error(t('matchmaking.failedLoadProfiles'));
+        setProfiles([]);
+        setLoading(false);
       }
-      setLoading(false);
-
-      // Save selection
-      localStorage.setItem("matchmaking_selected_event", selectedEventId);
     };
 
     loadProfiles();
