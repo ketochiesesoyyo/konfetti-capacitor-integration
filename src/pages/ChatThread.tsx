@@ -238,6 +238,27 @@ const ChatThread = () => {
         handleError(error, "Failed to send message", "MessageSend");
       } else {
         setMessage("");
+        
+        // Send email notification (don't await - fire and forget)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const conversationId = isDirectChat 
+            ? `direct-${eventId}-${userId}-${recipientId}` 
+            : matchId;
+          
+          supabase.functions
+            .invoke("new-message-notification", {
+              body: {
+                eventId,
+                conversationId,
+                senderId: userId,
+                recipientId: isDirectChat ? recipientId : chatDetails.userId,
+              },
+            })
+            .catch((err) => {
+              console.error("Failed to send email notification:", err);
+            });
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -313,6 +313,8 @@ export type Database = {
       }
       notification_logs: {
         Row: {
+          conversation_id: string | null
+          created_at: string
           event_id: string
           id: string
           notification_type: string
@@ -320,6 +322,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          conversation_id?: string | null
+          created_at?: string
           event_id: string
           id?: string
           notification_type: string
@@ -327,6 +331,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          conversation_id?: string | null
+          created_at?: string
           event_id?: string
           id?: string
           notification_type?: string
