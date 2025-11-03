@@ -46,7 +46,7 @@ export function FullScreenMatchDialog({
   return (
     <Dialog open={open} modal={true}>
       <DialogContent 
-        className="max-w-full h-screen w-screen p-0 border-0 bg-gradient-to-br from-primary/90 via-accent/80 to-secondary/90"
+        className="max-w-full h-screen w-screen p-0 border-0 bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -105,7 +105,7 @@ export function FullScreenMatchDialog({
               size="lg"
               variant="outline"
               onClick={onKeepMatching}
-              className="flex-1 text-lg py-6 bg-white/20 text-white border-white/50 hover:bg-white/30 backdrop-blur-sm shadow-xl"
+              className="flex-1 text-lg py-6 bg-white/20 text-black border-white/50 hover:bg-white/30 backdrop-blur-sm shadow-xl"
             >
               <PartyPopper className="w-5 h-5 mr-2" />
               {t('matchDialog.keepMatching')}
