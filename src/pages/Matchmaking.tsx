@@ -224,7 +224,7 @@ const Matchmaking = () => {
         return;
       }
 
-      // Fetch profiles of users in the selected event only (excluding host)
+      // Fetch profiles of users in the selected event only (excluding current user and host)
       const { data: eventAttendees, error: attendeesError } = await supabase
         .from("event_attendees")
         .select("user_id")
@@ -238,8 +238,10 @@ const Matchmaking = () => {
         return;
       }
 
-      // Filter out the host from attendees - Don't filter! If host joined via invite, they should be matchable
-      const attendeeIds = eventAttendees?.map((a) => a.user_id) || [];
+      // Explicitly filter out both current user and host from matchmaking pool
+      const attendeeIds = eventAttendees
+        ?.map((a) => a.user_id)
+        .filter((id) => id !== userId && id !== hostId) || [];
 
       if (attendeeIds.length === 0) {
         setProfiles([]);

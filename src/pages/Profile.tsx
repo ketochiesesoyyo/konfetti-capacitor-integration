@@ -307,9 +307,9 @@ const Profile = () => {
 
       {/* Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
+        <DialogContent className="max-w-lg w-full p-0 gap-0 overflow-hidden max-h-[90vh]">
           {/* Fully Scrollable Preview */}
-          <div className="overflow-y-auto max-h-[90vh]">
+          <div className="overflow-y-auto max-h-[90vh] w-full">
             {/* First Photo with Name Overlay */}
             <div className="relative aspect-[3/4]">
               <img

@@ -787,9 +787,14 @@ const EditProfile = () => {
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="max-w-[calc(100vw-2rem)] w-full">
+                        <SelectContent 
+                          className="max-w-[calc(100vw-2rem)] w-full z-[100]" 
+                          position="popper"
+                          sideOffset={5}
+                          align="start"
+                        >
                           {availableQuestions.map((q) => (
-                            <SelectItem key={q} value={q} className="text-sm break-words whitespace-normal">
+                            <SelectItem key={q} value={q} className="text-sm break-words whitespace-normal h-auto py-3">
                               {q}
                             </SelectItem>
                           ))}
