@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ type ProfileWithEvent = {
 
 const LikedYou = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"new" | "passed" | "all-likes">("new");
   const [loading, setLoading] = useState(true);
@@ -257,7 +258,7 @@ const LikedYou = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLike = async (profile: ProfileWithEvent) => {
     if (!userId) return;
