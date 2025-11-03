@@ -37,6 +37,7 @@ const LikedYou = () => {
 
   useEffect(() => {
     const loadLikes = async () => {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
@@ -243,6 +244,19 @@ const LikedYou = () => {
     };
 
     loadLikes();
+
+    // Refresh when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadLikes();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [navigate]);
 
   const handleLike = async (profile: ProfileWithEvent) => {
@@ -515,9 +529,9 @@ const LikedYou = () => {
             ))
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">{t('likedYou.noLikes')}</p>
+              <p className="text-muted-foreground">You haven't liked anyone yet</p>
               <p className="text-sm text-muted-foreground mt-2">
-                {t('likedYou.noLikesDesc')}
+                Start swiping in matchmaking to see profiles here
               </p>
             </Card>
           )}
