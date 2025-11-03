@@ -1100,58 +1100,25 @@ const CreateEvent = () => {
           </Card>
         ) : (
           <Card className="p-6 space-y-6 animate-fade-in">
-            <h2 className="text-xl font-bold">Select Your Plan</h2>
+            <h2 className="text-xl font-bold">Your Event Plan</h2>
             
             <div className="grid gap-3">
-              <button
-                type="button"
-                onClick={() => setEventData({ ...eventData, plan: 'free' })}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  eventData.plan === 'free'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted-foreground/20 hover:border-primary/50'
-                }`}
+              <div
+                className="p-4 rounded-lg border-2 border-primary bg-primary/5 text-left"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-lg">Free Plan</h3>
-                  {eventData.plan === 'free' && <Check className="w-5 h-5 text-primary" />}
+                  <Check className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Perfect for intimate gatherings
+                  Perfect for all celebrations
                 </p>
                 <ul className="text-sm space-y-1">
-                  <li>✓ Up to 10 guests</li>
+                  <li>✓ Up to 100 guests</li>
                   <li>✓ Full matchmaking features</li>
                   <li>✓ Event management dashboard</li>
                 </ul>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setEventData({ ...eventData, plan: 'premium' })}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  eventData.plan === 'premium'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted-foreground/20 hover:border-primary/50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold text-lg">Premium Plan</h3>
-                    <p className="text-2xl font-bold text-primary mt-1">$299</p>
-                  </div>
-                  {eventData.plan === 'premium' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  For larger celebrations
-                </p>
-                <ul className="text-sm space-y-1">
-                  <li>✓ Unlimited guests</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                  <li>✓ Priority support</li>
-                </ul>
-              </button>
+              </div>
             </div>
 
             <Button
@@ -1161,7 +1128,7 @@ const CreateEvent = () => {
               size="lg"
               disabled={isCreating}
             >
-              {isCreating ? "Creating..." : eventData.plan === "premium" ? "Continue to Payment ($299)" : "Create Event"}
+              {isCreating ? "Creating..." : "Create Event"}
             </Button>
           </Card>
         )}
