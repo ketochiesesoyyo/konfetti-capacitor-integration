@@ -903,22 +903,31 @@ const EventDashboard = () => {
               </Card>
             )}
 
-            <Card className="p-6 border-destructive/50">
-              <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>
-              <p className="text-sm text-muted-foreground mb-2">
-                Close the event early. Matches and chats will remain.
-              </p>
-              <p className="text-xs text-destructive/80 mb-4">
-                ⚠️ This action cannot be undone. No reimbursements will be provided after closing.
-              </p>
-              <Button 
-                variant="destructive" 
-                className="w-full"
-                onClick={() => setCloseEventDialogOpen(true)}
-              >
-                Close Event Now
-              </Button>
-            </Card>
+            {event.status === 'closed' ? (
+              <Card className="p-6 bg-muted">
+                <h3 className="font-semibold mb-2">Event Closed</h3>
+                <p className="text-sm text-muted-foreground">
+                  This event was closed on {format(new Date(event.close_date), 'MMMM dd, yyyy')}
+                </p>
+              </Card>
+            ) : (
+              <Card className="p-6 border-destructive/50">
+                <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Close the event early. Matches and chats will remain.
+                </p>
+                <p className="text-xs text-destructive/80 mb-4">
+                  ⚠️ This action cannot be undone. No reimbursements will be provided after closing.
+                </p>
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => setCloseEventDialogOpen(true)}
+                >
+                  Close Event Now
+                </Button>
+              </Card>
+            )}
           </div>
         )}
       </div>

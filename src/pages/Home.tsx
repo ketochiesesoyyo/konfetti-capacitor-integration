@@ -142,6 +142,7 @@ const Home = () => {
 
   const getEventStatus = (event: any): 'draft' | 'closed' | 'active' => {
     if (event.status === 'draft') return 'draft';
+    if (event.status === 'closed') return 'closed';
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
