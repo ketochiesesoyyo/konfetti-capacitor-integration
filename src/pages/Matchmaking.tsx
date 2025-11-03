@@ -1148,8 +1148,16 @@ const Matchmaking = () => {
         matchedProfile={matchedProfile}
         onStartChat={() => {
           setShowMatchDialog(false);
-          if (matchId) {
-            navigate(`/chat/${matchId}`);
+          if (matchId && matchedProfile) {
+            navigate(`/chat/${matchId}`, {
+              state: {
+                matchId: matchId,
+                userId: matchedProfile.id,
+                name: matchedProfile.name,
+                photo: matchedProfile.photo_url || '/placeholder.svg',
+                eventName: events.find(e => e.id === selectedEventId)?.name || 'Event',
+              }
+            });
           }
         }}
         onKeepMatching={() => {

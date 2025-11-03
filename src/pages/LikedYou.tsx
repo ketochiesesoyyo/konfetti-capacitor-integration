@@ -304,7 +304,15 @@ const LikedYou = () => {
           });
           
           setTimeout(() => {
-            navigate(`/chat/${newMatch.id}`);
+            navigate(`/chat/${newMatch.id}`, {
+              state: {
+                matchId: newMatch.id,
+                userId: profile.user_id,
+                name: profile.name,
+                photo: profile.photo,
+                eventName: profile.eventName,
+              }
+            });
           }, 1000);
         }
       } else {
@@ -314,7 +322,15 @@ const LikedYou = () => {
         });
         
         setTimeout(() => {
-          navigate(`/chat/${match.id}`);
+          navigate(`/chat/${match.id}`, {
+            state: {
+              matchId: match.id,
+              userId: profile.user_id,
+              name: profile.name,
+              photo: profile.photo,
+              eventName: profile.eventName,
+            }
+          });
         }, 1000);
       }
 
@@ -443,7 +459,15 @@ const LikedYou = () => {
                   size="sm"
                   variant="gradient"
                   className="flex-1"
-                  onClick={() => navigate(`/chat/${profile.matchId}`)}
+                  onClick={() => navigate(`/chat/${profile.matchId}`, {
+                    state: {
+                      matchId: profile.matchId,
+                      userId: profile.user_id,
+                      name: profile.name,
+                      photo: profile.photo,
+                      eventName: profile.eventName,
+                    }
+                  })}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {t('likedYou.goChat')}
