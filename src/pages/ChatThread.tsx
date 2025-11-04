@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Send, MoreVertical, UserX, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -310,6 +311,13 @@ const ChatThread = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
+          <Avatar 
+            className="w-12 h-12 cursor-pointer"
+            onClick={() => setShowProfileDialog(true)}
+          >
+            <AvatarImage src={chatDetails.photo} alt={chatDetails.name} />
+            <AvatarFallback>{chatDetails.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
           <div 
             className="flex-1 min-w-0 cursor-pointer"
             onClick={() => setShowProfileDialog(true)}
