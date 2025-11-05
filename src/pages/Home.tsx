@@ -853,7 +853,7 @@ const Home = () => {
                 )}>
                   <Button
                     size="lg"
-                    className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-background border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground whitespace-nowrap px-6"
+                    className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap px-6"
                     onClick={() => {
                       handleCreateEvent();
                       setFabOpen(false);
