@@ -259,7 +259,8 @@
     "passwordsNoMatch": "Las contraseñas no coinciden",
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "passwordUpdated": "Contraseña actualizada correctamente",
-    "loggedOut": "Se cerró la sesión correctamente"
+    "loggedOut": "Se cerró la sesión correctamente",
+    "communityGuidelines": "Directrices de la Comunidad"
   },
   "createEvent": {
     "title": "Crear evento",
@@ -471,7 +472,8 @@
     "emailRegistered": "Este correo electrónico ya está registrado",
     "accountCreated": "¡Cuenta creada! Por favor, complete su perfil.",
     "socialLoginError": "Se ha producido un error durante el inicio de sesión social",
-    "failedSignIn": "No se pudo iniciar sesión con {{provider}}"
+    "failedSignIn": "No se pudo iniciar sesión con {{provider}}",
+    "communityGuidelines": "Directrices de la Comunidad"
   },
   "notFound": {
     "title": "404",

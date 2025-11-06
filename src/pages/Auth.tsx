@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { useTranslation } from "react-i18next";
+import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
 
 const isDev = import.meta.env.DEV;
 
@@ -28,6 +29,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -365,7 +367,22 @@ const Auth = () => {
               : t('auth.hasAccount')}
           </button>
         </div>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => setShowGuidelines(true)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('auth.communityGuidelines')}
+          </button>
+        </div>
       </Card>
+
+      <CommunityGuidelinesDialog 
+        open={showGuidelines} 
+        onOpenChange={setShowGuidelines}
+      />
     </div>
   );
 };

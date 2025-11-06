@@ -259,7 +259,8 @@
     "passwordsNoMatch": "Passwords do not match",
     "passwordMinLength": "Password must be at least 6 characters",
     "passwordUpdated": "Password updated successfully",
-    "loggedOut": "Logged out successfully"
+    "loggedOut": "Logged out successfully",
+    "communityGuidelines": "Community Guidelines"
   },
   "createEvent": {
     "title": "Create Event",
@@ -472,7 +473,8 @@
     "emailRegistered": "This email is already registered",
     "accountCreated": "Account created! Please complete your profile.",
     "socialLoginError": "An error occurred during social login",
-    "failedSignIn": "Failed to sign in with {{provider}}"
+    "failedSignIn": "Failed to sign in with {{provider}}",
+    "communityGuidelines": "Community Guidelines"
   },
   "notFound": {
     "title": "404",

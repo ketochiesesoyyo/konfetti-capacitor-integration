@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   useEffect(() => {
     const fetchCurrentEmail = async () => {
@@ -210,7 +212,22 @@ const Settings = () => {
             {t('settings.logout')}
           </Button>
         </Card>
+
+        {/* Community Guidelines Link */}
+        <div className="text-center py-6 pb-8">
+          <button
+            onClick={() => setShowGuidelines(true)}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('settings.communityGuidelines')}
+          </button>
+        </div>
       </div>
+
+      <CommunityGuidelinesDialog 
+        open={showGuidelines} 
+        onOpenChange={setShowGuidelines}
+      />
     </div>
   );
 };
