@@ -1051,6 +1051,9 @@ const Matchmaking = () => {
                   <h2 className="text-3xl font-bold mb-1 drop-shadow-lg">
                     {currentProfile.name}, {currentProfile.age || "?"}
                   </h2>
+                  {currentProfile.instagram_username && (
+                    <p className="text-sm text-white/90 drop-shadow-lg">@{currentProfile.instagram_username}</p>
+                  )}
                 </div>
               </div>
 
@@ -1061,9 +1064,6 @@ const Matchmaking = () => {
                   <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
                     <h3 className="font-semibold mb-2 text-primary">About</h3>
                     <p className="text-foreground leading-relaxed">{currentProfile.bio}</p>
-                    {currentProfile.instagram_username && (
-                      <p className="text-primary mt-2 font-medium">@{currentProfile.instagram_username}</p>
-                    )}
                   </div>
                 )}
 

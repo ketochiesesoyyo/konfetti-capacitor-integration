@@ -118,6 +118,9 @@ export const ProfileViewDialog = ({ open, onOpenChange, userId, eventName }: Pro
                   <h2 className="text-2xl font-bold">
                     {profile?.name}, {profile?.age || "?"}
                   </h2>
+                  {profile?.instagram_username && (
+                    <p className="text-sm text-primary mt-1">@{profile.instagram_username}</p>
+                  )}
                   {eventName && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                       <MapPin className="w-4 h-4" />
@@ -131,9 +134,6 @@ export const ProfileViewDialog = ({ open, onOpenChange, userId, eventName }: Pro
                   <div>
                     <h3 className="font-semibold mb-2">About</h3>
                     <p className="text-sm text-muted-foreground">{profile.bio}</p>
-                    {profile.instagram_username && (
-                      <p className="text-sm text-primary mt-2">@{profile.instagram_username}</p>
-                    )}
                   </div>
                 )}
 

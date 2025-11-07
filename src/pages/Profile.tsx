@@ -209,6 +209,9 @@ const Profile = () => {
             <div>
               <p className="text-sm text-muted-foreground">{t('profile.nameAge')}</p>
               <p className="font-medium">{user.name}, {user.age}</p>
+              {user.instagram_username && (
+                <p className="text-sm text-primary mt-1">@{user.instagram_username}</p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t('profile.gender')}</p>
@@ -256,9 +259,6 @@ const Profile = () => {
           </div>
           <div className="space-y-2">
             <p className="text-foreground">{user.bio}</p>
-            {user.instagram_username && (
-              <p className="text-primary font-medium">@{user.instagram_username}</p>
-            )}
           </div>
         </Card>
 
