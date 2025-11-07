@@ -254,7 +254,12 @@ const Profile = () => {
               {t('profile.edit')}
             </Button>
           </div>
-          <p className="text-foreground">{user.bio}</p>
+          <div className="space-y-2">
+            <p className="text-foreground">{user.bio}</p>
+            {user.instagram_username && (
+              <p className="text-primary font-medium">@{user.instagram_username}</p>
+            )}
+          </div>
         </Card>
 
         {/* Prompts Card */}

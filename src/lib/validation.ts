@@ -17,6 +17,7 @@ export const profileSchema = z.object({
   interests: z.array(z.string()).max(10, 'Maximum 10 interests allowed'),
   age_min: z.number().int().min(18).max(120).optional(),
   age_max: z.number().int().min(18).max(120).optional(),
+  instagram_username: z.string().trim().max(30, 'Instagram username must be less than 30 characters').optional(),
 });
 
 // Swipe validation

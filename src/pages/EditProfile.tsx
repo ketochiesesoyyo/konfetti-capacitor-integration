@@ -52,6 +52,7 @@ const EditProfile = () => {
     gender: "",
     interested_in: "",
     bio: "",
+    instagram_username: "",
     interests: [] as string[],
     photos: [] as string[],
     prompts: [] as Array<{ question: string; answer: string }>,
@@ -65,6 +66,7 @@ const EditProfile = () => {
     gender: "",
     interested_in: "",
     bio: "",
+    instagram_username: "",
     interests: [] as string[],
     photos: [] as string[],
     prompts: [] as Array<{ question: string; answer: string }>,
@@ -177,6 +179,7 @@ const EditProfile = () => {
           gender: "",
           interested_in: "",
           bio: "",
+          instagram_username: "",
           interests: [],
           photos: [],
           prompts: [],
@@ -204,6 +207,7 @@ const EditProfile = () => {
           gender: profileData.gender || "",
           interested_in: profileData.interested_in || "",
           bio: profileData.bio || "",
+          instagram_username: profileData.instagram_username || "",
           interests: profileData.interests || [],
           photos: profileData.photos || [],
           prompts: parsedPrompts,
@@ -679,17 +683,30 @@ const EditProfile = () => {
         {/* Bio */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">About Me</h2>
-          <div className="space-y-2">
-            <Textarea
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-              placeholder="Tell others about yourself..."
-              className="min-h-[100px]"
-              maxLength={150}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {profile.bio.length}/150
-            </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Textarea
+                value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                placeholder="Tell others about yourself..."
+                className="min-h-[100px]"
+                maxLength={150}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {profile.bio.length}/150
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="instagram">Instagram profile (optional)</Label>
+              <Input
+                id="instagram"
+                value={profile.instagram_username}
+                onChange={(e) => setProfile({ ...profile, instagram_username: e.target.value })}
+                placeholder="@username"
+                maxLength={30}
+              />
+            </div>
           </div>
         </Card>
 

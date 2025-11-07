@@ -10,6 +10,7 @@ type Profile = {
   age: number | null;
   photos: string[];
   bio: string | null;
+  instagram_username: string | null;
   interests: string[] | null;
   prompts: Array<{ question: string; answer: string }> | null;
 };
@@ -36,7 +37,7 @@ export const ProfileViewDialog = ({ open, onOpenChange, userId, eventName }: Pro
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("name, age, photos, bio, interests, prompts")
+      .select("name, age, photos, bio, instagram_username, interests, prompts")
       .eq("user_id", userId)
       .single();
 
@@ -48,6 +49,7 @@ export const ProfileViewDialog = ({ open, onOpenChange, userId, eventName }: Pro
         age: data.age,
         photos: data.photos || [],
         bio: data.bio,
+        instagram_username: data.instagram_username,
         interests: data.interests,
         prompts: data.prompts as Array<{ question: string; answer: string }> | null,
       });
@@ -129,6 +131,9 @@ export const ProfileViewDialog = ({ open, onOpenChange, userId, eventName }: Pro
                   <div>
                     <h3 className="font-semibold mb-2">About</h3>
                     <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                    {profile.instagram_username && (
+                      <p className="text-sm text-primary mt-2">@{profile.instagram_username}</p>
+                    )}
                   </div>
                 )}
 

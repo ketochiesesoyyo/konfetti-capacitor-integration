@@ -34,6 +34,7 @@ type Profile = {
   photos: string[] | null;
   prompts: any;
   bio: string | null;
+  instagram_username: string | null;
   interests: string[] | null;
   user_id: string;
 };
@@ -1060,6 +1061,9 @@ const Matchmaking = () => {
                   <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
                     <h3 className="font-semibold mb-2 text-primary">About</h3>
                     <p className="text-foreground leading-relaxed">{currentProfile.bio}</p>
+                    {currentProfile.instagram_username && (
+                      <p className="text-primary mt-2 font-medium">@{currentProfile.instagram_username}</p>
+                    )}
                   </div>
                 )}
 

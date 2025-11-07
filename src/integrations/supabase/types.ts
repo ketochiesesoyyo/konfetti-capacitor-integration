@@ -358,6 +358,7 @@ export type Database = {
           created_at: string
           gender: string | null
           id: string
+          instagram_username: string | null
           interested_in: string | null
           interests: string[] | null
           name: string
@@ -375,6 +376,7 @@ export type Database = {
           created_at?: string
           gender?: string | null
           id?: string
+          instagram_username?: string | null
           interested_in?: string | null
           interests?: string[] | null
           name: string
@@ -392,6 +394,7 @@ export type Database = {
           created_at?: string
           gender?: string | null
           id?: string
+          instagram_username?: string | null
           interested_in?: string | null
           interests?: string[] | null
           name?: string
