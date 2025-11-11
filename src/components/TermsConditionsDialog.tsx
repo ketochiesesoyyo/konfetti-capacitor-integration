@@ -9,11 +9,11 @@ interface TermsConditionsDialogProps {
 export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Konfetti Terms and Conditions of Use</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] pr-4">
+        <ScrollArea className="flex-1 pr-4 overflow-auto">
           <div className="space-y-6 text-sm">
             <section>
               <p className="mb-4">

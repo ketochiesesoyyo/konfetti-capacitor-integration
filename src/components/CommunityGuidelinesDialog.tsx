@@ -17,13 +17,13 @@ export const CommunityGuidelinesDialog = ({
 }: CommunityGuidelinesDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh]">
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Konfetti Community Guidelines
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-full pr-4">
+        <ScrollArea className="flex-1 pr-4 overflow-auto">
           <div className="space-y-6 text-sm leading-relaxed">
             <p>
               Konfetti is a space to spark genuine connections around real celebrations. Whether you're attending a wedding, party, or special event, our mission is to make it easy for guests to connect in a kind, respectful, and authentic way — before, during, and after the event.
