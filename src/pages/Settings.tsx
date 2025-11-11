@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
+import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     const fetchCurrentEmail = async () => {
@@ -213,13 +215,20 @@ const Settings = () => {
           </Button>
         </Card>
 
-        {/* Community Guidelines Link */}
-        <div className="text-center py-6 pb-8">
+        {/* Community Guidelines & Terms Link */}
+        <div className="text-center py-6 pb-8 space-x-3">
           <button
             onClick={() => setShowGuidelines(true)}
             className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
           >
             {t('settings.communityGuidelines')}
+          </button>
+          <span className="text-sm text-muted-foreground">•</span>
+          <button
+            onClick={() => setShowTerms(true)}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('settings.termsConditions')}
           </button>
         </div>
       </div>
@@ -227,6 +236,10 @@ const Settings = () => {
       <CommunityGuidelinesDialog 
         open={showGuidelines} 
         onOpenChange={setShowGuidelines}
+      />
+      <TermsConditionsDialog 
+        open={showTerms} 
+        onOpenChange={setShowTerms}
       />
     </div>
   );

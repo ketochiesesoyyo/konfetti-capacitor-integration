@@ -261,7 +261,8 @@
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "passwordUpdated": "Contraseña actualizada correctamente",
     "loggedOut": "Se cerró la sesión correctamente",
-    "communityGuidelines": "Directrices de la Comunidad"
+    "communityGuidelines": "Directrices de la Comunidad",
+    "termsConditions": "Términos y Condiciones"
   },
   "createEvent": {
     "title": "Crear evento",
@@ -474,7 +475,8 @@
     "accountCreated": "¡Cuenta creada! Por favor, complete su perfil.",
     "socialLoginError": "Se ha producido un error durante el inicio de sesión social",
     "failedSignIn": "No se pudo iniciar sesión con {{provider}}",
-    "communityGuidelines": "Directrices de la Comunidad"
+    "communityGuidelines": "Directrices de la Comunidad",
+    "termsConditions": "Términos y Condiciones"
   },
   "notFound": {
     "title": "404",

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { useTranslation } from "react-i18next";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
+import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
 
 const isDev = import.meta.env.DEV;
 
@@ -30,6 +31,7 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -368,7 +370,7 @@ const Auth = () => {
           </button>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-x-3">
           <button
             type="button"
             onClick={() => setShowGuidelines(true)}
@@ -376,12 +378,24 @@ const Auth = () => {
           >
             {t('auth.communityGuidelines')}
           </button>
+          <span className="text-xs text-muted-foreground">•</span>
+          <button
+            type="button"
+            onClick={() => setShowTerms(true)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('auth.termsConditions')}
+          </button>
         </div>
       </Card>
 
       <CommunityGuidelinesDialog 
         open={showGuidelines} 
         onOpenChange={setShowGuidelines}
+      />
+      <TermsConditionsDialog 
+        open={showTerms} 
+        onOpenChange={setShowTerms}
       />
     </div>
   );
