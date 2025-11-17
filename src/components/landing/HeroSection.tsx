@@ -4,15 +4,18 @@ import { Button } from "@/components/ui/button";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import profileTim from "@/assets/profile-tim.jpg";
+import profileMaria from "@/assets/profile-maria.jpg";
+import profileHannah from "@/assets/profile-hannah.jpg";
 
 export const HeroSection = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const profiles = [
-    { name: "Tim", age: 27, initials: "T" },
-    { name: "Maria", age: 27, initials: "M" },
-    { name: "Hannah", age: 29, initials: "H" },
+    { name: "Tim", age: 27, initials: "T", image: profileTim },
+    { name: "Maria", age: 27, initials: "M", image: profileMaria },
+    { name: "Hannah", age: 29, initials: "H", image: profileHannah },
   ];
 
   return (
@@ -45,7 +48,11 @@ export const HeroSection = () => {
                 style={{ animationDelay: `${index * 150}ms` }}
               >
                 <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary/20 shadow-card">
-                  <AvatarImage src="" alt={profile.name} />
+                  <AvatarImage 
+                    src={profile.image} 
+                    alt={profile.name}
+                    className="object-cover object-center"
+                  />
                   <AvatarFallback className="bg-gradient-primary-vertical text-primary-foreground text-xl">
                     {profile.initials}
                   </AvatarFallback>
