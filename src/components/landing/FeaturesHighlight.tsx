@@ -60,20 +60,23 @@ export const FeaturesHighlight = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300 space-y-3"
-            >
-              <div className="h-10 w-10 rounded-xl bg-gradient-primary-vertical flex items-center justify-center">
-                <feature.icon className="h-5 w-5 text-primary-foreground" />
+          {features.map((feature, index) => {
+            const IconComponent = feature.icon;
+            return (
+              <div
+                key={index}
+                className="p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300 space-y-3"
+              >
+                <div className="h-10 w-10 rounded-xl bg-gradient-primary-vertical flex items-center justify-center">
+                  <IconComponent className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <h3 className="text-base font-bold text-foreground">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-base font-bold text-foreground">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
