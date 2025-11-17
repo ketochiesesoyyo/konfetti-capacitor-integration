@@ -526,5 +526,232 @@
     "alreadyReported": "Already reported",
     "reportSuccess": "Report submitted and user unmatched",
     "reportFailed": "Failed to submit report"
+  },
+  "landing": {
+    "hero": {
+      "headline": "Meet someone who's also dancing at the same wedding",
+      "subheadline": "Private event matchmaking for real celebrations",
+      "createEvent": "Create an Event",
+      "joinEvent": "Join an Event",
+      "getStarted": "New here?",
+      "signUp": "Sign up for free"
+    },
+    "intro": {
+      "title": "Introducing Konfetti",
+      "description": "Konfetti turns every wedding into a chance to meet someone new.",
+      "tagline": "Private, fun, and made for celebration."
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "subtitle": "Konfetti is a social matchmaking app for guests attending the same wedding or private event.",
+      "step": "Step",
+      "step1": {
+        "title": "Create the event",
+        "description": "Hosts set up their wedding or celebration in seconds.",
+        "visual": "Event Code: KONFETTI-PARTY"
+      },
+      "step2": {
+        "title": "Invite guests",
+        "description": "Send private links so only your guests can join.",
+        "visual": "🔗 Copy Event Link"
+      },
+      "step3": {
+        "title": "Match and connect",
+        "description": "Guests browse, swipe, and chat before meeting in real life at the event.",
+        "visual": "🎉 It's a Match!"
+      }
+    },
+    "profileCreation": {
+      "title": "Create Your Profile in Minutes",
+      "subtitle": "Set up your profile and start connecting with other event attendees",
+      "step1": {
+        "title": "Add Photos",
+        "description": "Upload up to 6 photos with crop feature"
+      },
+      "step2": {
+        "title": "Write Bio",
+        "description": "Add bio and optional Instagram username"
+      },
+      "step3": {
+        "title": "Select Interests",
+        "description": "Choose tags that represent you"
+      },
+      "step4": {
+        "title": "Answer Prompts",
+        "description": "Up to 3 custom prompts to show personality"
+      },
+      "step5": {
+        "title": "Set Preferences",
+        "description": "Age range and interested in"
+      },
+      "privacy": "Profiles only visible to event attendees"
+    },
+    "whyKonfetti": {
+      "title": "Why Konfetti?",
+      "subtitle": "Because every wedding is already full of chemistry.",
+      "benefit1": {
+        "title": "Event-only access",
+        "description": "You only see and chat with guests from your event."
+      },
+      "benefit2": {
+        "title": "Safe and private",
+        "description": "Hosts verify events, and profiles remain visible only to attendees."
+      },
+      "benefit3": {
+        "title": "Real vibes, not random swipes",
+        "description": "Match with people who share a connection through friends, not strangers."
+      },
+      "benefit4": {
+        "title": "No endless chatting",
+        "description": "Conversations that lead to real meetings at real celebrations."
+      },
+      "benefit5": {
+        "title": "Scheduled matchmaking",
+        "description": "Opens 1 week before the event, so everyone can browse before meeting."
+      },
+      "benefit6": {
+        "title": "Available in English & Spanish",
+        "description": "Built for diverse celebrations around the world."
+      }
+    },
+    "features": {
+      "title": "Everything You Need",
+      "subtitle": "Powerful features designed for meaningful connections",
+      "feature1": {
+        "title": "Scheduled Matchmaking",
+        "description": "Opens 1 week before event, closes 3 days after"
+      },
+      "feature2": {
+        "title": "In-App Chat",
+        "description": "Message your matches securely"
+      },
+      "feature3": {
+        "title": "Photo Profiles",
+        "description": "Up to 6 photos with crop functionality"
+      },
+      "feature4": {
+        "title": "Custom Prompts",
+        "description": "Make your personality shine"
+      },
+      "feature5": {
+        "title": "Interest Tags",
+        "description": "Find people with shared hobbies"
+      },
+      "feature6": {
+        "title": "Instagram Integration",
+        "description": "Optional profile linking"
+      },
+      "feature7": {
+        "title": "Multi-Language",
+        "description": "Switch between English and Spanish"
+      },
+      "feature8": {
+        "title": "Dark/Sunset Themes",
+        "description": "Choose your vibe"
+      }
+    },
+    "testimonials": {
+      "title": "What People Say About Konfetti",
+      "subtitle": "Real stories from real celebrations",
+      "couple": {
+        "quote": "I met my boyfriend using Konfetti! I trusted more in people introduced by our own friends than in other dating apps.",
+        "author": "Carole M.",
+        "role": "Wedding Guest"
+      },
+      "host": {
+        "quote": "Konfetti was a lot of fun for our single guests and made the party so much more wild and fun.",
+        "author": "Guillermo C.",
+        "role": "Groom"
+      }
+    },
+    "safety": {
+      "title": "Your Safety Matters",
+      "subtitle": "We built Konfetti to make meeting new people effortless, respectful, and real.",
+      "feature1": {
+        "title": "Age verification",
+        "description": "18+ required"
+      },
+      "feature2": {
+        "title": "Host-verified events",
+        "description": "Only verified hosts can create events"
+      },
+      "feature3": {
+        "title": "Report & block",
+        "description": "Easy tools to stay safe"
+      },
+      "feature4": {
+        "title": "Community Guidelines",
+        "description": "Clear rules enforcement"
+      },
+      "feature5": {
+        "title": "Event-scoped visibility",
+        "description": "Profiles only visible within event"
+      },
+      "feature6": {
+        "title": "Automatic chat closure",
+        "description": "Chats close 3 days post-event"
+      },
+      "feature7": {
+        "title": "No public profiles",
+        "description": "Privacy by design"
+      },
+      "feature8": {
+        "title": "Verified attendees",
+        "description": "Only invited guests can join"
+      },
+      "viewGuidelines": "View Community Guidelines"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about Konfetti",
+      "q1": {
+        "question": "How do I join an event?",
+        "answer": "You can join an event using either the invite link shared by the host, or by entering the event code manually in the Join Event page."
+      },
+      "q2": {
+        "question": "Is my profile public?",
+        "answer": "No, your profile is only visible to other attendees of events you've joined. Once an event ends (3 days after the event date), your profile becomes invisible to those attendees."
+      },
+      "q3": {
+        "question": "What happens after the event ends?",
+        "answer": "Matchmaking closes 3 days after the event date. After that, you can no longer swipe or match with new people from that event, but existing matches and chats remain accessible."
+      },
+      "q4": {
+        "question": "Can I join multiple events?",
+        "answer": "Yes! You can join as many events as you're invited to. Your profile will be visible separately in each event."
+      },
+      "q5": {
+        "question": "What's the difference between Free and Premium?",
+        "answer": "Free events support up to 50 single guests, while Premium events have unlimited capacity. Premium also includes additional features for hosts."
+      },
+      "q6": {
+        "question": "How does matchmaking timing work?",
+        "answer": "Matchmaking opens 1 week before the event date and closes 3 days after. This gives guests time to connect before and after the celebration."
+      },
+      "q7": {
+        "question": "Can I edit my profile after joining?",
+        "answer": "Yes, you can edit your profile, photos, bio, interests, and prompts at any time from the Profile page."
+      },
+      "q8": {
+        "question": "Is Konfetti available in my language?",
+        "answer": "Konfetti is currently available in English and Spanish. You can switch languages in the app settings."
+      }
+    },
+    "footer": {
+      "contact": {
+        "title": "Contact Us"
+      },
+      "social": {
+        "title": "Follow Us"
+      },
+      "legal": {
+        "title": "Legal",
+        "guidelines": "Community Guidelines",
+        "terms": "Terms & Conditions",
+        "privacy": "Privacy Policy"
+      },
+      "copyright": "© 2025 Konfetti SAPI de C.V.",
+      "madeIn": "Made in Mexico 🇲🇽"
+    }
   }
 }
