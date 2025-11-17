@@ -48,11 +48,11 @@ export const Testimonials = () => {
 
               {/* Image */}
               <div className="mb-6">
-                <div className="w-full h-48 md:h-56 rounded-2xl overflow-hidden">
+                <div className="w-full h-56 md:h-64 rounded-2xl overflow-hidden">
                   <img 
                     src={testimonial.image} 
                     alt={testimonial.author}
-                    className="w-full h-full object-cover object-center"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               </div>
