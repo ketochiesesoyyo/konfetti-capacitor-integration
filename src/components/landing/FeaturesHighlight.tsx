@@ -31,19 +31,9 @@ export const FeaturesHighlight = () => {
       description: t("landing.features.feature5.description"),
     },
     {
-      icon: Instagram,
-      title: t("landing.features.feature6.title"),
-      description: t("landing.features.feature6.description"),
-    },
-    {
       icon: Languages,
       title: t("landing.features.feature7.title"),
       description: t("landing.features.feature7.description"),
-    },
-    {
-      icon: Palette,
-      title: t("landing.features.feature8.title"),
-      description: t("landing.features.feature8.description"),
     },
   ];
 
