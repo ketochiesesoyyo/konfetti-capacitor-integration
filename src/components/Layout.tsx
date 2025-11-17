@@ -15,15 +15,15 @@ const Layout = ({ children }: LayoutProps) => {
 
   const tabs = [
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/", icon: PartyPopper, label: "Events" },
+    { path: "/dashboard", icon: PartyPopper, label: "Events" },
     { path: "/matchmaking", customIcon: true, label: "" },
     { path: "/liked", icon: Heart, label: "Liked" },
     { path: "/chats", icon: MessageCircle, label: "Chats" },
   ] as const;
 
   const isActive = (path: string) => {
-    if (path === "/" && location.pathname === "/") return true;
-    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    if (path === "/dashboard" && location.pathname === "/dashboard") return true;
+    if (path !== "/dashboard" && location.pathname.startsWith(path)) return true;
     return false;
   };
 
