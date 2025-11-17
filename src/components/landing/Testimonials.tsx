@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Quote } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import testimonialCarole from "@/assets/testimonial-carole.jpg";
+import testimonialGuillermo from "@/assets/testimonial-guillermo.jpg";
 
 export const Testimonials = () => {
   const { t } = useTranslation();
@@ -11,14 +12,14 @@ export const Testimonials = () => {
       quote: t("landing.testimonials.couple.quote"),
       author: t("landing.testimonials.couple.author"),
       role: t("landing.testimonials.couple.role"),
-      initials: "CM",
+      image: testimonialCarole,
     },
     {
       type: "host",
       quote: t("landing.testimonials.host.quote"),
       author: t("landing.testimonials.host.author"),
       role: t("landing.testimonials.host.role"),
-      initials: "GC",
+      image: testimonialGuillermo,
     },
   ];
 
@@ -45,14 +46,15 @@ export const Testimonials = () => {
                 <Quote className="h-6 w-6 text-primary" />
               </div>
 
-              {/* Avatar */}
+              {/* Image */}
               <div className="mb-6">
-                <Avatar className="h-16 w-16 border-2 border-primary/20">
-                  <AvatarImage src="" alt={testimonial.author} />
-                  <AvatarFallback className="bg-gradient-primary-vertical text-primary-foreground">
-                    {testimonial.initials}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="w-full h-48 md:h-56 rounded-2xl overflow-hidden">
+                  <img 
+                    src={testimonial.image} 
+                    alt={testimonial.author}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
               </div>
 
               {/* Quote */}
