@@ -1,27 +1,27 @@
 import { useTranslation } from "react-i18next";
-import { Upload, Type, Tag, MessageSquare, Settings } from "lucide-react";
+import { ImagePlus, FileText, ListChecks, MessageCircleQuestion, Settings } from "lucide-react";
 
 export const ProfileCreation = () => {
   const { t } = useTranslation();
 
   const steps = [
     {
-      icon: Upload,
+      icon: ImagePlus,
       title: t("landing.profileCreation.step1.title"),
       description: t("landing.profileCreation.step1.description"),
     },
     {
-      icon: Type,
+      icon: FileText,
       title: t("landing.profileCreation.step2.title"),
       description: t("landing.profileCreation.step2.description"),
     },
     {
-      icon: Tag,
+      icon: ListChecks,
       title: t("landing.profileCreation.step3.title"),
       description: t("landing.profileCreation.step3.description"),
     },
     {
-      icon: MessageSquare,
+      icon: MessageCircleQuestion,
       title: t("landing.profileCreation.step4.title"),
       description: t("landing.profileCreation.step4.description"),
     },
@@ -52,8 +52,8 @@ export const ProfileCreation = () => {
                 key={index}
                 className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300"
               >
-                <div className="h-12 w-12 rounded-full bg-gradient-primary-vertical flex items-center justify-center">
-                  <IconComponent className="h-6 w-6 text-primary-foreground" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <IconComponent className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-base font-bold text-foreground">{step.title}</h3>
                 <p className="text-sm text-muted-foreground">{step.description}</p>
