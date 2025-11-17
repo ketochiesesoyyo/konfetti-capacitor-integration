@@ -38,20 +38,22 @@ export const HowItWorks = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center text-center space-y-6 p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300"
-            >
-              {/* Step Number */}
-              <div className="text-sm font-bold text-primary">
-                {t("landing.howItWorks.step")} {index + 1}
-              </div>
+          {steps.map((step, index) => {
+            const IconComponent = step.icon;
+            return (
+              <div
+                key={index}
+                className="flex flex-col items-center text-center space-y-6 p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300"
+              >
+                {/* Step Number */}
+                <div className="text-sm font-bold text-primary">
+                  {t("landing.howItWorks.step")} {index + 1}
+                </div>
 
-              {/* Icon */}
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <step.icon className="h-8 w-8 text-primary" />
-              </div>
+                {/* Icon */}
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <IconComponent className="h-8 w-8 text-primary" />
+                </div>
 
               {/* Title */}
               <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
@@ -66,7 +68,8 @@ export const HowItWorks = () => {
                 {step.visual}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </section>

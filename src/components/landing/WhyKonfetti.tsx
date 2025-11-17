@@ -50,20 +50,23 @@ export const WhyKonfetti = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {benefits.map((benefit, index) => (
-            <div
-              key={index}
-              className="p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300 space-y-4"
-            >
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <benefit.icon className="h-7 w-7 text-primary" />
+          {benefits.map((benefit, index) => {
+            const IconComponent = benefit.icon;
+            return (
+              <div
+                key={index}
+                className="p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300 space-y-4"
+              >
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <IconComponent className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">{benefit.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {benefit.description}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-foreground">{benefit.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {benefit.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

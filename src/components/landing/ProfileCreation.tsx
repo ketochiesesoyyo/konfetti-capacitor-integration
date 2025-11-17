@@ -45,18 +45,21 @@ export const ProfileCreation = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {steps.map((step, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300"
-            >
-              <div className="h-12 w-12 rounded-full bg-gradient-primary-vertical flex items-center justify-center">
-                <step.icon className="h-6 w-6 text-primary-foreground" />
+          {steps.map((step, index) => {
+            const IconComponent = step.icon;
+            return (
+              <div
+                key={index}
+                className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300"
+              >
+                <div className="h-12 w-12 rounded-full bg-gradient-primary-vertical flex items-center justify-center">
+                  <IconComponent className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h3 className="text-base font-bold text-foreground">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
               </div>
-              <h3 className="text-base font-bold text-foreground">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-12 text-center">
