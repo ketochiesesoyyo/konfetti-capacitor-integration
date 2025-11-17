@@ -69,7 +69,7 @@ export const HeroSection = () => {
             <Button
               size="lg"
               variant="gradient"
-              onClick={() => navigate("/create-event")}
+              onClick={() => navigate("/auth")}
               className="w-full sm:w-auto min-w-[200px]"
             >
               {t("landing.hero.createEvent")}
@@ -77,7 +77,7 @@ export const HeroSection = () => {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate("/join-event")}
+              onClick={() => navigate("/auth")}
               className="w-full sm:w-auto min-w-[200px]"
             >
               {t("landing.hero.joinEvent")}
