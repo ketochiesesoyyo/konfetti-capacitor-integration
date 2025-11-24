@@ -79,6 +79,8 @@ const EditProfile = () => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string>("");
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -124,12 +126,93 @@ const EditProfile = () => {
     };
   }, [navigate]);
 
+  // Auto-save effect
+  useEffect(() => {
+    if (!userId || loading || autoSaving) return;
+
+    // Skip if no changes
+    if (!hasChanges()) return;
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef[0]) {
+      clearTimeout(autoSaveTimeoutRef[0]);
+    }
+
+    // Set new timeout for debounced auto-save
+    const timeout = setTimeout(() => {
+      autoSaveProfile();
+    }, 2000); // Auto-save 2 seconds after last change
+
+    autoSaveTimeoutRef[0] = timeout;
+
+    return () => {
+      if (autoSaveTimeoutRef[0]) {
+        clearTimeout(autoSaveTimeoutRef[0]);
+      }
+    };
+  }, [profile, userId, loading]);
+
+  // Save on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (userId && !loading && hasChanges()) {
+        autoSaveProfile(true); // Synchronous save
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [userId, loading, profile]);
+
   const checkInitialAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
     } else {
       await fetchProfile();
+    }
+  };
+
+  const autoSaveProfile = async (synchronous: boolean = false) => {
+    if (!userId || autoSaving) return;
+
+    if (!synchronous) setAutoSaving(true);
+    
+    try {
+      const ageValue = profile.age ? parseInt(profile.age) : null;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          name: profile.name.trim() || originalProfile.name,
+          age: ageValue,
+          gender: profile.gender || originalProfile.gender,
+          interested_in: profile.interested_in || originalProfile.interested_in,
+          bio: profile.bio?.trim(),
+          instagram_username: profile.instagram_username?.trim(),
+          interests: profile.interests,
+          photos: profile.photos,
+          prompts: profile.prompts,
+          age_min: profile.age_min,
+          age_max: profile.age_max,
+        })
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Auto-save error:", error);
+        return;
+      }
+
+      // Update original profile to match auto-saved state
+      setOriginalProfile(profile);
+      
+      if (!synchronous) {
+        console.log("Profile auto-saved");
+      }
+    } catch (error: any) {
+      console.error("Error auto-saving profile:", error);
+    } finally {
+      if (!synchronous) setAutoSaving(false);
     }
   };
 
@@ -519,9 +602,14 @@ const EditProfile = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-[hsl(var(--title))]">Edit Profile</h1>
-            <p className="text-sm mt-1 text-subtitle">Update your information</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-subtitle">Update your information</p>
+              {autoSaving && (
+                <span className="text-xs text-muted-foreground">• Saving draft...</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
