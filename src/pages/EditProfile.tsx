@@ -516,6 +516,7 @@ const EditProfile = () => {
       profile.gender !== originalProfile.gender ||
       profile.interested_in !== originalProfile.interested_in ||
       profile.bio !== originalProfile.bio ||
+      profile.instagram_username !== originalProfile.instagram_username ||
       profile.age_min !== originalProfile.age_min ||
       profile.age_max !== originalProfile.age_max ||
       JSON.stringify(profile.interests) !== JSON.stringify(originalProfile.interests) ||
