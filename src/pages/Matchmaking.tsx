@@ -442,7 +442,8 @@ const Matchmaking = () => {
       // Past: matchmaking closed or event closed
       if (
         event.status === "closed" ||
-        (event.matchmaking_close_date && isAfter(now, new Date(event.matchmaking_close_date)))
+        (event.matchmaking_close_date && isAfter(now, new Date(event.matchmaking_close_date))) ||
+        (event.close_date && isAfter(now, new Date(event.close_date)))
       ) {
         past.push(event);
       }
