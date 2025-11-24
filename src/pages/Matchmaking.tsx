@@ -511,6 +511,11 @@ const Matchmaking = () => {
               {t('matchmaking.soon')}
             </Badge>
           )}
+          {status === "past" && (
+            <Badge variant="outline" className="shrink-0 bg-muted text-muted-foreground">
+              {t('matchmaking.closed')}
+            </Badge>
+          )}
         </div>
         <div className="text-sm text-muted-foreground">
           {formatDateRange(event.matchmaking_start_date || event.date, event.close_date)}
