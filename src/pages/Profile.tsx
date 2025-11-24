@@ -332,6 +332,14 @@ const Profile = () => {
 
             {/* Profile Content */}
             <div className="p-6 space-y-6 bg-background">
+            {/* Instagram */}
+            {user?.instagram_username && (
+              <div>
+                <h3 className="font-semibold mb-1">Instagram</h3>
+                <p className="text-primary">@{user.instagram_username}</p>
+              </div>
+            )}
+
             {/* Bio */}
             {user?.bio && (
               <div>
