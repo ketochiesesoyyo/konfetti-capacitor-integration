@@ -356,6 +356,8 @@ export type Database = {
           age_min: number | null
           bio: string | null
           created_at: string
+          email_like_notifications: boolean | null
+          email_match_notifications: boolean | null
           gender: string | null
           id: string
           instagram_username: string | null
@@ -374,6 +376,8 @@ export type Database = {
           age_min?: number | null
           bio?: string | null
           created_at?: string
+          email_like_notifications?: boolean | null
+          email_match_notifications?: boolean | null
           gender?: string | null
           id?: string
           instagram_username?: string | null
@@ -392,6 +396,8 @@ export type Database = {
           age_min?: number | null
           bio?: string | null
           created_at?: string
+          email_like_notifications?: boolean | null
+          email_match_notifications?: boolean | null
           gender?: string | null
           id?: string
           instagram_username?: string | null

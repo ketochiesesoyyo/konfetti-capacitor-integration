@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, LogOut, Lock, Mail, Languages } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, LogOut, Lock, Mail, Languages, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,15 +22,29 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [emailMatchNotifications, setEmailMatchNotifications] = useState(true);
+  const [emailLikeNotifications, setEmailLikeNotifications] = useState(true);
 
   useEffect(() => {
-    const fetchCurrentEmail = async () => {
+    const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setCurrentEmail(user.email);
       }
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email_match_notifications, email_like_notifications')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile) {
+          setEmailMatchNotifications(profile.email_match_notifications ?? true);
+          setEmailLikeNotifications(profile.email_like_notifications ?? true);
+        }
+      }
     };
-    fetchCurrentEmail();
+    fetchUserData();
   }, []);
 
   const changeLanguage = (lng: string) => {
@@ -87,6 +102,31 @@ const Settings = () => {
       toast.success(t('settings.passwordUpdated'));
       setNewPassword("");
       setConfirmPassword("");
+    }
+  };
+
+  const handleNotificationToggle = async (type: 'match' | 'like', value: boolean) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const updateField = type === 'match' 
+      ? 'email_match_notifications' 
+      : 'email_like_notifications';
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [updateField]: value })
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error(t('settings.notificationUpdateError'));
+    } else {
+      if (type === 'match') {
+        setEmailMatchNotifications(value);
+      } else {
+        setEmailLikeNotifications(value);
+      }
+      toast.success(t('settings.notificationUpdated'));
     }
   };
 
@@ -172,6 +212,48 @@ const Settings = () => {
             <Button onClick={handlePasswordChange} disabled={loading} className="w-full" size="lg">
               {t('settings.updatePassword')}
             </Button>
+          </div>
+        </Card>
+
+        {/* Email Notifications */}
+        <Card className="p-8 shadow-card hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              <Bell className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold">{t('settings.emailNotifications')}</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+              <div className="space-y-1 flex-1">
+                <Label htmlFor="match-notifications" className="text-sm font-medium">
+                  {t('settings.matchNotifications')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('settings.matchNotificationsDesc')}
+                </p>
+              </div>
+              <Switch
+                id="match-notifications"
+                checked={emailMatchNotifications}
+                onCheckedChange={(checked) => handleNotificationToggle('match', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+              <div className="space-y-1 flex-1">
+                <Label htmlFor="like-notifications" className="text-sm font-medium">
+                  {t('settings.likeNotifications')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('settings.likeNotificationsDesc')}
+                </p>
+              </div>
+              <Switch
+                id="like-notifications"
+                checked={emailLikeNotifications}
+                onCheckedChange={(checked) => handleNotificationToggle('like', checked)}
+              />
+            </div>
           </div>
         </Card>
 
