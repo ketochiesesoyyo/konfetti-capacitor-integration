@@ -364,6 +364,7 @@ const EditProfile = () => {
           gender: profile.gender,
           interested_in: profile.interested_in,
           bio: profile.bio?.trim(),
+          instagram_username: profile.instagram_username?.trim(),
           interests: profile.interests,
           photos: profile.photos,
           prompts: profile.prompts,
