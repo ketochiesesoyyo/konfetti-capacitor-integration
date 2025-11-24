@@ -262,7 +262,14 @@
     "passwordUpdated": "Contraseña actualizada correctamente",
     "loggedOut": "Se cerró la sesión correctamente",
     "communityGuidelines": "Directrices de la Comunidad",
-    "termsConditions": "Términos y Condiciones"
+    "termsConditions": "Términos y Condiciones",
+    "emailNotifications": "Notificaciones por Correo",
+    "matchNotifications": "Notificaciones de Match",
+    "matchNotificationsDesc": "Recibir un correo cuando tengas un match",
+    "likeNotifications": "Notificaciones de Me Gusta",
+    "likeNotificationsDesc": "Recibir un correo cuando alguien te da me gusta",
+    "notificationUpdated": "Preferencias de notificación actualizadas",
+    "notificationUpdateError": "Error al actualizar las preferencias de notificación"
   },
   "createEvent": {
     "title": "Crear evento",

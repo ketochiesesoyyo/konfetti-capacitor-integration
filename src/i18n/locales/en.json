@@ -262,7 +262,14 @@
     "passwordUpdated": "Password updated successfully",
     "loggedOut": "Logged out successfully",
     "communityGuidelines": "Community Guidelines",
-    "termsConditions": "Terms & Conditions"
+    "termsConditions": "Terms & Conditions",
+    "emailNotifications": "Email Notifications",
+    "matchNotifications": "Match Notifications",
+    "matchNotificationsDesc": "Receive an email when you get a match",
+    "likeNotifications": "Like Notifications",
+    "likeNotificationsDesc": "Receive an email when someone likes you",
+    "notificationUpdated": "Notification preferences updated",
+    "notificationUpdateError": "Failed to update notification preferences"
   },
   "createEvent": {
     "title": "Create Event",
