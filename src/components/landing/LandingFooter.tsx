@@ -72,12 +72,6 @@ export const LandingFooter = () => {
                 >
                   {t("landing.footer.legal.terms")}
                 </button>
-                <a
-                  href="#"
-                  className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {t("landing.footer.legal.privacy")}
-                </a>
               </div>
             </div>
           </div>
