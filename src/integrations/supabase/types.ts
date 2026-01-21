@@ -128,6 +128,48 @@ export type Database = {
         }
         Relationships: []
       }
+      event_requests: {
+        Row: {
+          created_at: string
+          email: string
+          expected_guests: number
+          id: string
+          message: string | null
+          partner1_name: string
+          partner2_name: string
+          phone: string
+          status: string
+          updated_at: string
+          wedding_date: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expected_guests: number
+          id?: string
+          message?: string | null
+          partner1_name: string
+          partner2_name: string
+          phone: string
+          status?: string
+          updated_at?: string
+          wedding_date: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expected_guests?: number
+          id?: string
+          message?: string | null
+          partner1_name?: string
+          partner2_name?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          wedding_date?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           close_date: string

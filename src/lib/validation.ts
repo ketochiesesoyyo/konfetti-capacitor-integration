@@ -44,3 +44,16 @@ export const matchSchema = z.object({
   user2_id: z.string().uuid('Invalid user ID'),
   event_id: z.string().uuid('Invalid event ID'),
 });
+
+// Event request form validation
+export const eventRequestSchema = z.object({
+  partner1_name: z.string().trim().min(1, 'Partner 1 name is required').max(100, 'Name must be less than 100 characters'),
+  partner2_name: z.string().trim().min(1, 'Partner 2 name is required').max(100, 'Name must be less than 100 characters'),
+  wedding_date: z.date({ required_error: 'Wedding date is required' }),
+  expected_guests: z.number({ required_error: 'Expected guests is required' }).int().min(10, 'Minimum 10 guests').max(2000, 'Maximum 2000 guests'),
+  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+  phone: z.string().trim().min(1, 'Phone number is required').max(30, 'Phone number must be less than 30 characters'),
+  message: z.string().trim().max(500, 'Message must be less than 500 characters').optional(),
+});
+
+export type EventRequestFormData = z.infer<typeof eventRequestSchema>;

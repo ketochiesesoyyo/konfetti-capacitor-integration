@@ -69,7 +69,11 @@ export const HeroSection = () => {
             <Button
               size="lg"
               variant="gradient"
-              onClick={() => navigate("/auth")}
+              onClick={() => {
+                document.getElementById("contact-form")?.scrollIntoView({ 
+                  behavior: "smooth" 
+                });
+              }}
               className="w-full sm:w-auto min-w-[200px]"
             >
               {t("landing.hero.createEvent")}
