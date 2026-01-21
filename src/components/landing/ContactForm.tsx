@@ -46,10 +46,13 @@ export const ContactForm = () => {
   const onSubmit = async (data: EventRequestFormData) => {
     setIsSubmitting(true);
     try {
+      const formattedDate = format(data.wedding_date, "yyyy-MM-dd");
+      
+      // Save to database
       const { error } = await supabase.from("event_requests").insert({
         partner1_name: data.partner1_name,
         partner2_name: data.partner2_name,
-        wedding_date: format(data.wedding_date, "yyyy-MM-dd"),
+        wedding_date: formattedDate,
         expected_guests: data.expected_guests,
         email: data.email,
         phone: data.phone,
@@ -57,6 +60,24 @@ export const ContactForm = () => {
       });
 
       if (error) throw error;
+
+      // Send email notification (fire and forget - don't block success)
+      try {
+        await supabase.functions.invoke("event-request-notification", {
+          body: {
+            partner1_name: data.partner1_name,
+            partner2_name: data.partner2_name,
+            wedding_date: formattedDate,
+            expected_guests: data.expected_guests,
+            email: data.email,
+            phone: data.phone,
+            message: data.message,
+          },
+        });
+      } catch (emailError) {
+        // Log but don't fail the submission
+        console.error("Failed to send notification email:", emailError);
+      }
 
       setIsSuccess(true);
       form.reset();
