@@ -64,7 +64,7 @@ export const HowItWorks = () => {
               </p>
 
               {/* Visual Hint */}
-              <div className="pt-4 text-sm text-muted-foreground font-mono bg-muted/50 px-4 py-2 rounded-xl">
+              <div className="pt-4 text-sm text-foreground font-mono bg-muted px-4 py-2 rounded-xl">
                 {step.visual}
               </div>
             </div>
