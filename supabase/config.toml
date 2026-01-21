@@ -2,3 +2,6 @@ project_id = "wyvaygkvuhayqyphngab"
 
 [functions.send-matchmaking-notifications]
 verify_jwt = false
+
+[functions.event-request-notification]
+verify_jwt = false
