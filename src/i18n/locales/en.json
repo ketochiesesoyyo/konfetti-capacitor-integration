@@ -554,9 +554,9 @@
       "subtitle": "Konfetti is a social matchmaking app for guests attending the same wedding or private event.",
       "step": "Step",
       "step1": {
-        "title": "Create the event",
-        "description": "Hosts set up their wedding or celebration in seconds.",
-        "visual": "Event Code: KONFETTI-PARTY"
+        "title": "Request your event",
+        "description": "Contact us via email (hello@konfetti.app) or WhatsApp to set up your event. We'll have it ready in no time!",
+        "visual": "📧 hello@konfetti.app"
       },
       "step2": {
         "title": "Invite guests",
@@ -729,8 +729,8 @@
         "answer": "Yes! You can join as many events as you're invited to. Your profile will be visible separately in each event."
       },
       "q5": {
-        "question": "What's the difference between Free and Premium?",
-        "answer": "Free events support up to 50 single guests, while Premium events have unlimited capacity. Premium also includes additional features for hosts."
+        "question": "How much does it cost?",
+        "answer": "All Konfetti events have a flat price of US$ 299 per event. This includes unlimited guests, full matchmaking features, and dedicated support."
       },
       "q6": {
         "question": "How does matchmaking timing work?",

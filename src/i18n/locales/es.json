@@ -553,9 +553,9 @@
       "subtitle": "Konfetti es una app de matchmaking social para invitados que asisten a la misma boda o evento privado.",
       "step": "Paso",
       "step1": {
-        "title": "Crear el evento",
-        "description": "Los anfitriones configuran su boda o celebración en segundos.",
-        "visual": "Código de Evento: KONFETTI-PARTY"
+        "title": "Solicita tu evento",
+        "description": "Contáctanos por email (hello@konfetti.app) o WhatsApp para configurar tu evento. ¡Lo tendremos listo en un momento!",
+        "visual": "📧 hello@konfetti.app"
       },
       "step2": {
         "title": "Invitar a los invitados",
@@ -728,8 +728,8 @@
         "answer": "¡Sí! Puedes unirte a tantos eventos como te inviten. Tu perfil será visible por separado en cada evento."
       },
       "q5": {
-        "question": "¿Cuál es la diferencia entre Gratis y Premium?",
-        "answer": "Los eventos gratuitos admiten hasta 50 invitados solteros, mientras que los eventos Premium tienen capacidad ilimitada. Premium también incluye características adicionales para anfitriones."
+        "question": "¿Cuánto cuesta?",
+        "answer": "Todos los eventos de Konfetti tienen un precio fijo de MX$ 5,000 por evento. Esto incluye invitados ilimitados, todas las funciones de matchmaking y soporte dedicado."
       },
       "q6": {
         "question": "¿Cómo funciona el timing del matchmaking?",
