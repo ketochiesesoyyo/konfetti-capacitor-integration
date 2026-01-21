@@ -3,8 +3,8 @@ import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-// TODO: Update this to your notification email
-const NOTIFICATION_EMAIL = "hello@konfetti.app";
+// Notification recipient email
+const NOTIFICATION_EMAIL = "ketochiesesoyyo@gmail.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,13 +127,17 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const emailResponse = await resend.emails.send({
-      from: "Konfetti <onboarding@resend.dev>",
+    const payload = {
+      from: "Konfetti <info@konfetti.app>",
       to: [NOTIFICATION_EMAIL],
       subject: `🎉 New Event Request: ${data.partner1_name} & ${data.partner2_name}`,
       html: emailHtml,
       reply_to: data.email,
-    });
+    };
+
+    console.log("RESEND_PAYLOAD:", JSON.stringify(payload, null, 2));
+
+    const emailResponse = await resend.emails.send(payload);
 
     console.log("Notification email sent successfully:", emailResponse);
 
