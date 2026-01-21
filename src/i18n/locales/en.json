@@ -745,6 +745,24 @@
         "answer": "Konfetti is currently available in English and Spanish. You can switch languages in the app settings."
       }
     },
+    "contactForm": {
+      "title": "Request Your Event",
+      "subtitle": "Fill out the form below and we'll get back to you with a personalized quote",
+      "partner1": "Partner 1 Name",
+      "partner2": "Partner 2 Name",
+      "weddingDate": "Wedding Date",
+      "selectDate": "Select a date",
+      "expectedGuests": "Expected Number of Guests",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "message": "Additional Message (optional)",
+      "messagePlaceholder": "Tell us more about your event...",
+      "submit": "Send Request",
+      "successTitle": "Request Received!",
+      "success": "Thank you! We'll contact you soon with a personalized quote.",
+      "submitAnother": "Submit Another Request",
+      "error": "Something went wrong. Please try again or email us directly."
+    },
     "footer": {
       "contact": {
         "title": "Contact Us"

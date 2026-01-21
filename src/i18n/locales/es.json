@@ -744,6 +744,24 @@
         "answer": "Konfetti está actualmente disponible en inglés y español. Puedes cambiar el idioma en la configuración de la app."
       }
     },
+    "contactForm": {
+      "title": "Solicita Tu Evento",
+      "subtitle": "Completa el formulario y te contactaremos con una cotización personalizada",
+      "partner1": "Nombre del Novio/a 1",
+      "partner2": "Nombre del Novio/a 2",
+      "weddingDate": "Fecha de la Boda",
+      "selectDate": "Selecciona una fecha",
+      "expectedGuests": "Número Esperado de Invitados",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "message": "Mensaje Adicional (opcional)",
+      "messagePlaceholder": "Cuéntanos más sobre tu evento...",
+      "submit": "Enviar Solicitud",
+      "successTitle": "¡Solicitud Recibida!",
+      "success": "¡Gracias! Te contactaremos pronto con una cotización personalizada.",
+      "submitAnother": "Enviar Otra Solicitud",
+      "error": "Algo salió mal. Por favor intenta de nuevo o envíanos un email directamente."
+    },
     "footer": {
       "contact": {
         "title": "Contáctanos"

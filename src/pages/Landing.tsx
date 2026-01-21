@@ -10,6 +10,7 @@ import { FeaturesHighlight } from "@/components/landing/FeaturesHighlight";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { SafetyPrivacy } from "@/components/landing/SafetyPrivacy";
 import { FAQ } from "@/components/landing/FAQ";
+import { ContactForm } from "@/components/landing/ContactForm";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
 const Landing = () => {
@@ -38,6 +39,7 @@ const Landing = () => {
       <Testimonials />
       <SafetyPrivacy />
       <FAQ />
+      <ContactForm />
       <LandingFooter />
     </div>
   );
