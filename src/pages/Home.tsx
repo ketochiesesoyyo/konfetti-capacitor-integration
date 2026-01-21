@@ -852,17 +852,6 @@ const Home = () => {
                   fabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
                 )}>
                   <Button
-                    size="lg"
-                    className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap px-6"
-                    onClick={() => {
-                      handleCreateEvent();
-                      setFabOpen(false);
-                    }}
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Create Event
-                  </Button>
-                  <Button
                     variant="outline"
                     size="lg"
                     className="shadow-heavy hover:shadow-glow transition-all duration-300 hover-scale glass-light border-2 whitespace-nowrap px-6"

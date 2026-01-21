@@ -9,13 +9,6 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -505,24 +498,6 @@ const CreateEvent = () => {
     setImagePreview("");
   };
 
-  const handlePaymentCheckout = async (eventId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
-        body: { eventId },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
-        toast.success("Redirecting to payment...");
-      }
-    } catch (error: any) {
-      console.error("Payment checkout error:", error);
-      toast.error("Failed to initiate payment");
-    }
-  };
 
   const handleCreateEvent = async () => {
     if (!userId) {
@@ -638,8 +613,8 @@ const CreateEvent = () => {
               description: `Wedding celebration for ${eventName}`,
               invite_code: inviteCode,
               image_url: imageUrl,
-              status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
-              plan: eventData.plan,
+              status: 'active',
+              plan: 'premium',
               matchmaking_start_date: eventData.matchmakingStartDate || null,
               matchmaking_start_time: eventData.matchmakingStartTime || null,
               matchmaking_close_date: null,
@@ -651,13 +626,6 @@ const CreateEvent = () => {
             throw new Error(`Failed to update event: ${updateError.message}`);
           }
 
-          // If Premium plan selected, redirect to payment
-          if (eventData.plan === 'premium') {
-            await handlePaymentCheckout(eventIdToUpdate);
-            toast.info("Complete payment to activate Premium features");
-            setIsCreating(false);
-            return;
-          }
 
           // Clear draft ID only after successful creation
           setDraftEventId(null);
@@ -703,8 +671,8 @@ const CreateEvent = () => {
               invite_code: inviteCode,
               created_by: userId,
               image_url: imageUrl,
-              status: eventData.plan === 'premium' ? 'pending_payment' : 'active',
-              plan: eventData.plan,
+              status: 'active',
+              plan: 'premium',
               matchmaking_start_date: eventData.matchmakingStartDate || null,
               matchmaking_start_time: eventData.matchmakingStartTime || null,
             })
@@ -734,13 +702,6 @@ const CreateEvent = () => {
             // Don't fail the whole operation for this
           }
           
-          // If Premium plan selected, redirect to payment
-          if (eventData.plan === 'premium') {
-            await handlePaymentCheckout(event.id);
-            toast.info(t("createEvent.completePayment"));
-            setIsCreating(false);
-            return;
-          }
 
           toast.success(t("createEvent.eventCreated"), {
             description: t("createEvent.shareCode"),
@@ -1031,7 +992,7 @@ const CreateEvent = () => {
               Next
             </Button>
           </Card>
-        ) : step === 2 ? (
+        ) : (
           <Card className="p-6 space-y-6 animate-fade-in">
             <h2 className="text-xl font-bold">Review Your Event</h2>
             
@@ -1092,146 +1053,12 @@ const CreateEvent = () => {
 
             <Button
               variant="gradient"
-              onClick={() => setStep(3)}
-              className="w-full"
-              size="lg"
-              disabled={!eventData.agreedToTerms}
-            >
-              Select Event Plan
-            </Button>
-          </Card>
-        ) : (
-          <Card className="p-6 space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-bold text-center mb-2">Choose your matchmaking experience</h2>
-            
-            <div className="grid gap-4">
-              {/* Free Plan */}
-              <div
-                className="p-5 rounded-lg border-2 border-border bg-background text-left transition-all hover:shadow-md cursor-pointer"
-                onClick={() => setSelectedPlan('free')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">Free</h3>
-                  {selectedPlan === 'free' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2 italic">
-                  "Start testing Konfetti."
-                </p>
-                <p className="text-xl font-bold mb-3">Free</p>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✓ Up to 5 singles</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                </ul>
-              </div>
-
-              {/* Basic Plan */}
-              <div
-                className="p-5 rounded-lg border-2 border-border bg-background text-left transition-all hover:shadow-md cursor-pointer"
-                onClick={() => setSelectedPlan('basic')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">Basic</h3>
-                  {selectedPlan === 'basic' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2 italic">
-                  "Perfect for small weddings."
-                </p>
-                <p className="text-xl font-bold mb-3">USD 239</p>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✓ Up to 15 singles</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                  <li>✓ Priority support</li>
-                </ul>
-              </div>
-
-              {/* Premium Plan - HIGHLIGHTED */}
-              <div
-                className="p-5 rounded-lg border-2 bg-gradient-to-br from-primary/5 to-primary/10 text-left transition-all shadow-lg hover:shadow-xl cursor-pointer relative overflow-hidden"
-                style={{
-                  borderImage: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-variant))) 1',
-                }}
-                onClick={() => setSelectedPlan('premium')}
-              >
-                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-                  Most chosen by couples
-                </Badge>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-xl">Premium</h3>
-                  {selectedPlan === 'premium' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2 italic">
-                  "Covers everyone who might match."
-                </p>
-                <p className="text-2xl font-bold mb-3 text-primary">USD 299</p>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✓ Up to 50 singles</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ Advanced analytics</li>
-                </ul>
-              </div>
-
-              {/* VIP Plan */}
-              <div
-                className="p-5 rounded-lg border-2 border-border bg-background text-left transition-all hover:shadow-md cursor-pointer"
-                onClick={() => setSelectedPlan('vip')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">VIP</h3>
-                  {selectedPlan === 'vip' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2 italic">
-                  "For grand celebrations."
-                </p>
-                <p className="text-xl font-bold mb-3">USD 1,099</p>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✓ Up to 300 singles</li>
-                  <li>✓ VIP Badge (coming soon)</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ Advanced analytics</li>
-                  <li>✓ Dedicated account manager</li>
-                </ul>
-              </div>
-
-              {/* VIP+ Plan */}
-              <div
-                className="p-5 rounded-lg border-2 border-border bg-background text-left transition-all hover:shadow-md cursor-pointer"
-                onClick={() => setSelectedPlan('vip_plus')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">VIP+</h3>
-                  {selectedPlan === 'vip_plus' && <Check className="w-5 h-5 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground mb-2 italic">
-                  "For luxury & destination events."
-                </p>
-                <p className="text-xl font-bold mb-3">USD 5,399</p>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✓ Unlimited singles</li>
-                  <li>✓ Diamond VIP Badge (coming soon)</li>
-                  <li>✓ Full matchmaking features</li>
-                  <li>✓ Event management dashboard</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ Advanced analytics</li>
-                  <li>✓ Dedicated account manager</li>
-                  <li>✓ Custom branding options</li>
-                </ul>
-              </div>
-            </div>
-
-            <Button
-              variant="gradient"
               onClick={handleCreateEvent}
               className="w-full"
               size="lg"
-              disabled={isCreating}
+              disabled={!eventData.agreedToTerms || isCreating}
             >
-              {isCreating ? "Creating..." : selectedPlan === 'free' ? "Create Event" : "Continue to Payment"}
+              {isCreating ? "Creating..." : "Create Event"}
             </Button>
           </Card>
         )}
