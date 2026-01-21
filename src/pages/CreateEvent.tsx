@@ -32,6 +32,7 @@ const CreateEvent = () => {
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [eventImage, setEventImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
@@ -76,16 +77,29 @@ const CreateEvent = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
+        return;
+      }
+      
+      setUserId(session.user.id);
+      
+      // Check if user has admin role
+      const { data: hasAdminRole } = await supabase
+        .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
+      
+      if (!hasAdminRole) {
+        toast.error("Access denied. Only administrators can create events.");
+        navigate("/dashboard");
+        return;
+      }
+      
+      setIsAdmin(true);
+      
+      // Load draft if editing
+      if (editEventId) {
+        await loadDraftEvent(editEventId, session.user.id);
       } else {
-        setUserId(session.user.id);
-        
-        // Load draft if editing
-        if (editEventId) {
-          await loadDraftEvent(editEventId, session.user.id);
-        } else {
-          // Check for existing auto-saved draft
-          await loadExistingDraft(session.user.id);
-        }
+        // Check for existing auto-saved draft
+        await loadExistingDraft(session.user.id);
       }
     };
     checkAuth();
@@ -384,10 +398,10 @@ const CreateEvent = () => {
     return `${name1.substring(0, 3)}${name2.substring(0, 3)}${year}${randomChars}`;
   };
 
-  if (loadingDraft) {
+  if (loadingDraft || isAdmin === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading draft...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
