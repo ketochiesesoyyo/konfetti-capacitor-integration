@@ -4,7 +4,7 @@ import { Resend } from "npm:resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 // TODO: Update this to your notification email
-const NOTIFICATION_EMAIL = "hello@konfetti.love";
+const NOTIFICATION_EMAIL = "hello@konfetti.app";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
