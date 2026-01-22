@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { IntroSection } from "@/components/landing/IntroSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ProfileCreation } from "@/components/landing/ProfileCreation";
+import { MatchmakingJourney } from "@/components/landing/MatchmakingJourney";
 import { WhyKonfetti } from "@/components/landing/WhyKonfetti";
 import { FeaturesHighlight } from "@/components/landing/FeaturesHighlight";
 import { Testimonials } from "@/components/landing/Testimonials";
@@ -34,6 +35,7 @@ const Landing = () => {
       <IntroSection />
       <HowItWorks />
       <ProfileCreation />
+      <MatchmakingJourney />
       <WhyKonfetti />
       <FeaturesHighlight />
       <Testimonials />

@@ -594,6 +594,22 @@
       },
       "privacy": "Profiles only visible to event attendees"
     },
+    "matchmakingJourney": {
+      "title": "Your Love Story Starts Here",
+      "subtitle": "From the match to the first date, Konfetti guides you every step of the way",
+      "step1": {
+        "title": "Match on the App",
+        "description": "Browse profiles and connect with other guests before the event"
+      },
+      "step2": {
+        "title": "Meet at the Wedding",
+        "description": "Break the ice and flirt with your match in person during the celebration"
+      },
+      "step3": {
+        "title": "Go on a Date",
+        "description": "After the wedding, continue the connection with a romantic date"
+      }
+    },
     "whyKonfetti": {
       "title": "Why Konfetti?",
       "subtitle": "Because every wedding is already full of chemistry.",
