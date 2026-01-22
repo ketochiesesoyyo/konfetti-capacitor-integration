@@ -543,6 +543,43 @@
       "getStarted": "¿Nuevo aquí?",
       "signUp": "Regístrate gratis"
     },
+    "nav": {
+      "couples": "Novios",
+      "planners": "Wedding Planners",
+      "contact": "Contacto"
+    },
+    "contact": {
+      "badge": "Estamos aquí para ayudar",
+      "title": "¡Hablemos!",
+      "subtitle": "¿Tienes preguntas sobre Konfetti? ¿Quieres saber cómo podemos hacer tu boda inolvidable? ¡Nos encantaría saber de ti!",
+      "incentive1": {
+        "title": "Respuestas Rápidas",
+        "description": "Normalmente respondemos en 24 horas"
+      },
+      "incentive2": {
+        "title": "Sin Compromiso",
+        "description": "¿Solo explorando? ¡Está bien!"
+      },
+      "incentive3": {
+        "title": "Toque Personal",
+        "description": "Humanos reales, no bots"
+      },
+      "formTitle": "Envíanos un mensaje",
+      "formSubtitle": "Te responderemos lo antes posible",
+      "name": "Tu Nombre",
+      "namePlaceholder": "María García",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "maria@ejemplo.com",
+      "subject": "Asunto",
+      "subjectPlaceholder": "¿De qué se trata?",
+      "message": "Tu Mensaje",
+      "messagePlaceholder": "Cuéntanos qué tienes en mente...",
+      "submit": "Enviar Mensaje",
+      "successTitle": "¡Mensaje Enviado!",
+      "success": "¡Gracias por escribirnos! Te responderemos pronto.",
+      "sendAnother": "Enviar Otro Mensaje",
+      "error": "Algo salió mal. Por favor intenta de nuevo."
+    },
     "intro": {
       "title": "Presentamos Konfetti",
       "description": "Konfetti convierte cada boda en una oportunidad para conocer a alguien nuevo.",

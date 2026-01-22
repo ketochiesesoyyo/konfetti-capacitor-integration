@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { KonfettiLogo } from "@/components/KonfettiLogo";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import profileTim from "@/assets/profile-tim.jpg";
 import profileMaria from "@/assets/profile-maria.jpg";
@@ -19,12 +17,7 @@ export const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex flex-col">
-      {/* Header with Logo and Language Switcher */}
-      <header className="w-full py-6 px-6 flex justify-between items-center">
-        <KonfettiLogo className="h-8" />
-        <LanguageSwitcher />
-      </header>
+    <section className="relative py-20 flex flex-col">
 
       {/* Hero Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
