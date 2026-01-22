@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical, Shield } from "lucide-react";
+import { Plus, Calendar, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { isAdminDomainAllowed } from "@/lib/domain";
 import { format } from "date-fns";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
 import {
@@ -42,16 +41,12 @@ import { Label } from "@/components/ui/label";
 const Home = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"attending" | "hosting">("attending");
-  const [hostingEvents, setHostingEvents] = useState<any[]>([]);
   const [attendingEvents, setAttendingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [selectedEventToLeave, setSelectedEventToLeave] = useState<any>(null);
   const [leaveReason, setLeaveReason] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
-  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "active" | "closed">("all");
   const [attendingSortBy, setAttendingSortBy] = useState<"name" | "date" | "status">("date");
   const [attendingFilterStatus, setAttendingFilterStatus] = useState<"all" | "active" | "closed">("all");
   const [selectionMode, setSelectionMode] = useState(false);
@@ -87,19 +82,8 @@ const Home = () => {
         
         if (hiddenError) throw hiddenError;
         setHiddenEventIds(new Set(hiddenData?.map(h => h.event_id) || []));
-        
-        // Fetch events user is hosting with guest counts
-        const { data: hosting, error: hostingError } = await supabase
-          .from("events")
-          .select("*, event_attendees(count)")
-          .eq("created_by", session.user.id)
-          .order("date", { ascending: true });
-
-        if (hostingError) throw hostingError;
-        setHostingEvents(hosting || []);
 
         // Fetch events user is attending (joined via event_attendees)
-        // Query events directly - invite codes will be masked in UI for non-creators
         const { data: attending, error: attendingError } = await supabase
           .from("event_attendees")
           .select("event_id, events(*)")
@@ -107,7 +91,7 @@ const Home = () => {
 
         if (attendingError) throw attendingError;
         
-        // Mask invite codes and filter out events where close_date has passed
+        // Filter out events where close_date has passed and where user is host
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -136,18 +120,7 @@ const Home = () => {
     };
 
     fetchUserAndEvents();
-  }, [navigate]);
-
-  const getThemeClass = (theme: string) => {
-    const themes = {
-      sunset: "gradient-sunset",
-      ocean: "gradient-ocean",
-      golden: "gradient-golden",
-      emerald: "gradient-emerald",
-      midnight: "gradient-midnight",
-    };
-    return themes[theme as keyof typeof themes] || themes.sunset;
-  };
+  }, [navigate, t]);
 
   const getEventStatus = (event: any): 'draft' | 'closed' | 'active' => {
     if (event.status === 'draft') return 'draft';
@@ -156,7 +129,6 @@ const Home = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Check if close_date has passed
     if (event.close_date) {
       const closeDate = new Date(event.close_date);
       closeDate.setHours(0, 0, 0, 0);
@@ -166,16 +138,10 @@ const Home = () => {
     return 'active';
   };
 
-  const handleCreateEvent = () => {
-    // Show paywall modal - will be implemented with real payment flow
-    navigate("/create-event");
-  };
-
   const handleLeaveEvent = async () => {
     if (!selectedEventToLeave || !userId) return;
 
     try {
-      // Log the departure with reason
       const { error: logError } = await supabase
         .from("event_departures")
         .insert({
@@ -186,7 +152,6 @@ const Home = () => {
 
       if (logError) throw logError;
 
-      // Remove user from event attendees
       const { error: deleteError } = await supabase
         .from("event_attendees")
         .delete()
@@ -197,7 +162,6 @@ const Home = () => {
 
       toast.success(t('home.leftEvent'));
       
-      // Refresh the events list
       setAttendingEvents(prev => prev.filter(e => e.id !== selectedEventToLeave.id));
       setLeaveDialogOpen(false);
       setSelectedEventToLeave(null);
@@ -207,34 +171,6 @@ const Home = () => {
       toast.error(t('home.failedLeave'));
     }
   };
-
-  // Sort and filter hosting events
-  const getSortedAndFilteredHostingEvents = () => {
-    let filtered = hostingEvents;
-
-    // Apply status filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(event => getEventStatus(event) === filterStatus);
-    }
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "date":
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case "status":
-          return getEventStatus(a).localeCompare(getEventStatus(b));
-        default:
-          return 0;
-      }
-    });
-
-    return sorted;
-  };
-
-  const displayedHostingEvents = getSortedAndFilteredHostingEvents();
 
   // Sort and filter attending events
   const getSortedAndFilteredAttendingEvents = () => {
@@ -340,12 +276,7 @@ const Home = () => {
   };
 
   const visibleAttendingEvents = getVisibleEvents(displayedAttendingEvents);
-  const visibleHostingEvents = getVisibleEvents(displayedHostingEvents);
-
-  // Calculate hidden event counts per tab
   const hiddenAttendingCount = displayedAttendingEvents.filter(e => hiddenEventIds.has(e.id)).length;
-  const hiddenHostingCount = displayedHostingEvents.filter(e => hiddenEventIds.has(e.id)).length;
-  const currentTabHiddenCount = activeTab === "attending" ? hiddenAttendingCount : hiddenHostingCount;
 
   return (
     <div className="min-h-screen bg-background">
@@ -371,33 +302,8 @@ const Home = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-6">
-        {/* Tab Selector */}
-        <Card className="p-1.5 mb-6 shadow-soft">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setActiveTab("attending")}
-              className={cn(
-                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
-                activeTab === "attending"
-                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
-              )}
-            >
-              {t('home.attending')} ({visibleAttendingEvents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("hosting")}
-              className={cn(
-                "py-3 px-5 rounded-2xl font-semibold transition-all duration-300 text-sm",
-                activeTab === "hosting"
-                  ? "bg-primary text-primary-foreground shadow-soft scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
-              )}
-            >
-              {t('home.hosting')} ({visibleHostingEvents.length})
-            </button>
-          </div>
-        </Card>
+        {/* Title */}
+        <h2 className="text-xl font-semibold mb-4">{t('home.attending')} ({visibleAttendingEvents.length})</h2>
 
         {/* Selection Controls */}
         <div className="flex gap-2 mb-6">
@@ -455,7 +361,7 @@ const Home = () => {
             ) : (
               <>
                 <EyeOff className="w-4 h-4 mr-2" />
-                {t('home.showHidden')} ({currentTabHiddenCount})
+                {t('home.showHidden')} ({hiddenAttendingCount})
               </>
             )}
           </Button>
@@ -478,192 +384,12 @@ const Home = () => {
                 </Card>
               ))}
             </div>
-          ) : activeTab === "attending" ? (
-            <>
-              {/* Sort and Filter Controls for Attending */}
-              <div className="flex gap-2 mb-4">
-                  <div className="flex-1">
-                    <Select value={attendingSortBy} onValueChange={(value: any) => setAttendingSortBy(value)}>
-                      <SelectTrigger className="w-full">
-                        <div className="flex items-center gap-2">
-                          <ArrowUpDown className="w-4 h-4" />
-                          <SelectValue />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="date">{t('home.sortByDate')}</SelectItem>
-                        <SelectItem value="name">{t('home.sortByName')}</SelectItem>
-                        <SelectItem value="status">{t('home.sortByStatus')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1">
-                    <Select value={attendingFilterStatus} onValueChange={(value: any) => setAttendingFilterStatus(value)}>
-                      <SelectTrigger className="w-full">
-                        <div className="flex items-center gap-2">
-                          <Filter className="w-4 h-4" />
-                          <SelectValue />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('home.allEvents')}</SelectItem>
-                        <SelectItem value="active">{t('home.activeOnly')}</SelectItem>
-                        <SelectItem value="closed">{t('home.closedOnly')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-              {visibleAttendingEvents.length > 0 ? (
-              visibleAttendingEvents.map((event, index) => (
-                <Card key={event.id} className={cn("overflow-hidden hover-lift shadow-card animate-enter", `delay-${Math.min(index * 100, 600)}`)}>
-
-                  <div className="flex">
-                    {/* Selection Checkbox */}
-                    {selectionMode && (
-                      <div className="flex items-center justify-center px-3">
-                        <Checkbox
-                          checked={selectedEvents.has(event.id)}
-                          onCheckedChange={() => handleToggleEventSelection(event.id)}
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Event Image - Circular with margin */}
-                    <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center hover-scale transition-all shadow-soft">
-                        {event.image_url ? (
-                          <img 
-                            src={event.image_url} 
-                            alt={event.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <ImageIcon className="w-10 h-10 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Event Content */}
-                    <div className="flex-1 p-4 flex flex-col">
-                      <div className="flex items-start justify-between">
-                        <div 
-                          className="flex-1 cursor-pointer" 
-                          onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
-                        >
-                          <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{format(new Date(event.date), 'dd / MMM / yyyy')}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <Badge 
-                            variant="outline"
-                            className={getEventStatus(event) === 'closed' 
-                              ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                              : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
-                          >
-                            {getEventStatus(event) === 'closed' ? 'Closed' : 'Active'}
-                          </Badge>
-                          
-                          {!selectionMode && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="w-4 h-4 text-gray-600" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => navigate(`/matchmaking/${event.id}`)}>
-                                  Go Matchmaking
-                                </DropdownMenuItem>
-                                {hiddenEventIds.has(event.id) ? (
-                                  <DropdownMenuItem onClick={async () => {
-                                    if (!userId) return;
-                                    try {
-                                      const { error } = await supabase
-                                        .from("hidden_events")
-                                        .delete()
-                                        .eq("user_id", userId)
-                                        .eq("event_id", event.id);
-                                      if (error) throw error;
-                                      setHiddenEventIds(prev => {
-                                        const newSet = new Set(prev);
-                                        newSet.delete(event.id);
-                                        return newSet;
-                                      });
-                                      toast.success(t('home.eventShown'));
-                                    } catch (error: any) {
-                                      console.error("Error showing event:", error);
-                                      toast.error(t('home.failedShow'));
-                                    }
-                                  }}>
-                                    {t('home.showEvent')}
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem onClick={async () => {
-                                    if (!userId) return;
-                                    try {
-                                      const { error } = await supabase
-                                        .from("hidden_events")
-                                        .insert({ user_id: userId, event_id: event.id });
-                                      if (error) throw error;
-                                      setHiddenEventIds(prev => new Set([...prev, event.id]));
-                                      toast.success(t('home.eventHidden'));
-                                    } catch (error: any) {
-                                      console.error("Error hiding event:", error);
-                                      toast.error(t('home.failedShow'));
-                                    }
-                                  }}>
-                                    {t('home.hideEvent')}
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setSelectedEventToLeave(event);
-                                    setLeaveDialogOpen(true);
-                                  }}
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  {t('home.leaveEvent')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : showHidden ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">
-                  No hidden events
-                </p>
-              </Card>
-            ) : (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground mb-4">
-                  {attendingFilterStatus !== "all" 
-                    ? `No ${attendingFilterStatus} events found` 
-                    : "Join a wedding using an invite link from your hosts!"}
-                </p>
-                {attendingFilterStatus === "all" && (
-                  <Button variant="outline" onClick={() => navigate("/join-event")}>
-                    Enter Event Code
-                  </Button>
-                )}
-              </Card>
-            )}
-            </>
-          ) : visibleHostingEvents.length > 0 || hostingEvents.length > 0 ? (
+          ) : (
             <>
               {/* Sort and Filter Controls */}
-              {!showHidden && <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-4">
                 <div className="flex-1">
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <Select value={attendingSortBy} onValueChange={(value: any) => setAttendingSortBy(value)}>
                     <SelectTrigger className="w-full">
                       <div className="flex items-center gap-2">
                         <ArrowUpDown className="w-4 h-4" />
@@ -671,14 +397,14 @@ const Home = () => {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="date">Sort by Date</SelectItem>
-                      <SelectItem value="name">Sort by Name</SelectItem>
-                      <SelectItem value="status">Sort by Status</SelectItem>
+                      <SelectItem value="date">{t('home.sortByDate')}</SelectItem>
+                      <SelectItem value="name">{t('home.sortByName')}</SelectItem>
+                      <SelectItem value="status">{t('home.sortByStatus')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex-1">
-                  <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                  <Select value={attendingFilterStatus} onValueChange={(value: any) => setAttendingFilterStatus(value)}>
                     <SelectTrigger className="w-full">
                       <div className="flex items-center gap-2">
                         <Filter className="w-4 h-4" />
@@ -686,156 +412,135 @@ const Home = () => {
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Events</SelectItem>
-                      <SelectItem value="draft">Drafts Only</SelectItem>
-                      <SelectItem value="active">Active Only</SelectItem>
-                      <SelectItem value="closed">Closed Only</SelectItem>
+                      <SelectItem value="all">{t('home.allEvents')}</SelectItem>
+                      <SelectItem value="active">{t('home.activeOnly')}</SelectItem>
+                      <SelectItem value="closed">{t('home.closedOnly')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>}
+              </div>
 
-              {visibleHostingEvents.length > 0 ? (
-                visibleHostingEvents.map((event) => (
-              <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="flex">
-                  {/* Selection Checkbox */}
-                  {selectionMode && (
-                    <div className="flex items-center justify-center px-3">
-                      <Checkbox
-                        checked={selectedEvents.has(event.id)}
-                        onCheckedChange={() => handleToggleEventSelection(event.id)}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Event Image - Circular with margin */}
-                  <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
-                    <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                      {event.image_url ? (
-                        <img 
-                          src={event.image_url} 
-                          alt={event.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ImageIcon className="w-10 h-10 text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Event Content */}
-                  <div className="flex-1 p-4 flex flex-col">
-                    <div className="flex items-start justify-between">
-                      <div 
-                        className="flex-1 cursor-pointer" 
-                        onClick={() => !selectionMode && (getEventStatus(event) === 'draft' ? navigate(`/create-event?edit=${event.id}`) : navigate(`/event-dashboard/${event.id}`))}
-                      >
-                        <h3 className="font-semibold text-lg hover:text-primary transition-colors">{event.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{event.date ? format(new Date(event.date), 'dd / MMM / yyyy') : 'No date set'}</span>
+              {visibleAttendingEvents.length > 0 ? (
+                visibleAttendingEvents.map((event, index) => (
+                  <Card key={event.id} className={cn("overflow-hidden hover-lift shadow-card animate-enter", `delay-${Math.min(index * 100, 600)}`)}>
+                    <div className="flex">
+                      {/* Selection Checkbox */}
+                      {selectionMode && (
+                        <div className="flex items-center justify-center px-3">
+                          <Checkbox
+                            checked={selectedEvents.has(event.id)}
+                            onCheckedChange={() => handleToggleEventSelection(event.id)}
+                          />
                         </div>
-                        {getEventStatus(event) !== 'draft' && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Code: <span className="font-mono font-semibold">{event.invite_code}</span>
-                            {activeTab === 'hosting' && (
-                              <div className="mt-0.5 flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                <span>{event.event_attendees?.[0]?.count || 0} {event.event_attendees?.[0]?.count === 1 ? 'guest' : 'guests'}</span>
-                              </div>
+                      )}
+                      
+                      {/* Event Image - Circular with margin */}
+                      <div className="w-28 shrink-0 flex items-center justify-center py-3 pl-3">
+                        <div className="w-24 h-24 rounded-full overflow-hidden bg-muted flex items-center justify-center hover-scale transition-all shadow-soft">
+                          {event.image_url ? (
+                            <img 
+                              src={event.image_url} 
+                              alt={event.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="w-10 h-10 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Event Content */}
+                      <div className="flex-1 p-4 flex flex-col">
+                        <div className="flex items-start justify-between">
+                          <div 
+                            className="flex-1 cursor-pointer" 
+                            onClick={() => !selectionMode && navigate(`/matchmaking/${event.id}`)}
+                          >
+                            <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>{format(new Date(event.date), 'dd / MMM / yyyy')}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge 
+                              variant="outline"
+                              className={getEventStatus(event) === 'closed' 
+                                ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
+                                : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'}
+                            >
+                              {getEventStatus(event) === 'closed' ? 'Closed' : 'Active'}
+                            </Badge>
+                            
+                            {!selectionMode && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="w-4 h-4 text-gray-600" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem onClick={() => navigate(`/matchmaking/${event.id}`)}>
+                                    Go Matchmaking
+                                  </DropdownMenuItem>
+                                  {hiddenEventIds.has(event.id) ? (
+                                    <DropdownMenuItem onClick={async () => {
+                                      if (!userId) return;
+                                      try {
+                                        const { error } = await supabase
+                                          .from("hidden_events")
+                                          .delete()
+                                          .eq("user_id", userId)
+                                          .eq("event_id", event.id);
+                                        if (error) throw error;
+                                        setHiddenEventIds(prev => {
+                                          const newSet = new Set(prev);
+                                          newSet.delete(event.id);
+                                          return newSet;
+                                        });
+                                        toast.success(t('home.eventShown'));
+                                      } catch (error: any) {
+                                        console.error("Error showing event:", error);
+                                        toast.error(t('home.failedShow'));
+                                      }
+                                    }}>
+                                      {t('home.showEvent')}
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    <DropdownMenuItem onClick={async () => {
+                                      if (!userId) return;
+                                      try {
+                                        const { error } = await supabase
+                                          .from("hidden_events")
+                                          .insert({ user_id: userId, event_id: event.id });
+                                        if (error) throw error;
+                                        setHiddenEventIds(prev => new Set([...prev, event.id]));
+                                        toast.success(t('home.eventHidden'));
+                                      } catch (error: any) {
+                                        console.error("Error hiding event:", error);
+                                        toast.error(t('home.failedShow'));
+                                      }
+                                    }}>
+                                      {t('home.hideEvent')}
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem 
+                                    onClick={() => {
+                                      setSelectedEventToLeave(event);
+                                      setLeaveDialogOpen(true);
+                                    }}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    {t('home.leaveEvent')}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge 
-                          variant="outline"
-                          className={
-                            getEventStatus(event) === 'draft'
-                              ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 pointer-events-none'
-                              : getEventStatus(event) === 'closed' 
-                                ? 'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground pointer-events-none' 
-                                : 'bg-white text-foreground hover:bg-white hover:text-foreground pointer-events-none'
-                          }
-                        >
-                          {getEventStatus(event) === 'draft' ? 'Draft' : getEventStatus(event) === 'closed' ? 'Closed' : 'Active'}
-                        </Badge>
-                        
-                        {!selectionMode && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="w-4 h-4 text-gray-600" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              {getEventStatus(event) === 'draft' ? (
-                                <DropdownMenuItem onClick={() => navigate(`/create-event?edit=${event.id}`)}>
-                                  Complete Draft
-                                </DropdownMenuItem>
-                              ) : (
-                                <>
-                                  <DropdownMenuItem onClick={() => navigate(`/event-dashboard/${event.id}`)}>
-                                    Manage Event
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => {
-                                    navigator.clipboard.writeText(event.invite_code);
-                                    toast.success("Invite code copied!");
-                                  }}>
-                                    Copy Code
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {hiddenEventIds.has(event.id) ? (
-                                <DropdownMenuItem onClick={async () => {
-                                  if (!userId) return;
-                                  try {
-                                    const { error } = await supabase
-                                      .from("hidden_events")
-                                      .delete()
-                                      .eq("user_id", userId)
-                                      .eq("event_id", event.id);
-                                    if (error) throw error;
-                                    setHiddenEventIds(prev => {
-                                      const newSet = new Set(prev);
-                                      newSet.delete(event.id);
-                                      return newSet;
-                                    });
-                                    toast.success("Event shown");
-                                  } catch (error: any) {
-                                    console.error("Error showing event:", error);
-                                    toast.error("Failed to show event");
-                                  }
-                                }}>
-                                  Show Event
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onClick={async () => {
-                                  if (!userId) return;
-                                  try {
-                                    const { error } = await supabase
-                                      .from("hidden_events")
-                                      .insert({ user_id: userId, event_id: event.id });
-                                    if (error) throw error;
-                                    setHiddenEventIds(prev => new Set([...prev, event.id]));
-                                    toast.success("Event hidden");
-                                  } catch (error: any) {
-                                    console.error("Error hiding event:", error);
-                                    toast.error("Failed to hide event");
-                                  }
-                                }}>
-                                  Hide Event
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </Card>
+                  </Card>
                 ))
               ) : showHidden ? (
                 <Card className="p-8 text-center">
@@ -845,22 +550,20 @@ const Home = () => {
                 </Card>
               ) : (
                 <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">
-                    No {filterStatus === "all" ? "" : filterStatus} events found
+                  <p className="text-muted-foreground mb-4">
+                    {attendingFilterStatus !== "all" 
+                      ? `No ${attendingFilterStatus} events found` 
+                      : "Join a wedding using an invite link from your hosts!"}
                   </p>
+                  {attendingFilterStatus === "all" && (
+                    <Button variant="outline" onClick={() => navigate("/join-event")}>
+                      Enter Event Code
+                    </Button>
+                  )}
                 </Card>
               )}
             </>
-          ) : !showHidden ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                You haven't created any events yet
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Create a private matchmaking space for your wedding guests
-              </p>
-            </Card>
-          ) : null}
+          )}
         </div>
 
         {/* Floating Action Button */}
