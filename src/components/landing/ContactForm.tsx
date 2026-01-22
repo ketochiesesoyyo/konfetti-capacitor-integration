@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Form,
   FormControl,
@@ -34,6 +35,7 @@ export const ContactForm = () => {
   const form = useForm<EventRequestFormData>({
     resolver: zodResolver(eventRequestSchema),
     defaultValues: {
+      submitter_type: undefined,
       partner1_name: "",
       partner2_name: "",
       expected_guests: undefined,
@@ -50,6 +52,7 @@ export const ContactForm = () => {
       
       // Save to database
       const { error } = await supabase.from("event_requests").insert({
+        submitter_type: data.submitter_type,
         partner1_name: data.partner1_name,
         partner2_name: data.partner2_name,
         wedding_date: formattedDate,
@@ -65,6 +68,7 @@ export const ContactForm = () => {
       try {
         await supabase.functions.invoke("event-request-notification", {
           body: {
+            submitter_type: data.submitter_type,
             partner1_name: data.partner1_name,
             partner2_name: data.partner2_name,
             wedding_date: formattedDate,
@@ -132,6 +136,38 @@ export const ContactForm = () => {
         <div className="bg-card rounded-2xl p-8 shadow-card border border-border">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Submitter Type */}
+              <FormField
+                control={form.control}
+                name="submitter_type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>{t("landing.contactForm.submitterType")}</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="couple" id="couple" />
+                          <label htmlFor="couple" className="text-sm font-medium cursor-pointer">
+                            {t("landing.contactForm.submitterCouple")}
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="wedding_planner" id="wedding_planner" />
+                          <label htmlFor="wedding_planner" className="text-sm font-medium cursor-pointer">
+                            {t("landing.contactForm.submitterPlanner")}
+                          </label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Partner Names - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

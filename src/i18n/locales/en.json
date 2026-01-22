@@ -748,6 +748,9 @@
     "contactForm": {
       "title": "Request Your Event",
       "subtitle": "Fill out the form below and we'll get back to you with a personalized quote",
+      "submitterType": "Who is submitting this request?",
+      "submitterCouple": "We are the couple",
+      "submitterPlanner": "I'm a wedding planner",
       "partner1": "Partner 1 Name",
       "partner2": "Partner 2 Name",
       "weddingDate": "Wedding Date",

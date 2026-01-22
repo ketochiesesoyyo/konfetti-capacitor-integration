@@ -139,6 +139,7 @@ export type Database = {
           partner2_name: string
           phone: string
           status: string
+          submitter_type: string
           updated_at: string
           wedding_date: string
         }
@@ -152,6 +153,7 @@ export type Database = {
           partner2_name: string
           phone: string
           status?: string
+          submitter_type?: string
           updated_at?: string
           wedding_date: string
         }
@@ -165,6 +167,7 @@ export type Database = {
           partner2_name?: string
           phone?: string
           status?: string
+          submitter_type?: string
           updated_at?: string
           wedding_date?: string
         }

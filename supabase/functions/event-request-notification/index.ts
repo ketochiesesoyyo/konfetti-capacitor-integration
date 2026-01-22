@@ -13,6 +13,7 @@ const corsHeaders = {
 };
 
 interface EventRequestData {
+  submitter_type: 'couple' | 'wedding_planner';
   partner1_name: string;
   partner2_name: string;
   wedding_date: string;
@@ -38,6 +39,8 @@ const handler = async (req: Request): Promise<Response> => {
       day: "numeric",
     });
 
+    const submitterLabel = data.submitter_type === 'wedding_planner' ? 'Wedding Planner' : 'The Couple';
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -52,6 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
           .header { text-align: center; margin-bottom: 24px; }
           .header h1 { color: #9b2c2c; margin: 0; font-size: 24px; }
           .header p { color: #666; margin-top: 8px; }
+          .badge { display: inline-block; background: #f0f0f0; color: #666; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; margin-top: 8px; }
+          .badge.planner { background: #e8f4fd; color: #1e88e5; }
           .section { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #eee; }
           .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
           .section-title { font-size: 14px; font-weight: 600; color: #9b2c2c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
@@ -69,6 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="header">
               <h1>🎉 New Event Request!</h1>
               <p>${data.partner1_name} & ${data.partner2_name} want to use Konfetti</p>
+              <span class="badge ${data.submitter_type === 'wedding_planner' ? 'planner' : ''}">Submitted by: ${submitterLabel}</span>
             </div>
             
             <div class="section">
