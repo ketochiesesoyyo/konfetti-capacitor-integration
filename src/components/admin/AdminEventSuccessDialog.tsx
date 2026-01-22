@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +30,7 @@ export const AdminEventSuccessDialog = ({
 
   const handleViewDashboard = () => {
     onOpenChange(false);
-    navigate(`/event-dashboard/${eventId}`);
+    navigate(`/event-dashboard/${eventId}?from=admin`);
   };
 
   return (
