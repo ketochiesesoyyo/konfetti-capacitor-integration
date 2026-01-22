@@ -1,30 +1,29 @@
 import { useTranslation } from "react-i18next";
-import { Smartphone, Heart, Calendar } from "lucide-react";
+import journeyStep1 from "@/assets/journey-step1-match.jpg";
+import journeyStep2 from "@/assets/journey-step2-wedding.jpg";
+import journeyStep3 from "@/assets/journey-step3-date.jpg";
 
 export const MatchmakingJourney = () => {
   const { t } = useTranslation();
 
   const steps = [
     {
-      icon: Smartphone,
+      image: journeyStep1,
       step: "01",
       title: t("landing.matchmakingJourney.step1.title"),
       description: t("landing.matchmakingJourney.step1.description"),
-      gradient: "from-primary/20 to-primary/5",
     },
     {
-      icon: Heart,
+      image: journeyStep2,
       step: "02",
       title: t("landing.matchmakingJourney.step2.title"),
       description: t("landing.matchmakingJourney.step2.description"),
-      gradient: "from-pink-500/20 to-pink-500/5",
     },
     {
-      icon: Calendar,
+      image: journeyStep3,
       step: "03",
       title: t("landing.matchmakingJourney.step3.title"),
       description: t("landing.matchmakingJourney.step3.description"),
-      gradient: "from-amber-500/20 to-amber-500/5",
     },
   ];
 
@@ -41,24 +40,25 @@ export const MatchmakingJourney = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, index) => {
-            const IconComponent = step.icon;
-            return (
-              <div
-                key={index}
-                className="flex flex-col items-center text-center group"
-              >
-                <div className={`relative w-full aspect-[3/4] mb-6 rounded-2xl overflow-hidden shadow-card bg-gradient-to-b ${step.gradient} flex items-center justify-center`}>
-                  <IconComponent className="h-24 w-24 text-foreground/30" />
-                  <div className="absolute top-4 left-4 h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-sm">{step.step}</span>
-                  </div>
+          {steps.map((step, index) => (
+            <div
+              key={index}
+              className="flex flex-col items-center text-center group"
+            >
+              <div className="relative w-full aspect-[3/4] mb-6 rounded-2xl overflow-hidden shadow-card">
+                <img 
+                  src={step.image} 
+                  alt={step.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute top-4 left-4 h-10 w-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                  <span className="text-primary-foreground font-bold text-sm">{step.step}</span>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
               </div>
-            );
-          })}
+              <h3 className="text-xl font-bold text-foreground mb-2">{step.title}</h3>
+              <p className="text-muted-foreground">{step.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
