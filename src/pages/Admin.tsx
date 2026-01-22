@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { isAdminDomainAllowed } from "@/lib/domain";
 
 interface EventRequest {
   id: string;
@@ -48,6 +49,12 @@ const Admin = () => {
   }, []);
 
   const checkAdminAndLoadData = async () => {
+    // Check domain first
+    if (!isAdminDomainAllowed()) {
+      navigate("/dashboard");
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");

@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import "./i18n/config";
+import { isAdminDomainAllowed } from "./lib/domain";
 
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -28,6 +29,8 @@ const JoinEventByLink = lazy(() => import("./pages/JoinEventByLink"));
 const EventDashboard = lazy(() => import("./pages/EventDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
+
+const showAdminRoute = isAdminDomainAllowed();
 
 const queryClient = new QueryClient();
 
@@ -63,7 +66,7 @@ const App = () => (
               <Route path="/join-event" element={<JoinEvent />} />
               <Route path="/join/:code" element={<JoinEventByLink />} />
               <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
-              <Route path="/admin" element={<Admin />} />
+              {showAdminRoute && <Route path="/admin" element={<Admin />} />}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
