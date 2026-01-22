@@ -37,11 +37,13 @@ import { eventSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
+import { isAdminDomainAllowed } from "@/lib/domain";
 
 const EventDashboard = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
   const [searchParams] = useSearchParams();
+  const isAdminContext = searchParams.get('from') === 'admin' && isAdminDomainAllowed();
   const [activeTab, setActiveTab] = useState<"guests" | "stats" | "settings">("guests");
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [closeEventDialogOpen, setCloseEventDialogOpen] = useState(false);
@@ -307,8 +309,17 @@ const EventDashboard = () => {
         eventName: event.name,
         eventId: eventId,
         isDirectChat: true,
+        fromAdmin: isAdminContext,
       }
     });
+  };
+
+  const handleBack = () => {
+    if (isAdminContext) {
+      navigate('/admin');
+    } else {
+      navigate('/');
+    }
   };
 
   const handleSaveEvent = async () => {
@@ -495,7 +506,7 @@ const EventDashboard = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Event not found</p>
-          <Button onClick={() => navigate("/")}>Go Home</Button>
+          <Button onClick={handleBack}>Go Back</Button>
         </div>
       </div>
     );
@@ -510,7 +521,7 @@ const EventDashboard = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/")}
+              onClick={handleBack}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
