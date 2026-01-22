@@ -593,6 +593,22 @@
       },
       "privacy": "Perfiles solo visibles para asistentes del evento"
     },
+    "matchmakingJourney": {
+      "title": "Tu Historia de Amor Comienza Aquí",
+      "subtitle": "Desde el match hasta la primera cita, Konfetti te acompaña en cada paso",
+      "step1": {
+        "title": "Haz Match en la App",
+        "description": "Explora perfiles y conecta con otros invitados antes del evento"
+      },
+      "step2": {
+        "title": "Conócelos en la Boda",
+        "description": "Rompe el hielo y coquetea con tu match en persona durante la celebración"
+      },
+      "step3": {
+        "title": "Tengan su Primera Cita",
+        "description": "Después de la boda, continúa la conexión con una cita romántica"
+      }
+    },
     "whyKonfetti": {
       "title": "¿Por qué Konfetti?",
       "subtitle": "Porque cada boda ya está llena de química.",
