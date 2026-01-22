@@ -263,7 +263,10 @@ const Admin = () => {
               <p className="text-muted-foreground">Gestión de solicitudes y eventos</p>
             </div>
           </div>
-          <Button onClick={() => navigate("/create-event")} className="gap-2">
+          <Button onClick={() => {
+            setRequestForEventCreation(null);
+            setCreateEventDialogOpen(true);
+          }} className="gap-2">
             <Plus className="w-4 h-4" />
             Crear Evento
           </Button>
