@@ -27,6 +27,7 @@ const JoinEvent = lazy(() => import("./pages/JoinEvent"));
 const JoinEventByLink = lazy(() => import("./pages/JoinEventByLink"));
 const EventDashboard = lazy(() => import("./pages/EventDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/join-event" element={<JoinEvent />} />
               <Route path="/join/:code" element={<JoinEventByLink />} />
               <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
