@@ -79,9 +79,9 @@ export const CouplesHeroSection = () => {
         </div>
 
         {/* Headline */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-8 leading-snug">
           {t("landing.couples.hero.headline")}
-          <span className="text-primary block mt-2">
+          <span className="text-primary block mt-3">
             {t("landing.couples.hero.headlineAccent")}
           </span>
         </h1>
