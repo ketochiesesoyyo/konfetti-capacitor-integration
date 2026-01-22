@@ -544,6 +544,43 @@
       "getStarted": "New here?",
       "signUp": "Sign up for free"
     },
+    "nav": {
+      "couples": "Couples",
+      "planners": "Wedding Planners",
+      "contact": "Contact"
+    },
+    "contact": {
+      "badge": "We're here to help",
+      "title": "Let's Talk!",
+      "subtitle": "Have questions about Konfetti? Want to learn more about how we can make your wedding unforgettable? We'd love to hear from you!",
+      "incentive1": {
+        "title": "Quick Responses",
+        "description": "We typically respond within 24 hours"
+      },
+      "incentive2": {
+        "title": "No Obligation",
+        "description": "Just exploring? That's totally fine!"
+      },
+      "incentive3": {
+        "title": "Personal Touch",
+        "description": "Real humans, not bots"
+      },
+      "formTitle": "Send us a message",
+      "formSubtitle": "We'll get back to you as soon as possible",
+      "name": "Your Name",
+      "namePlaceholder": "Maria García",
+      "email": "Email Address",
+      "emailPlaceholder": "maria@example.com",
+      "subject": "Subject",
+      "subjectPlaceholder": "What's this about?",
+      "message": "Your Message",
+      "messagePlaceholder": "Tell us what's on your mind...",
+      "submit": "Send Message",
+      "successTitle": "Message Sent!",
+      "success": "Thank you for reaching out! We'll get back to you soon.",
+      "sendAnother": "Send Another Message",
+      "error": "Something went wrong. Please try again."
+    },
     "intro": {
       "title": "Introducing Konfetti",
       "description": "Konfetti turns every wedding into a chance to meet someone new.",

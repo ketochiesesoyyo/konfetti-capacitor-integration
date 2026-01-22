@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LandingNav } from "@/components/landing/LandingNav";
 import { PlannerHeroSection } from "@/components/landing/planner/PlannerHeroSection";
 import { PlannerBenefits } from "@/components/landing/planner/PlannerBenefits";
 import { PlannerProcess } from "@/components/landing/planner/PlannerProcess";
@@ -25,6 +26,7 @@ const WeddingPlanners = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <LandingNav />
       <PlannerHeroSection />
       <PlannerBenefits />
       <PlannerProcess />

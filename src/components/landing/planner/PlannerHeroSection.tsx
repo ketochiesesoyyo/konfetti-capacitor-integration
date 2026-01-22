@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { KonfettiLogo } from "@/components/KonfettiLogo";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Sparkles, Users, Heart } from "lucide-react";
 
 export const PlannerHeroSection = () => {
@@ -14,12 +12,7 @@ export const PlannerHeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex flex-col">
-      {/* Header with Logo and Language Switcher */}
-      <header className="w-full py-6 px-6 flex justify-between items-center">
-        <KonfettiLogo className="h-8" />
-        <LanguageSwitcher />
-      </header>
+    <section className="relative py-20 flex flex-col">
 
       {/* Hero Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">

@@ -12,6 +12,7 @@ import "./i18n/config";
 const Auth = lazy(() => import("./pages/Auth"));
 const Landing = lazy(() => import("./pages/Landing"));
 const WeddingPlanners = lazy(() => import("./pages/WeddingPlanners"));
+const Contact = lazy(() => import("./pages/Contact"));
 const Home = lazy(() => import("./pages/Home"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
@@ -44,6 +45,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Layout><Home /></Layout>} />
               <Route path="/profile" element={<Layout><Profile /></Layout>} />

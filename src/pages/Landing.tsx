@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LandingNav } from "@/components/landing/LandingNav";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { IntroSection } from "@/components/landing/IntroSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -31,6 +32,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <LandingNav />
       <HeroSection />
       <IntroSection />
       <HowItWorks />
