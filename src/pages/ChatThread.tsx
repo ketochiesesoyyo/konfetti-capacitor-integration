@@ -65,6 +65,15 @@ const ChatThread = () => {
     userId: "",
     eventId: "",
     isDirectChat: false,
+    fromAdmin: false,
+  };
+
+  const handleBack = () => {
+    if (chatDetails.fromAdmin && chatDetails.eventId) {
+      navigate(`/event-dashboard/${chatDetails.eventId}?from=admin`);
+    } else {
+      navigate("/chats");
+    }
   };
 
   useEffect(() => {
@@ -307,7 +316,7 @@ const ChatThread = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/chats")}
+            onClick={handleBack}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
