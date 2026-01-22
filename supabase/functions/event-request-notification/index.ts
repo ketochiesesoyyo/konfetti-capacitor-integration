@@ -144,8 +144,106 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("RESEND_PAYLOAD:", JSON.stringify(payload, null, 2));
 
     const emailResponse = await resend.emails.send(payload);
-
     console.log("Notification email sent successfully:", emailResponse);
+
+    // Send confirmation email to the submitter
+    const isWeddingPlanner = data.submitter_type === 'wedding_planner';
+    const confirmationSubject = isWeddingPlanner
+      ? `¡Recibimos tu solicitud para ${data.partner1_name} & ${data.partner2_name}!`
+      : `¡Hemos recibido tu solicitud, ${data.partner1_name} & ${data.partner2_name}!`;
+
+    const greeting = isWeddingPlanner
+      ? 'Hola,'
+      : `Hola ${data.partner1_name} & ${data.partner2_name},`;
+
+    const confirmationHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Solicitud Recibida</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+          .header { text-align: center; margin-bottom: 24px; }
+          .header h1 { color: #9b2c2c; margin: 0; font-size: 28px; }
+          .content { margin-bottom: 24px; }
+          .content p { margin: 0 0 16px 0; }
+          .highlight { background: #fef2f2; border-left: 4px solid #9b2c2c; padding: 16px; border-radius: 0 8px 8px 0; margin: 24px 0; }
+          .highlight p { margin: 0; font-weight: 500; color: #9b2c2c; }
+          .details { background: #f9f9f9; border-radius: 8px; padding: 16px; margin: 24px 0; }
+          .details-title { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+          .details-row { display: flex; margin-bottom: 4px; }
+          .details-label { color: #666; width: 120px; }
+          .details-value { color: #333; font-weight: 500; }
+          .footer { text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee; }
+          .footer p { color: #999; font-size: 14px; margin: 0 0 8px 0; }
+          .social-links { margin-top: 16px; }
+          .social-links a { color: #9b2c2c; text-decoration: none; margin: 0 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="card">
+            <div class="header">
+              <h1>🎉 ¡Solicitud Recibida!</h1>
+            </div>
+            
+            <div class="content">
+              <p>${greeting}</p>
+              <p>¡Gracias por tu interés en <strong>Konfetti</strong>! Hemos recibido tu solicitud y estamos emocionados de poder ser parte de este día tan especial.</p>
+              
+              <div class="highlight">
+                <p>📞 Nos pondremos en contacto contigo en un máximo de <strong>24 horas</strong>.</p>
+              </div>
+              
+              <div class="details">
+                <div class="details-title">Resumen de tu solicitud</div>
+                <div class="details-row">
+                  <span class="details-label">Pareja:</span>
+                  <span class="details-value">${data.partner1_name} & ${data.partner2_name}</span>
+                </div>
+                <div class="details-row">
+                  <span class="details-label">Fecha:</span>
+                  <span class="details-value">${formattedDate}</span>
+                </div>
+                <div class="details-row">
+                  <span class="details-label">Invitados:</span>
+                  <span class="details-value">${data.expected_guests} solteros</span>
+                </div>
+              </div>
+              
+              <p>Si tienes alguna pregunta mientras tanto, no dudes en responder a este correo.</p>
+              
+              <p>¡Saludos!<br><strong>El equipo de Konfetti</strong> 🎊</p>
+            </div>
+            
+            <div class="footer">
+              <p>Konfetti - El matchmaking para bodas</p>
+              <div class="social-links">
+                <a href="https://konfetti.app">konfetti.app</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      const confirmationResponse = await resend.emails.send({
+        from: "Konfetti <info@konfetti.app>",
+        to: [data.email],
+        subject: confirmationSubject,
+        html: confirmationHtml,
+      });
+      console.log("Confirmation email sent successfully:", confirmationResponse);
+    } catch (confirmError) {
+      // Log but don't fail the request if confirmation email fails
+      console.error("Failed to send confirmation email:", confirmError);
+    }
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
