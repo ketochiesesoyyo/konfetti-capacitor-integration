@@ -45,8 +45,13 @@ export const matchSchema = z.object({
   event_id: z.string().uuid('Invalid event ID'),
 });
 
+// Submitter type enum
+export const submitterTypeOptions = ['couple', 'wedding_planner'] as const;
+export type SubmitterType = typeof submitterTypeOptions[number];
+
 // Event request form validation
 export const eventRequestSchema = z.object({
+  submitter_type: z.enum(submitterTypeOptions, { required_error: 'Please select who is submitting' }),
   partner1_name: z.string().trim().min(1, 'Partner 1 name is required').max(100, 'Name must be less than 100 characters'),
   partner2_name: z.string().trim().min(1, 'Partner 2 name is required').max(100, 'Name must be less than 100 characters'),
   wedding_date: z.date({ required_error: 'Wedding date is required' }),

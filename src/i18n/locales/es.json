@@ -747,6 +747,9 @@
     "contactForm": {
       "title": "Solicita Tu Evento",
       "subtitle": "Completa el formulario y te contactaremos con una cotización personalizada",
+      "submitterType": "¿Quién está enviando esta solicitud?",
+      "submitterCouple": "Somos los novios",
+      "submitterPlanner": "Soy wedding planner",
       "partner1": "Nombre del Novio/a 1",
       "partner2": "Nombre del Novio/a 2",
       "weddingDate": "Fecha de la Boda",
