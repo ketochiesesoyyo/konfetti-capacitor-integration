@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { isAdminDomainAllowed } from "@/lib/domain";
+import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationDialog";
+import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
 
 interface EventRequest {
   id: string;
@@ -26,23 +28,32 @@ interface EventRequest {
   status: string;
   created_at: string;
   updated_at: string;
+  event_id: string | null;
 }
 
 const STATUS_OPTIONS = [
-  { value: "pending", label: "Pendiente", color: "bg-yellow-500/20 text-yellow-700 border-yellow-500/30" },
-  { value: "contacted", label: "Contactado", color: "bg-blue-500/20 text-blue-700 border-blue-500/30" },
-  { value: "approved", label: "Aprobado", color: "bg-green-500/20 text-green-700 border-green-500/30" },
-  { value: "rejected", label: "Rechazado", color: "bg-red-500/20 text-red-700 border-red-500/30" },
+  { value: "pending", label: "Pendiente", color: "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400" },
+  { value: "contacted", label: "Contactado", color: "bg-blue-500/20 text-blue-700 border-blue-500/30 dark:text-blue-400" },
+  { value: "paid", label: "Pagado", color: "bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400" },
+  { value: "lost", label: "Perdido", color: "bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400" },
 ];
 
 const Admin = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<EventRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  
+  // Event creation dialogs
+  const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
+  const [requestForEventCreation, setRequestForEventCreation] = useState<EventRequest | null>(null);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [createdEventId, setCreatedEventId] = useState<string>("");
+  const [createdInviteCode, setCreatedInviteCode] = useState<string>("");
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -60,6 +71,8 @@ const Admin = () => {
       navigate("/auth");
       return;
     }
+
+    setUserId(session.user.id);
 
     const { data: hasAdminRole } = await supabase
       .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
@@ -91,6 +104,16 @@ const Admin = () => {
   };
 
   const updateStatus = async (requestId: string, newStatus: string) => {
+    // If changing to "paid", open the event creation dialog
+    if (newStatus === "paid") {
+      const request = requests.find(r => r.id === requestId);
+      if (request && !request.event_id) {
+        setRequestForEventCreation(request);
+        setCreateEventDialogOpen(true);
+        return;
+      }
+    }
+
     setUpdatingStatus(requestId);
     const { error } = await supabase
       .from('event_requests')
@@ -112,6 +135,28 @@ const Admin = () => {
     setUpdatingStatus(null);
   };
 
+  const handleEventCreated = (eventId: string, inviteCode: string) => {
+    setCreateEventDialogOpen(false);
+    setCreatedEventId(eventId);
+    setCreatedInviteCode(inviteCode);
+    setSuccessDialogOpen(true);
+    
+    // Update the request in local state
+    if (requestForEventCreation) {
+      setRequests(prev => prev.map(r => 
+        r.id === requestForEventCreation.id 
+          ? { ...r, status: 'paid', event_id: eventId, updated_at: new Date().toISOString() } 
+          : r
+      ));
+      if (selectedRequest?.id === requestForEventCreation.id) {
+        setSelectedRequest(prev => prev ? { ...prev, status: 'paid', event_id: eventId } : null);
+      }
+    }
+    
+    setRequestForEventCreation(null);
+    toast.success("Evento creado exitosamente");
+  };
+
   const getStatusBadge = (status: string) => {
     const statusOption = STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
     return (
@@ -130,7 +175,7 @@ const Admin = () => {
     total: requests.length,
     pending: requests.filter(r => r.status === 'pending').length,
     contacted: requests.filter(r => r.status === 'contacted').length,
-    approved: requests.filter(r => r.status === 'approved').length,
+    paid: requests.filter(r => r.status === 'paid').length,
   };
 
   if (!isAdmin && isLoading) {
@@ -145,14 +190,20 @@ const Admin = () => {
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Panel de Administración</h1>
-            <p className="text-muted-foreground">Gestión de solicitudes de eventos</p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Panel de Administración</h1>
+              <p className="text-muted-foreground">Gestión de solicitudes de eventos</p>
+            </div>
           </div>
+          <Button onClick={() => navigate("/create-event")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Crear Evento
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -177,8 +228,8 @@ const Admin = () => {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-emerald-500">{stats.approved}</div>
-              <p className="text-sm text-muted-foreground">Aprobados</p>
+              <div className="text-2xl font-bold text-emerald-500">{stats.paid}</div>
+              <p className="text-sm text-muted-foreground">Pagados</p>
             </CardContent>
           </Card>
         </div>
@@ -218,7 +269,15 @@ const Admin = () => {
                     {requests.map((request) => (
                       <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(request)}>
                         <TableCell className="font-medium">
-                          {request.partner1_name} & {request.partner2_name}
+                          <div className="flex items-center gap-2">
+                            {request.partner1_name} & {request.partner2_name}
+                            {request.event_id && (
+                              <Badge variant="secondary" className="text-xs">
+                                <LinkIcon className="w-3 h-3 mr-1" />
+                                Evento
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {format(new Date(request.wedding_date), "dd MMM yyyy", { locale: es })}
@@ -286,6 +345,23 @@ const Admin = () => {
                 {getStatusBadge(selectedRequest.status)}
               </div>
 
+              {selectedRequest.event_id && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                      Evento creado
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate(`/event-dashboard/${selectedRequest.event_id}`)}
+                    >
+                      Ver Dashboard
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -330,12 +406,24 @@ const Admin = () => {
               </div>
 
               <div className="flex gap-2 pt-2">
+                {!selectedRequest.event_id && (
+                  <Button
+                    onClick={() => {
+                      setRequestForEventCreation(selectedRequest);
+                      setIsDialogOpen(false);
+                      setCreateEventDialogOpen(true);
+                    }}
+                    className="flex-1"
+                  >
+                    Crear Evento
+                  </Button>
+                )}
                 <Select 
                   value={selectedRequest.status} 
                   onValueChange={(value) => updateStatus(selectedRequest.id, value)}
                   disabled={updatingStatus === selectedRequest.id}
                 >
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className={selectedRequest.event_id ? "flex-1" : ""}>
                     {updatingStatus === selectedRequest.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -358,6 +446,25 @@ const Admin = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Event Creation Dialog */}
+      {userId && (
+        <AdminEventCreationDialog
+          open={createEventDialogOpen}
+          onOpenChange={setCreateEventDialogOpen}
+          request={requestForEventCreation}
+          userId={userId}
+          onEventCreated={handleEventCreated}
+        />
+      )}
+
+      {/* Event Success Dialog */}
+      <AdminEventSuccessDialog
+        open={successDialogOpen}
+        onOpenChange={setSuccessDialogOpen}
+        eventId={createdEventId}
+        inviteCode={createdInviteCode}
+      />
     </div>
   );
 };

@@ -132,6 +132,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          event_id: string | null
           expected_guests: number
           id: string
           message: string | null
@@ -146,6 +147,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          event_id?: string | null
           expected_guests: number
           id?: string
           message?: string | null
@@ -160,6 +162,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          event_id?: string | null
           expected_guests?: number
           id?: string
           message?: string | null
@@ -171,7 +174,15 @@ export type Database = {
           updated_at?: string
           wedding_date?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "event_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
