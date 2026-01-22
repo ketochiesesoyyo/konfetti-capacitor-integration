@@ -11,6 +11,7 @@ import "./i18n/config";
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
 const Landing = lazy(() => import("./pages/Landing"));
+const ForCouples = lazy(() => import("./pages/ForCouples"));
 const WeddingPlanners = lazy(() => import("./pages/WeddingPlanners"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Home = lazy(() => import("./pages/Home"));
@@ -44,6 +45,7 @@ const App = () => (
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/para-novios" element={<ForCouples />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />

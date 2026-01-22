@@ -917,6 +917,98 @@
           "role": "Bodas y Eventos, Monterrey"
         }
       }
+    },
+    "couples": {
+      "hero": {
+        "badge": "Hecho para parejas como ustedes",
+        "headline": "Tu boda podría ser",
+        "headlineAccent": "el inicio de muchas historias de amor",
+        "subheadline": "Imagina que tus invitados te agradezcan meses después porque conocieron a alguien especial en TU boda. Eso es lo que Konfetti hace posible.",
+        "stat1Label": "de bodas tienen al menos un match",
+        "stat2Label": "más interacción entre invitados",
+        "stat3Label": "conexiones creadas",
+        "cta": "Hacer mi boda inolvidable",
+        "urgency": "Únete a cientos de parejas que ya lo hicieron"
+      },
+      "socialProof": {
+        "title": "Parejas reales, resultados reales",
+        "subtitle": "Estas son historias de bodas que usaron Konfetti",
+        "story1Quote": "¡Dos de nuestros mejores amigos ahora están saliendo gracias a nuestra boda!",
+        "story1Names": "Laura & Carlos",
+        "story1Location": "Madrid",
+        "story2Quote": "Nuestros invitados todavía hablan de lo divertido que fue el matchmaking",
+        "story2Names": "Ana & Miguel",
+        "story2Location": "Barcelona",
+        "story3Quote": "¡Tenemos 3 parejas de nuestra boda que siguen juntas!",
+        "story3Names": "Sofía & David",
+        "story3Location": "Valencia",
+        "matchesBadge": "{{count}} matches en su boda",
+        "citiesLabel": "Activo en estas ciudades y muchas más"
+      },
+      "problemSolution": {
+        "title": "La diferencia es clara",
+        "subtitle": "Mira qué cambia cuando agregas Konfetti a tu boda",
+        "withoutTitle": "Sin Konfetti",
+        "withTitle": "Con Konfetti",
+        "without1": "Los invitados se quedan en sus mesas toda la noche",
+        "without2": "Los amigos solteros se sienten incómodos o excluidos",
+        "without3": "Poca interacción entre el lado de la novia y el novio",
+        "without4": "Solo otra boda más que olvidarán",
+        "with1": "Los invitados conocen gente nueva antes y durante el evento",
+        "with2": "Los solteros tienen una forma divertida y sin presión de conectar",
+        "with3": "Ambos lados se mezclan naturalmente a través de la app",
+        "with4": "Una boda que recordarán (¡y te agradecerán!) para siempre",
+        "recommended": "Recomendado"
+      },
+      "howItWorks": {
+        "badge": "Cero esfuerzo para ti",
+        "title": "Cómo funciona para ti",
+        "subtitle": "Nosotros hacemos todo el trabajo. Tú solo disfruta tu boda.",
+        "step1Title": "Contáctanos",
+        "step1Description": "Cuéntanos sobre tu boda: fecha, invitados esperados, preferencias. Nosotros configuramos todo.",
+        "step1Time": "5 minutos",
+        "step2Title": "Comparte el link",
+        "step2Description": "Te damos un link privado para compartir en tus invitaciones o grupo de WhatsApp. Eso es todo.",
+        "step2Time": "1 minuto",
+        "step3Title": "Mira la magia suceder",
+        "step3Description": "Tus invitados crean perfiles y empiezan a hacer match antes de la boda. Verás las conexiones crecer.",
+        "step3Time": "Automático",
+        "zeroEffort": "Tiempo total invertido: menos de 10 minutos"
+      },
+      "guestBenefits": {
+        "title": "Lo que obtienen tus invitados",
+        "subtitle": "Dales más que solo una buena cena",
+        "benefit1Title": "Romper el hielo",
+        "benefit1Description": "No más conversaciones incómodas. Ya saben a quién quieren conocer.",
+        "benefit2Title": "Chatear antes de la boda",
+        "benefit2Description": "Los matches pueden empezar a hablar días antes, creando anticipación.",
+        "benefit3Title": "Encontrar conexiones reales",
+        "benefit3Description": "A diferencia de apps de citas random, son personas de tu círculo.",
+        "benefit4Title": "Divertirse más",
+        "benefit4Description": "Saber que podrías conocer a alguien especial hace el evento más emocionante.",
+        "tagline": "Dales una razón para recordar tu boda para siempre"
+      },
+      "testimonials": {
+        "title": "De parejas que lo hicieron",
+        "subtitle": "Feedback real de bodas reales",
+        "testimonial1Quote": "Al principio era escéptica, pero ver a nuestros amigos solteros tan emocionados con la app fue increíble. ¡Dos de ellos ahora están comprometidos!",
+        "testimonial1Name": "Carole",
+        "testimonial1Role": "Novia, Barcelona 2024",
+        "testimonial1Result": "2 parejas siguen juntas",
+        "testimonial2Quote": "La mejor decisión que tomamos para nuestra boda. No nos costó nada y les dio a nuestros invitados algo único.",
+        "testimonial2Name": "Guillermo",
+        "testimonial2Role": "Novio, Madrid 2024",
+        "testimonial2Result": "15+ matches en la boda"
+      },
+      "urgency": {
+        "headline": "¿Tu boda será solo otra fiesta más?",
+        "subheadline": "¿O será el lugar donde comiencen historias de amor?",
+        "stat1": "100% gratis para novios",
+        "stat2": "Listo en 24 horas",
+        "stat3": "Sin necesidad de descargar app",
+        "cta": "Sí, quiero esto para mi boda",
+        "note": "Cupos limitados por mes"
+      }
     }
   }
 }

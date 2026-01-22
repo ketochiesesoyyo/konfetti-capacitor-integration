@@ -13,7 +13,7 @@ export const LandingNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: "/", label: t("landing.nav.couples") },
+    { href: "/para-novios", label: t("landing.nav.couples") },
     { href: "/wedding-planners", label: t("landing.nav.planners") },
     { href: "/contact", label: t("landing.nav.contact") },
   ];

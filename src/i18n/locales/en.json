@@ -918,6 +918,98 @@
           "role": "Wedding & Events, Monterrey"
         }
       }
+    },
+    "couples": {
+      "hero": {
+        "badge": "Made for couples like you",
+        "headline": "Your wedding could be",
+        "headlineAccent": "the start of many love stories",
+        "subheadline": "Imagine your guests thanking you months later because they met someone special at YOUR wedding. That's what Konfetti makes possible.",
+        "stat1Label": "of weddings have at least one match",
+        "stat2Label": "more interaction between guests",
+        "stat3Label": "connections made",
+        "cta": "Make my wedding unforgettable",
+        "urgency": "Join hundreds of couples who already did it"
+      },
+      "socialProof": {
+        "title": "Real couples, real results",
+        "subtitle": "These are stories from weddings that used Konfetti",
+        "story1Quote": "Two of our best friends are now dating thanks to our wedding!",
+        "story1Names": "Laura & Carlos",
+        "story1Location": "Madrid",
+        "story2Quote": "Our guests still talk about how fun the matchmaking was",
+        "story2Names": "Ana & Miguel",
+        "story2Location": "Barcelona",
+        "story3Quote": "We have 3 couples from our wedding still together!",
+        "story3Names": "Sofia & David",
+        "story3Location": "Valencia",
+        "matchesBadge": "{{count}} matches at their wedding",
+        "citiesLabel": "Active in these cities and many more"
+      },
+      "problemSolution": {
+        "title": "The difference is clear",
+        "subtitle": "See what changes when you add Konfetti to your wedding",
+        "withoutTitle": "Without Konfetti",
+        "withTitle": "With Konfetti",
+        "without1": "Guests stick to their tables all night",
+        "without2": "Single friends feel awkward or left out",
+        "without3": "Limited interaction between bride and groom sides",
+        "without4": "Just another wedding they'll forget",
+        "with1": "Guests actively meet new people before and during the event",
+        "with2": "Singles have a fun, no-pressure way to connect",
+        "with3": "Both sides mix naturally through the app",
+        "with4": "A wedding they'll remember (and thank you for!) forever",
+        "recommended": "Recommended"
+      },
+      "howItWorks": {
+        "badge": "Zero effort for you",
+        "title": "How it works for you",
+        "subtitle": "We do all the heavy lifting. You just enjoy your wedding.",
+        "step1Title": "Contact us",
+        "step1Description": "Tell us about your wedding: date, expected guests, any preferences. We'll set everything up for you.",
+        "step1Time": "5 minutes",
+        "step2Title": "Share the link",
+        "step2Description": "We give you a private link to share in your wedding invitations or WhatsApp group. That's it.",
+        "step2Time": "1 minute",
+        "step3Title": "Watch the magic happen",
+        "step3Description": "Your guests create profiles and start matching before the wedding. You'll see the connections grow.",
+        "step3Time": "Automatic",
+        "zeroEffort": "Total time investment: less than 10 minutes"
+      },
+      "guestBenefits": {
+        "title": "What your guests get",
+        "subtitle": "Give them more than just a good dinner",
+        "benefit1Title": "Break the ice",
+        "benefit1Description": "No more awkward conversations. They already know who they want to meet.",
+        "benefit2Title": "Chat before the wedding",
+        "benefit2Description": "Matches can start talking days before, building anticipation.",
+        "benefit3Title": "Find real connections",
+        "benefit3Description": "Unlike random dating apps, these are pre-vetted people from your circle.",
+        "benefit4Title": "Have more fun",
+        "benefit4Description": "Knowing you might meet someone special makes the event more exciting.",
+        "tagline": "Give them a reason to remember your wedding forever"
+      },
+      "testimonials": {
+        "title": "From couples who did it",
+        "subtitle": "Real feedback from real weddings",
+        "testimonial1Quote": "I was skeptical at first, but seeing our single friends so excited about the app was amazing. Two of them are now engaged!",
+        "testimonial1Name": "Carole",
+        "testimonial1Role": "Bride, Barcelona 2024",
+        "testimonial1Result": "2 couples still together",
+        "testimonial2Quote": "The best decision we made for our wedding. It cost us nothing and gave our guests something unique to experience.",
+        "testimonial2Name": "Guillermo",
+        "testimonial2Role": "Groom, Madrid 2024",
+        "testimonial2Result": "15+ matches at the wedding"
+      },
+      "urgency": {
+        "headline": "Will your wedding just be another party?",
+        "subheadline": "Or will it be the place where love stories begin?",
+        "stat1": "100% free for couples",
+        "stat2": "Ready in 24 hours",
+        "stat3": "No app download needed",
+        "cta": "Yes, I want this for my wedding",
+        "note": "Limited spots available per month"
+      }
     }
   }
 }
