@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import journeyStep1 from "@/assets/journey-step1-match.jpg";
-import journeyStep2 from "@/assets/journey-step2-wedding.jpg";
-import journeyStep3 from "@/assets/journey-step3-date.jpg";
+import journeyStep1 from "@/assets/journey-step1-match1.jpg";
+import journeyStep2 from "@/assets/journey-step2-wedding1.jpg";
+import journeyStep3 from "@/assets/journey-step3-date1.jpg";
 
 export const MatchmakingJourney = () => {
   const { t } = useTranslation();
