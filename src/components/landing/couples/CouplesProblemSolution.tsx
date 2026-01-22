@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { X, Check, ArrowRight } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 export const CouplesProblemSolution = () => {
   const { t } = useTranslation();
@@ -53,12 +53,6 @@ export const CouplesProblemSolution = () => {
             </ul>
           </div>
 
-          {/* Arrow (hidden on mobile) */}
-          <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-              <ArrowRight className="h-6 w-6 text-primary-foreground" />
-            </div>
-          </div>
 
           {/* With Konfetti */}
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 relative">
