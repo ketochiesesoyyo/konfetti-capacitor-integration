@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LanguageSwitcherButtons } from "@/components/LanguageSwitcherButtons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,12 +46,12 @@ export const LandingNav = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <LanguageSwitcher />
+          <LanguageSwitcherButtons />
         </div>
 
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-4">
-          <LanguageSwitcher />
+          <LanguageSwitcherButtons />
           <Button
             variant="ghost"
             size="icon"
