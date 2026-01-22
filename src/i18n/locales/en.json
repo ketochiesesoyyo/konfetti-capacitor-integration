@@ -797,6 +797,90 @@
       },
       "copyright": "© 2025 Konfetti. All rights reserved.",
       "madeIn": "Made in Mexico 🇲🇽"
+    },
+    "planner": {
+      "hero": {
+        "badge": "For Wedding Planners",
+        "headline": "Add Value to Every Wedding You Plan",
+        "subheadline": "Offer your clients a unique experience that helps their single guests connect and makes their wedding unforgettable",
+        "statGuests": "Guests connected",
+        "statMatches": "Matches made",
+        "statSatisfaction": "Satisfaction",
+        "cta": "Request Information",
+        "trust": "We handle everything — you just share the link with your clients"
+      },
+      "benefits": {
+        "title": "Benefits for Your Clients",
+        "subtitle": "Give your couples something memorable to offer their single guests",
+        "benefit1": {
+          "title": "Unique Wedding Gift",
+          "description": "Offer couples a special add-on that makes their wedding stand out — connecting their single friends"
+        },
+        "benefit2": {
+          "title": "Enhanced Guest Experience",
+          "description": "Single guests will have more fun and feel more included, making the celebration more memorable"
+        },
+        "benefit3": {
+          "title": "Real Connections",
+          "description": "Help guests find meaningful connections that last beyond the wedding day"
+        },
+        "benefit4": {
+          "title": "Zero Effort for You",
+          "description": "We handle all the tech, user registration, and support — you just share the access link"
+        },
+        "benefit5": {
+          "title": "Safe & Private",
+          "description": "Profiles are only visible within the event. Privacy and safety are our top priorities"
+        },
+        "benefit6": {
+          "title": "Works Before, During & After",
+          "description": "Matchmaking opens 1 week before and stays active 3 days after the event"
+        }
+      },
+      "process": {
+        "title": "How Does It Work?",
+        "subtitle": "We take care of everything so you and your clients don't have to worry about anything",
+        "step": "Step",
+        "step1": {
+          "title": "You Contact Us",
+          "description": "Fill out the form below with your client's event details. We'll send you a personalized quote."
+        },
+        "step2": {
+          "title": "We Set Everything Up",
+          "description": "We create the event, configure the matchmaking dates, and prepare everything for your guests."
+        },
+        "step3": {
+          "title": "You Share the Link",
+          "description": "We'll give you a unique access link to share with the single guests through you or the couple."
+        },
+        "step4": {
+          "title": "Guests Start Matching",
+          "description": "Single guests create profiles and start swiping to find connections before and during the wedding."
+        },
+        "step5": {
+          "title": "Success Stories Are Born",
+          "description": "Matches chat, meet at the wedding, and who knows — maybe start their own love story!"
+        }
+      },
+      "testimonials": {
+        "title": "What Wedding Planners Say",
+        "subtitle": "Hear from professionals who have used Konfetti at their events",
+        "testimonial1": {
+          "quote": "My clients loved offering this to their guests. It added a fun, modern touch to the wedding and guests couldn't stop talking about it!",
+          "author": "Ana García",
+          "role": "Wedding Planner, Mexico City"
+        },
+        "testimonial2": {
+          "quote": "The single guests at the last wedding I organized made 20+ matches. Some even went on dates the week after! It was a huge hit.",
+          "author": "Carlos Mendoza",
+          "role": "Event Coordinator, Guadalajara"
+        },
+        "testimonial3": {
+          "quote": "Zero hassle for me. I just shared the link and Konfetti handled everything else. My clients were thrilled with this extra detail.",
+          "author": "María López",
+          "role": "Wedding & Events, Monterrey"
+        }
+      }
     }
   }
 }
