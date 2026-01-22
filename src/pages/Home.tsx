@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical } from "lucide-react";
+import { Plus, Calendar, Users, Settings, LogOut, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
+import { isAdminDomainAllowed } from "@/lib/domain";
 import { format } from "date-fns";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +59,7 @@ const Home = () => {
   const [hiddenEventIds, setHiddenEventIds] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [showAdminButton, setShowAdminButton] = useState(false);
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -69,6 +71,13 @@ const Home = () => {
         }
         
         setUserId(session.user.id);
+
+        // Check admin access (only on allowed domains)
+        if (isAdminDomainAllowed()) {
+          const { data: hasAdminRole } = await supabase
+            .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
+          setShowAdminButton(!!hasAdminRole);
+        }
         
         // Fetch hidden events
         const { data: hiddenData, error: hiddenError } = await supabase
@@ -342,9 +351,22 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
-        <div className="max-w-lg mx-auto">
-          <KonfettiLogo className="w-32 h-auto mb-1" />
-          <p className="text-sm text-subtitle">{t('home.tagline')}</p>
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div>
+            <KonfettiLogo className="w-32 h-auto mb-1" />
+            <p className="text-sm text-subtitle">{t('home.tagline')}</p>
+          </div>
+          {showAdminButton && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/admin')}
+              className="flex items-center gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </Button>
+          )}
         </div>
       </div>
 
