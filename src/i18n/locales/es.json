@@ -796,6 +796,90 @@
       },
       "copyright": "© 2025 Konfetti. Todos los derechos reservados.",
       "madeIn": "Hecho en México 🇲🇽"
+    },
+    "planner": {
+      "hero": {
+        "badge": "Para Wedding Planners",
+        "headline": "Agrega Valor a Cada Boda que Planeas",
+        "subheadline": "Ofrece a tus clientes una experiencia única que ayuda a sus invitados solteros a conectar y hace su boda inolvidable",
+        "statGuests": "Invitados conectados",
+        "statMatches": "Matches logrados",
+        "statSatisfaction": "Satisfacción",
+        "cta": "Solicitar Información",
+        "trust": "Nosotros nos encargamos de todo — tú solo compartes el link con tus clientes"
+      },
+      "benefits": {
+        "title": "Beneficios para Tus Clientes",
+        "subtitle": "Ofrece a las parejas algo memorable para sus invitados solteros",
+        "benefit1": {
+          "title": "Regalo de Boda Único",
+          "description": "Ofrece a los novios un extra especial que hace su boda destacar — conectar a sus amigos solteros"
+        },
+        "benefit2": {
+          "title": "Mejor Experiencia de Invitados",
+          "description": "Los invitados solteros se divertirán más y se sentirán más incluidos, haciendo la celebración más memorable"
+        },
+        "benefit3": {
+          "title": "Conexiones Reales",
+          "description": "Ayuda a los invitados a encontrar conexiones significativas que duran más allá del día de la boda"
+        },
+        "benefit4": {
+          "title": "Cero Esfuerzo para Ti",
+          "description": "Nosotros manejamos toda la tecnología, registro de usuarios y soporte — tú solo compartes el link de acceso"
+        },
+        "benefit5": {
+          "title": "Seguro y Privado",
+          "description": "Los perfiles solo son visibles dentro del evento. La privacidad y seguridad son nuestras prioridades"
+        },
+        "benefit6": {
+          "title": "Funciona Antes, Durante y Después",
+          "description": "El matchmaking abre 1 semana antes y se mantiene activo 3 días después del evento"
+        }
+      },
+      "process": {
+        "title": "¿Cómo Funciona?",
+        "subtitle": "Nosotros nos encargamos de todo para que tú y tus clientes no se preocupen por nada",
+        "step": "Paso",
+        "step1": {
+          "title": "Nos Contactas",
+          "description": "Llena el formulario abajo con los detalles del evento de tu cliente. Te enviaremos una cotización personalizada."
+        },
+        "step2": {
+          "title": "Configuramos Todo",
+          "description": "Creamos el evento, configuramos las fechas de matchmaking y preparamos todo para los invitados."
+        },
+        "step3": {
+          "title": "Compartes el Link",
+          "description": "Te daremos un link de acceso único para compartir con los invitados solteros a través tuyo o de los novios."
+        },
+        "step4": {
+          "title": "Los Invitados Empiezan a Hacer Match",
+          "description": "Los invitados solteros crean perfiles y empiezan a hacer swipe para encontrar conexiones antes y durante la boda."
+        },
+        "step5": {
+          "title": "Nacen Historias de Éxito",
+          "description": "Los matches chatean, se conocen en la boda y quién sabe — ¡quizás empiezan su propia historia de amor!"
+        }
+      },
+      "testimonials": {
+        "title": "Lo que Dicen los Wedding Planners",
+        "subtitle": "Escucha a profesionales que han usado Konfetti en sus eventos",
+        "testimonial1": {
+          "quote": "A mis clientes les encantó ofrecer esto a sus invitados. Agregó un toque divertido y moderno a la boda ¡y los invitados no paraban de hablar de ello!",
+          "author": "Ana García",
+          "role": "Wedding Planner, Ciudad de México"
+        },
+        "testimonial2": {
+          "quote": "Los invitados solteros de la última boda que organicé hicieron más de 20 matches. ¡Algunos incluso salieron en citas la semana siguiente! Fue un éxito rotundo.",
+          "author": "Carlos Mendoza",
+          "role": "Coordinador de Eventos, Guadalajara"
+        },
+        "testimonial3": {
+          "quote": "Cero complicaciones para mí. Solo compartí el link y Konfetti se encargó de todo lo demás. Mis clientes estaban encantados con este detalle extra.",
+          "author": "María López",
+          "role": "Bodas y Eventos, Monterrey"
+        }
+      }
     }
   }
 }
