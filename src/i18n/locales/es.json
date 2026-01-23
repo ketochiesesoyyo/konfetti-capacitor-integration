@@ -481,7 +481,8 @@
     "socialLoginError": "Se ha producido un error durante el inicio de sesión social",
     "failedSignIn": "No se pudo iniciar sesión con {{provider}}",
     "communityGuidelines": "Directrices de la Comunidad",
-    "termsConditions": "Términos y Condiciones"
+    "termsConditions": "Términos y Condiciones",
+    "privacyPolicy": "Política de Privacidad"
   },
   "notFound": {
     "title": "404",

@@ -482,7 +482,8 @@
     "socialLoginError": "An error occurred during social login",
     "failedSignIn": "Failed to sign in with {{provider}}",
     "communityGuidelines": "Community Guidelines",
-    "termsConditions": "Terms & Conditions"
+    "termsConditions": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy"
   },
   "notFound": {
     "title": "404",
