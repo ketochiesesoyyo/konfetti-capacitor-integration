@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { sendPushNotification } from "../_shared/apns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +112,15 @@ serve(async (req) => {
           notification_type: "match",
         });
       }
+
+      // Send push notification (regardless of email status)
+      await sendPushNotification(userId, {
+        title: language === 'es' ? '🎉 ¡Tienes un match!' : '🎉 You have a match!',
+        body: language === 'es'
+          ? `¡Felicidades! Has hecho match en ${event.name}`
+          : `Congratulations! You matched at ${event.name}`,
+        data: { type: 'match', eventId, matchId },
+      });
     }
 
     return new Response(

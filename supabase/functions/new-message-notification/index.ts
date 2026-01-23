@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { sendPushNotification } from "../_shared/apns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -373,6 +374,15 @@ serve(async (req) => {
         conversation_id: conversationId,
       });
 
+      // Send push notification to recipient
+      await sendPushNotification(recipientId, {
+        title: recipientLang === 'es' ? '📩 Nuevo mensaje' : '📩 New message',
+        body: recipientLang === 'es'
+          ? `${senderName} te envió un mensaje`
+          : `${senderName} sent you a message`,
+        data: { type: 'new_message', eventId: event.id, conversationId },
+      });
+
       guestEmailSent = true;
     } else {
       console.log("[NEW_MESSAGE][RATE_LIMIT] Skipping guest email", {
@@ -417,6 +427,15 @@ serve(async (req) => {
           user_id: hostId,
           notification_type: "host_new_message",
           conversation_id: conversationId,
+        });
+
+        // Send push notification to host
+        await sendPushNotification(hostId, {
+          title: hostLang === 'es' ? '📩 Mensaje de invitado' : '📩 Guest message',
+          body: hostLang === 'es'
+            ? `${senderName} te envió un mensaje sobre ${event.name}`
+            : `${senderName} sent you a message about ${event.name}`,
+          data: { type: 'host_new_message', eventId: event.id, conversationId },
         });
 
         hostEmailSent = true;

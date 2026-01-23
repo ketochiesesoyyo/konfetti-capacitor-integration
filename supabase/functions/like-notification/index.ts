@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { sendPushNotification } from "../_shared/apns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +112,15 @@ serve(async (req) => {
       user_id: likedUserId,
       event_id: eventId,
       notification_type: "like",
+    });
+
+    // Send push notification
+    await sendPushNotification(likedUserId, {
+      title: language === 'es' ? '💜 ¡Alguien te dio me gusta!' : '💜 Someone liked you!',
+      body: language === 'es'
+        ? `¡Alguien te dio me gusta en ${event.name}!`
+        : `Someone liked you at ${event.name}!`,
+      data: { type: 'like', eventId },
     });
 
     return new Response(
