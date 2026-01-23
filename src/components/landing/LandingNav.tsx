@@ -46,6 +46,9 @@ export const LandingNav = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          <Button asChild variant="default" size="sm">
+            <Link to="/auth">{t("landing.nav.login")}</Link>
+          </Button>
           <LanguageSwitcherButtons />
         </div>
 
@@ -86,6 +89,13 @@ export const LandingNav = () => {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/auth"
+              onClick={() => setIsMenuOpen(false)}
+              className="px-4 py-3 rounded-xl text-sm font-medium bg-primary text-primary-foreground text-center"
+            >
+              {t("landing.nav.login")}
+            </Link>
           </div>
         </nav>
       )}

@@ -566,7 +566,8 @@
     "nav": {
       "couples": "For Couples",
       "planners": "Wedding Planners",
-      "contact": "Contact"
+      "contact": "Contact",
+      "login": "Log In"
     },
     "contact": {
       "badge": "We're here to help",
