@@ -4,13 +4,15 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, LogOut, Lock, Mail, Languages, Bell } from "lucide-react";
+import { ArrowLeft, LogOut, Lock, Mail, Languages, Bell, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
 import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
+import { PrivacyPolicyDialog } from "@/components/PrivacyPolicyDialog";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [emailMatchNotifications, setEmailMatchNotifications] = useState(true);
   const [emailLikeNotifications, setEmailLikeNotifications] = useState(true);
 
@@ -297,8 +301,37 @@ const Settings = () => {
           </Button>
         </Card>
 
-        {/* Community Guidelines & Terms Link */}
+        {/* Delete Account */}
+        <Card className="p-6 shadow-card hover-lift border-destructive/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-2xl bg-destructive/10">
+              <Trash2 className="w-6 h-6 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-destructive">{t('settings.deleteAccount.title')}</h2>
+              <p className="text-sm text-muted-foreground">{t('settings.deleteAccount.subtitle')}</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setShowDeleteAccount(true)}
+            variant="destructive"
+            className="w-full"
+            size="lg"
+          >
+            <Trash2 className="w-5 h-5 mr-2" />
+            {t('settings.deleteAccount.button')}
+          </Button>
+        </Card>
+
+        {/* Legal Links */}
         <div className="text-center py-6 pb-8 space-x-3">
+          <button
+            onClick={() => setShowPrivacy(true)}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('settings.privacyPolicy')}
+          </button>
+          <span className="text-sm text-muted-foreground">•</span>
           <button
             onClick={() => setShowGuidelines(true)}
             className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
@@ -322,6 +355,14 @@ const Settings = () => {
       <TermsConditionsDialog 
         open={showTerms} 
         onOpenChange={setShowTerms}
+      />
+      <PrivacyPolicyDialog
+        open={showPrivacy}
+        onOpenChange={setShowPrivacy}
+      />
+      <DeleteAccountDialog
+        open={showDeleteAccount}
+        onOpenChange={setShowDeleteAccount}
       />
     </div>
   );
