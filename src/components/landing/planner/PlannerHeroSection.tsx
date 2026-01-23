@@ -1,15 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Users, Heart } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export const PlannerHeroSection = () => {
   const { t } = useTranslation();
-
-  const stats = [
-    { icon: Users, value: "500+", label: t("landing.planner.hero.statGuests") },
-    { icon: Heart, value: "150+", label: t("landing.planner.hero.statMatches") },
-    { icon: Sparkles, value: "98%", label: t("landing.planner.hero.statSatisfaction") },
-  ];
 
   return (
     <section className="relative py-20 flex flex-col">
@@ -32,30 +26,6 @@ export const PlannerHeroSection = () => {
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             {t("landing.planner.hero.subheadline")}
           </p>
-
-          {/* Stats */}
-          <div className="flex justify-center gap-8 py-8">
-            {stats.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="flex flex-col items-center space-y-2 animate-fade-in"
-                  style={{ animationDelay: `${index * 150}ms` }}
-                >
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <IconComponent className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-2xl md:text-3xl font-bold text-foreground">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {stat.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">

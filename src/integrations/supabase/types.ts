@@ -715,6 +715,7 @@ export type Database = {
     }
     Functions: {
       can_join_event: { Args: { _event_id: string }; Returns: boolean }
+      delete_user_account: { Args: never; Returns: undefined }
       get_event_guest_count: { Args: { _event_id: string }; Returns: number }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {

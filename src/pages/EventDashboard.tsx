@@ -121,27 +121,8 @@ const EventDashboard = () => {
     }
   };
 
-  const handleUpgradeToPremium = async () => {
-    if (!eventId) return;
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
-        body: { eventId },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
-        toast.success("Opening payment page...", {
-          description: "Complete payment to upgrade to Premium",
-        });
-      }
-    } catch (error: any) {
-      console.error("Upgrade checkout error:", error);
-      toast.error("Failed to initiate upgrade");
-    }
+  const handleContactSupport = () => {
+    window.location.href = "mailto:support@konfetti.app?subject=Event%20Inquiry";
   };
 
   useEffect(() => {

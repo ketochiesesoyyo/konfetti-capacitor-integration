@@ -178,43 +178,31 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
             </section>
 
             <section>
-              <h3 className="font-semibold text-base mb-2">6. PAYMENT TERMS</h3>
-              <h4 className="font-semibold mb-2">One-Time Event Activation Fee</h4>
+              <h3 className="font-semibold text-base mb-2">6. ACCESS AND SERVICE TERMS</h3>
+              <h4 className="font-semibold mb-2">Event Access</h4>
               <p className="mb-2">
-                Certain features of Konfetti are accessible only after a one-time activation payment made by the event host, planner, or organizer ("Host").
+                Konfetti operates on an invite-only basis. Access to certain features is granted to event hosts, planners, or organizers ("Hosts") upon request and approval.
               </p>
               <p className="mb-4">
-                This payment grants access to event-related digital tools such as guest invitations, matchmaking, and in-app interaction features for a defined period surrounding the event.
+                Hosts may contact Konfetti directly to discuss service options and event setup. No payments are processed through this app.
               </p>
 
-              <h4 className="font-semibold mb-2">No Recurring Charges</h4>
+              <h4 className="font-semibold mb-2">Service Activation</h4>
               <p className="mb-4">
-                Konfetti does not operate on a recurring subscription basis. Each event activation is a separate and independent service.
+                Upon approval, Hosts receive access credentials to create and manage their event, including guest invitations, matchmaking features, and in-app interaction tools.
               </p>
 
-              <h4 className="font-semibold mb-2">Final and Non-Refundable</h4>
-              <p className="mb-2">All payments are final and non-refundable.</p>
-              <p className="mb-2">The Host acknowledges and agrees that:</p>
+              <h4 className="font-semibold mb-2">Service Period</h4>
+              <p className="mb-2">Each event activation provides access to Konfetti's features for a defined period surrounding the event. The Host acknowledges that:</p>
               <ul className="list-disc pl-6 mb-4 space-y-1">
-                <li>The fee covers access to Konfetti's event platform and digital matchmaking environment;</li>
-                <li>Konfetti's services are considered fully rendered upon activation, even if the event is cancelled, postponed, or modified; and</li>
-                <li>Refunds or credits will not be issued for partial use, unused invitations, or cancelled events.</li>
+                <li>Access is granted for the specified event and time period;</li>
+                <li>Konfetti's services are considered rendered upon activation; and</li>
+                <li>Access terms are established directly with Konfetti prior to event activation.</li>
               </ul>
 
-              <h4 className="font-semibold mb-2">Payment Confirmation</h4>
-              <p className="mb-2">
-                Upon successful payment, the Host receives a confirmation and access credentials to create and manage their event.
-              </p>
+              <h4 className="font-semibold mb-2">Contact</h4>
               <p className="mb-4">
-                If payment cannot be processed or verified, access to paid features will not be granted.
-              </p>
-
-              <h4 className="font-semibold mb-2">Taxes</h4>
-              <p className="mb-2">
-                All prices shown are inclusive of applicable Mexican taxes (IVA) unless otherwise stated.
-              </p>
-              <p>
-                Konfetti may issue electronic invoices (CFDI) upon request and in compliance with Mexican tax law.
+                To request access or inquire about hosting an event, please contact us at support@konfetti.app.
               </p>
             </section>
 

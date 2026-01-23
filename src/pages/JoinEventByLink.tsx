@@ -120,7 +120,7 @@ const JoinEventByLink = () => {
       }
 
       if (!canJoinData) {
-        toast.error("This event has reached its maximum capacity (10 guests for Free plan). Please contact the host about upgrading to Premium for unlimited guests.");
+        toast.error(t("joinEventByLink.capacityReachedSimple"));
         setIsJoining(false);
         return;
       }
