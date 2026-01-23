@@ -14,6 +14,7 @@ import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { useTranslation } from "react-i18next";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
 import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
+import { PrivacyPolicyDialog } from "@/components/PrivacyPolicyDialog";
 
 const isDev = import.meta.env.DEV;
 
@@ -32,6 +33,7 @@ const Auth = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -373,6 +375,14 @@ const Auth = () => {
         <div className="mt-4 text-center space-x-3">
           <button
             type="button"
+            onClick={() => setShowPrivacy(true)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+          >
+            {t('auth.privacyPolicy')}
+          </button>
+          <span className="text-xs text-muted-foreground">•</span>
+          <button
+            type="button"
             onClick={() => setShowGuidelines(true)}
             className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
           >
@@ -396,6 +406,10 @@ const Auth = () => {
       <TermsConditionsDialog 
         open={showTerms} 
         onOpenChange={setShowTerms}
+      />
+      <PrivacyPolicyDialog 
+        open={showPrivacy} 
+        onOpenChange={setShowPrivacy}
       />
     </div>
   );
