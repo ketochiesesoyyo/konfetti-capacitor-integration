@@ -479,7 +479,7 @@
     "failedLoadLikes": "No se pudieron cargar los me gusta"
   },
   "auth": {
-    "appTitle": "La aplicación de emparejamiento de bodas",
+    "appTitle": "La aplicación de matchmaking para bodas",
     "email": "Correo electrónico",
     "emailPlaceholder": "you@example.com",
     "password": "Contraseña",

@@ -371,7 +371,7 @@ Interest Options:,
 """Start swiping to show interest!""","""¡Empieza a deslizar para mostrar interés!"""
 """Failed to load likes""","""No se pudieron cargar los me gusta"""
 🔐 AUTH PAGE (src/pages/Auth.tsx),🔐 PÁGINA DE AUTENTICACIÓN (src/pages/Auth.tsx)
-"""The Wedding Matchmaking App""","""La aplicación de emparejamiento de bodas"""
+"""The Wedding Matchmaking App""","""La aplicación de matchmaking para bodas"""
 """Email""","""Correo electrónico"""
 """you@example.com""","""you@example.com"""
 """Password""","""Contraseña"""
