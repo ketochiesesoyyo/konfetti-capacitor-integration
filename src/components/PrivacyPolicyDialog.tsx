@@ -20,7 +20,7 @@ export function PrivacyPolicyDialog({ open, onOpenChange }: PrivacyPolicyDialogP
                 <strong>Effective Date:</strong> January 2025
               </p>
               <p className="mb-4">
-                Konfetti SAPI de C.V. ("Konfetti", "we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and website (collectively, the "App").
+                Konfetti ("Konfetti", "we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and website (collectively, the "App").
               </p>
               <p className="mb-4">
                 By using Konfetti, you agree to the collection and use of information in accordance with this policy.
@@ -167,7 +167,7 @@ export function PrivacyPolicyDialog({ open, onOpenChange }: PrivacyPolicyDialogP
               </ul>
               <p className="mb-4">
                 <strong>Data Controller:</strong><br />
-                Konfetti SAPI de C.V.<br />
+                Konfetti<br />
                 Mexico
               </p>
             </section>

@@ -20,7 +20,7 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
                 Welcome to Konfetti's Terms and Conditions of Use ("Terms").
               </p>
               <p className="mb-4">
-                These Terms form a binding agreement between you ("you", "your", or the "user") and Konfetti SAPI de C.V. ("Konfetti", "we", "us", or "our").
+                These Terms form a binding agreement between you ("you", "your", or the "user") and Konfetti ("Konfetti", "we", "us", or "our").
               </p>
               <p className="mb-4">
                 Please read these Terms carefully before using our website or mobile application (collectively, the "App"). By accessing, viewing, downloading, or using Konfetti, you agree to be bound by these Terms, along with our Privacy Policy and Community Guidelines, which together form the entire agreement between you and Konfetti.
@@ -122,7 +122,7 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
 
               <h4 className="font-semibold mb-2">Our Content</h4>
               <p className="mb-2">
-                All intellectual property appearing on Konfetti — including logos, graphics, databases, designs, algorithms, and user interface — is owned or licensed by Konfetti SAPI de C.V.
+                All intellectual property appearing on Konfetti — including logos, graphics, databases, designs, algorithms, and user interface — is owned or licensed by Konfetti.
               </p>
               <p className="mb-2">You are granted a limited, personal, non-transferable, revocable licence to use Konfetti for lawful, personal use. You may not:</p>
               <ul className="list-disc pl-6 mb-4 space-y-1">
@@ -269,7 +269,7 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
 
             <section>
               <h3 className="font-semibold text-base mb-2">11. LIMITATION OF LIABILITY</h3>
-              <p className="mb-2">To the maximum extent permitted by law, Konfetti SAPI de C.V., its directors, employees, partners, or affiliates shall not be liable for:</p>
+              <p className="mb-2">To the maximum extent permitted by law, Konfetti, its directors, employees, partners, or affiliates shall not be liable for:</p>
               <ul className="list-disc pl-6 mb-4 space-y-1">
                 <li>Indirect, incidental, consequential, punitive, or special damages;</li>
                 <li>Loss of data, revenue, or goodwill; or</li>
@@ -378,8 +378,8 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
             </section>
 
             <section className="border-t pt-4 mt-6">
-              <p className="font-semibold">Last Updated: November 2025</p>
-              <p>Entity: Konfetti SAPI de C.V.</p>
+              <p className="font-semibold">Last Updated: January 2025</p>
+              <p>Operated by: Konfetti</p>
               <p>Jurisdiction: Mexico City, Mexico</p>
             </section>
           </div>
