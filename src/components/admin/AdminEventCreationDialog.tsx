@@ -249,7 +249,6 @@ export const AdminEventCreationDialog = ({
           created_by: userId,
           image_url: imageUrl,
           status: 'active',
-          plan: 'premium',
           matchmaking_start_date: matchmakingStartDate,
           matchmaking_start_time: '00:00',
         })

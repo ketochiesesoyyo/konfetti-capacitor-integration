@@ -628,7 +628,6 @@ const CreateEvent = () => {
               invite_code: inviteCode,
               image_url: imageUrl,
               status: 'active',
-              plan: 'premium',
               matchmaking_start_date: eventData.matchmakingStartDate || null,
               matchmaking_start_time: eventData.matchmakingStartTime || null,
               matchmaking_close_date: null,
@@ -686,7 +685,6 @@ const CreateEvent = () => {
               created_by: userId,
               image_url: imageUrl,
               status: 'active',
-              plan: 'premium',
               matchmaking_start_date: eventData.matchmakingStartDate || null,
               matchmaking_start_time: eventData.matchmakingStartTime || null,
             })
