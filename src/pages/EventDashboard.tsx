@@ -81,45 +81,12 @@ const EventDashboard = () => {
   useEffect(() => {
     fetchEventData();
     
-    // Handle payment success callback
-    const sessionId = searchParams.get('session_id');
-    const paymentStatus = searchParams.get('payment');
-    const tab = searchParams.get('tab');
-    
-    if (paymentStatus === 'success' && sessionId && eventId) {
-      verifyPayment(sessionId, eventId);
-    }
-    
     // Set active tab from URL parameter
+    const tab = searchParams.get('tab');
     if (tab === 'settings' || tab === 'guests' || tab === 'stats') {
       setActiveTab(tab as "guests" | "stats" | "settings");
     }
   }, [eventId]);
-
-  const verifyPayment = async (sessionId: string, eventId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-payment', {
-        body: { sessionId, eventId },
-      });
-
-      if (error) throw error;
-
-      toast.success("🎉 Payment verified! Premium features activated", {
-        description: "Your event now has unlimited guest capacity",
-      });
-      
-      // Refresh event data to show updated plan
-      await fetchEventData();
-      
-      // Remove query params from URL
-      navigate(`/event-dashboard/${eventId}`, { replace: true });
-    } catch (error: any) {
-      console.error("Payment verification error:", error);
-      toast.error("Payment verification failed", {
-        description: "Please contact support if payment was completed",
-      });
-    }
-  };
 
   const handleContactSupport = () => {
     window.location.href = "mailto:support@konfetti.app?subject=Event%20Inquiry";

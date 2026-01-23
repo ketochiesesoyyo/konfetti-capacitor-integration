@@ -11,7 +11,6 @@
 ### For Event Hosts
 - **Event Creation & Management**: Create private matchmaking events with customizable settings
 - **Guest Management**: View attendees, manage intro requests, facilitate matches
-- **Premium Plans**: Flexible pricing based on guest count ($299 premium tier)
 - **Host Dashboard**: Comprehensive event oversight and controls
 - **Invite System**: Unique shareable codes and links for each event
 
@@ -43,9 +42,8 @@
   - PostgreSQL database with RLS policies
   - Real-time subscriptions for chat
   - Cloud storage for profile photos
-  - Edge functions for payment processing
+  - Edge functions for notifications
 - **Authentication**: Email/password + Google OAuth
-- **Payments**: Stripe integration (checkout + verification)
 
 ## Design System - "Bloom-Inspired" Modern Elegance
 
