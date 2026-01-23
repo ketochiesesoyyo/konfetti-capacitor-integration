@@ -244,6 +244,17 @@ const Matchmaking = () => {
           }
         }
 
+        // Check if event close_date has passed (prevents swiping on old events)
+        if (closeDate) {
+          const eventCloseDateObj = new Date(closeDate);
+          if (new Date() > eventCloseDateObj) {
+            console.log('Event close_date has passed - marking as closed');
+            setProfiles([]);
+            setLoading(false);
+            return;
+          }
+        }
+
         // If event is closed, show message and don't load profiles
         if (eventStatus === "closed") {
           setProfiles([]);
