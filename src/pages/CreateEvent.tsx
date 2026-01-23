@@ -42,7 +42,7 @@ const CreateEvent = () => {
   const [draftEventId, setDraftEventId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'basic' | 'premium' | 'vip' | 'vip_plus'>('free');
+  
   
   const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
   
@@ -68,7 +68,7 @@ const CreateEvent = () => {
     matchmakingStartTime: "00:00",
     theme: "sunset",
     agreedToTerms: false,
-    plan: "free" as "free" | "premium",
+    
     expectedGuests: 0,
   });
 
@@ -171,7 +171,7 @@ const CreateEvent = () => {
           matchmakingStartTime: draft.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
-          plan: (draft.plan as "free" | "premium") || "free",
+          
           expectedGuests: 0,
         };
         
@@ -223,7 +223,7 @@ const CreateEvent = () => {
           matchmakingStartTime: event.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
-          plan: (event.plan as "free" | "premium") || "free",
+          
           expectedGuests: 0,
         };
         
