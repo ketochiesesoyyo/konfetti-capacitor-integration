@@ -831,7 +831,10 @@ const Matchmaking = () => {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent>
-                            <div className="space-y-2 pt-2">
+                            <div className={cn(
+                              "space-y-2 pt-2",
+                              showAllPast && pastEvents.length > 5 && "max-h-64 overflow-y-auto pr-2"
+                            )}>
                               {(showAllPast ? pastEvents : pastEvents.slice(0, 5)).map((event) => (
                                 <EventCard key={event.id} event={event} status="past" />
                               ))}
