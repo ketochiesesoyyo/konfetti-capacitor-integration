@@ -225,7 +225,6 @@ export type Database = {
           matchmaking_start_date: string | null
           matchmaking_start_time: string | null
           name: string
-          plan: string
           status: string
           updated_at: string
         }
@@ -242,7 +241,6 @@ export type Database = {
           matchmaking_start_date?: string | null
           matchmaking_start_time?: string | null
           name: string
-          plan?: string
           status?: string
           updated_at?: string
         }
@@ -259,7 +257,6 @@ export type Database = {
           matchmaking_start_date?: string | null
           matchmaking_start_time?: string | null
           name?: string
-          plan?: string
           status?: string
           updated_at?: string
         }
@@ -528,62 +525,6 @@ export type Database = {
         }
         Relationships: []
       }
-      subscriptions: {
-        Row: {
-          amount_cents: number
-          cancelled_at: string | null
-          created_at: string
-          currency: string
-          event_id: string
-          expires_at: string | null
-          id: string
-          metadata: Json | null
-          platform: Database["public"]["Enums"]["subscription_platform"]
-          status: Database["public"]["Enums"]["subscription_status"]
-          transaction_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount_cents: number
-          cancelled_at?: string | null
-          created_at?: string
-          currency?: string
-          event_id: string
-          expires_at?: string | null
-          id?: string
-          metadata?: Json | null
-          platform: Database["public"]["Enums"]["subscription_platform"]
-          status?: Database["public"]["Enums"]["subscription_status"]
-          transaction_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount_cents?: number
-          cancelled_at?: string | null
-          created_at?: string
-          currency?: string
-          event_id?: string
-          expires_at?: string | null
-          id?: string
-          metadata?: Json | null
-          platform?: Database["public"]["Enums"]["subscription_platform"]
-          status?: Database["public"]["Enums"]["subscription_status"]
-          transaction_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       swipes: {
         Row: {
           created_at: string
@@ -717,7 +658,6 @@ export type Database = {
       can_join_event: { Args: { _event_id: string }; Returns: boolean }
       delete_user_account: { Args: never; Returns: undefined }
       get_event_guest_count: { Args: { _event_id: string }; Returns: number }
-      has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -779,8 +719,6 @@ export type Database = {
     }
     Enums: {
       app_role: "free" | "premium" | "admin"
-      subscription_platform: "web" | "ios" | "android"
-      subscription_status: "active" | "expired" | "cancelled" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -909,8 +847,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["free", "premium", "admin"],
-      subscription_platform: ["web", "ios", "android"],
-      subscription_status: ["active", "expired", "cancelled", "pending"],
     },
   },
 } as const

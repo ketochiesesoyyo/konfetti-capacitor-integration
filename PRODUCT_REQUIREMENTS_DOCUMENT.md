@@ -56,7 +56,7 @@ An event-based matchmaking platform that enables curated dating/networking exper
 
 **Current Model (v4.0):**
 - **Admin-only event creation** via dedicated admin panel (`/admin`)
-- All events are created as `premium` with unlimited guests
+- All events have unlimited guest capacity
 - Variable pricing based on guest count (contact-based quotes)
 - Users contact `hello@konfetti.app` or WhatsApp for event requests
 - Regular users only see "I'm Attending" events on their dashboard
@@ -80,8 +80,8 @@ graph TD
     F --> G[Admin Reviews & Quotes]
     G --> H[Quote Sent to Client]
     H --> I{Client Accepts?}
-    I -->|Yes| J[Payment Processed]
-    J --> K[Admin Creates Event in Panel]
+    I -->|Yes| J[Admin Creates Event in Panel]
+    J --> K[Invite Link Generated]
     K --> L[Invite Link Generated]
     L --> M[Client Distributes to Guests]
     I -->|No| N[Lead Marked as Lost]
@@ -93,8 +93,7 @@ graph TD
 |--------|---------|
 | **Pricing Structure** | Variable, based on guest count |
 | **Quote Request** | Contact required (no public pricing) |
-| **Payment Processing** | External (Stripe/Manual) before event creation |
-| **Event Type** | All events created as `premium` (unlimited guests) |
+| **Payment Processing** | External/Manual before event creation |
 | **Admin Workflow** | Lead → Contacted → Paid → Event Created |
 
 ### Lead Management Statuses
@@ -906,7 +905,6 @@ graph TD
 | Storage | Supabase Storage | File Storage |
 | Realtime | Supabase Realtime | Live Updates |
 | Edge Functions | Deno | Serverless Functions |
-| Payments | Stripe | Payment Processing |
 
 ### Project Structure
 
