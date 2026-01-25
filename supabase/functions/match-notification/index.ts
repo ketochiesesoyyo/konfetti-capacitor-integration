@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { sendPushNotification } from "../_shared/apns.ts";
+import { sendMatchPush } from "../_shared/push-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +17,11 @@ serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -60,71 +65,67 @@ serve(async (req) => {
       throw new Error("Event not found");
     }
 
-    // Send emails to both users if they have notifications enabled
+    // Get both user profiles
+    const { data: profiles } = await supabaseClient
+      .from("profiles")
+      .select("name, email_match_notifications, user_id")
+      .in("user_id", [match.user1_id, match.user2_id]);
+
+    const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+    // Send notifications to both users
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-    const emailsSent = [];
+    const emailsSent: string[] = [];
+    const pushSent: string[] = [];
 
     for (const userId of [match.user1_id, match.user2_id]) {
-      // Get user profile with notification preferences
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("name, email_match_notifications, user_id")
-        .eq("user_id", userId)
-        .single();
+      const profile = profileMap.get(userId);
+      const otherUserId = userId === match.user1_id ? match.user2_id : match.user1_id;
+      const otherProfile = profileMap.get(otherUserId);
+      const matchedUserName = otherProfile?.name || "Someone";
 
-      if (!profile || !profile.email_match_notifications) {
-        continue; // Skip if notifications disabled
-      }
-
-      // Get user email from auth
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-
+      // Get user auth info (email + language)
       const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(userId);
-      
-      if (!authUser?.email) continue;
 
-      // Get user's language preference
-      const { data: { user: currentUser } } = await supabaseClient.auth.getUser(
-        authHeader.replace("Bearer ", "")
-      );
-      const language = currentUser?.user_metadata?.language || 'en';
+      if (!authUser) continue;
 
-      const emailHtml = createMatchEmail(profile.name, event.name, event.date, language);
-      const subject = language === 'es' ? '¡Tienes un match!' : 'You have a match!';
+      const language = authUser.user_metadata?.language || 'en';
 
-      const { error: emailError } = await resend.emails.send({
-        from: "Konfetti <onboarding@resend.dev>",
-        to: [authUser.email],
-        subject,
-        html: emailHtml,
-      });
-
-      if (!emailError) {
-        emailsSent.push(userId);
-        
-        // Log notification
-        await supabaseClient.from("notification_logs").insert({
-          user_id: userId,
-          event_id: eventId,
-          notification_type: "match",
-        });
+      // Send push notification (always, regardless of email preferences)
+      try {
+        await sendMatchPush(supabaseAdmin, userId, matchedUserName, language, matchId);
+        pushSent.push(userId);
+      } catch (pushError) {
+        console.error(`[MATCH] Push notification failed for user ${userId}:`, pushError);
       }
 
-      // Send push notification (regardless of email status)
-      await sendPushNotification(userId, {
-        title: language === 'es' ? '🎉 ¡Tienes un match!' : '🎉 You have a match!',
-        body: language === 'es'
-          ? `¡Felicidades! Has hecho match en ${event.name}`
-          : `Congratulations! You matched at ${event.name}`,
-        data: { type: 'match', eventId, matchId },
-      });
+      // Send email only if user has notifications enabled and has email
+      if (profile?.email_match_notifications && authUser.email) {
+        const emailHtml = createMatchEmail(profile.name || "Guest", event.name, event.date, language);
+        const subject = language === 'es' ? '¡Tienes un match!' : 'You have a match!';
+
+        const { error: emailError } = await resend.emails.send({
+          from: "Konfetti <hello@konfetti.app>",
+          to: [authUser.email],
+          subject,
+          html: emailHtml,
+        });
+
+        if (!emailError) {
+          emailsSent.push(userId);
+
+          // Log notification
+          await supabaseAdmin.from("notification_logs").insert({
+            user_id: userId,
+            event_id: eventId,
+            notification_type: "match",
+          });
+        }
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true, emailsSent }),
+      JSON.stringify({ success: true, emailsSent, pushSent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {

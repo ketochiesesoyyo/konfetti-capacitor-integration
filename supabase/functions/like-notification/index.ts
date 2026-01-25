@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { sendPushNotification } from "../_shared/apns.ts";
+import { sendLikePush } from "../_shared/push-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,11 +86,8 @@ serve(async (req) => {
       throw new Error("User email not found");
     }
 
-    // Get user's language preference
-    const { data: { user: currentUser } } = await supabaseClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
-    const language = currentUser?.user_metadata?.language || 'en';
+    // Get liked user's language preference
+    const language = authUser?.user_metadata?.language || 'en';
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     const emailHtml = createLikeEmail(profile.name, event.name, event.date, language);
@@ -114,14 +111,8 @@ serve(async (req) => {
       notification_type: "like",
     });
 
-    // Send push notification
-    await sendPushNotification(likedUserId, {
-      title: language === 'es' ? '💜 ¡Alguien te dio me gusta!' : '💜 Someone liked you!',
-      body: language === 'es'
-        ? `¡Alguien te dio me gusta en ${event.name}!`
-        : `Someone liked you at ${event.name}!`,
-      data: { type: 'like', eventId },
-    });
+    // Send push notification (uses service role client for device_tokens access)
+    await sendLikePush(supabaseAdmin, likedUserId, language);
 
     return new Response(
       JSON.stringify({ success: true }),

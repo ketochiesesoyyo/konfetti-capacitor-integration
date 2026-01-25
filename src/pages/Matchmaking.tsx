@@ -604,6 +604,18 @@ const Matchmaking = () => {
     if (liked) {
       toast.success(t('matchmaking.liked'));
 
+      // Send like notification (fire and forget - don't block UI)
+      supabase.functions
+        .invoke("like-notification", {
+          body: {
+            likedUserId: currentProfile.user_id,
+            eventId: selectedEventId,
+          },
+        })
+        .catch((err) => {
+          console.error("Failed to send like notification:", err);
+        });
+
       // Check if the other user already liked us
       const { data: reciprocalSwipe } = await supabase
         .from("swipes")
@@ -655,6 +667,18 @@ const Matchmaking = () => {
           if (matchError) {
             console.error("Error creating match:", matchError);
           } else {
+            // Send match notification (fire and forget - don't block UI)
+            supabase.functions
+              .invoke("match-notification", {
+                body: {
+                  matchId: newMatch.id,
+                  eventId: selectedEventId,
+                },
+              })
+              .catch((err) => {
+                console.error("Failed to send match notification:", err);
+              });
+
             // Show full-screen match dialog
             matchCreated = true;
             setMatchId(newMatch.id);
@@ -749,12 +773,12 @@ const Matchmaking = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+                <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
                   <DialogHeader>
                     <DialogTitle>{t('matchmaking.browseYourEvents')}</DialogTitle>
                   </DialogHeader>
-                  
-                  <ScrollArea className="flex-1 pr-4">
+
+                  <div className="flex-1 overflow-y-auto pr-4 -webkit-overflow-scrolling-touch">
                     <Accordion type="multiple" defaultValue={["live"]} className="space-y-4">
                       {/* Live Events Section */}
                       {liveEvents.length > 0 && (
@@ -852,7 +876,7 @@ const Matchmaking = () => {
                         </AccordionItem>
                       )}
                     </Accordion>
-                  </ScrollArea>
+                  </div>
                 </DialogContent>
               </Dialog>
               <KonfettiLogo className="w-32 h-auto" />
@@ -934,12 +958,12 @@ const Matchmaking = () => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Browse Your Events</DialogTitle>
                 </DialogHeader>
-                
-                <ScrollArea className="flex-1 pr-4">
+
+                <div className="flex-1 overflow-y-auto pr-4 -webkit-overflow-scrolling-touch">
                   <Accordion type="multiple" defaultValue={["live"]} className="space-y-4">
                     {/* Live Events Section */}
                     {liveEvents.length > 0 && (
@@ -1034,7 +1058,7 @@ const Matchmaking = () => {
                       </AccordionItem>
                     )}
                   </Accordion>
-                </ScrollArea>
+                </div>
               </DialogContent>
             </Dialog>
             <KonfettiLogo className="w-32 h-auto" />

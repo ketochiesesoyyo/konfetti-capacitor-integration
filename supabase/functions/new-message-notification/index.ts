@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { sendPushNotification } from "../_shared/apns.ts";
+import { sendNewMessagePush } from "../_shared/push-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -374,15 +374,6 @@ serve(async (req) => {
         conversation_id: conversationId,
       });
 
-      // Send push notification to recipient
-      await sendPushNotification(recipientId, {
-        title: recipientLang === 'es' ? '📩 Nuevo mensaje' : '📩 New message',
-        body: recipientLang === 'es'
-          ? `${senderName} te envió un mensaje`
-          : `${senderName} sent you a message`,
-        data: { type: 'new_message', eventId: event.id, conversationId },
-      });
-
       guestEmailSent = true;
     } else {
       console.log("[NEW_MESSAGE][RATE_LIMIT] Skipping guest email", {
@@ -429,15 +420,6 @@ serve(async (req) => {
           conversation_id: conversationId,
         });
 
-        // Send push notification to host
-        await sendPushNotification(hostId, {
-          title: hostLang === 'es' ? '📩 Mensaje de invitado' : '📩 Guest message',
-          body: hostLang === 'es'
-            ? `${senderName} te envió un mensaje sobre ${event.name}`
-            : `${senderName} sent you a message about ${event.name}`,
-          data: { type: 'host_new_message', eventId: event.id, conversationId },
-        });
-
         hostEmailSent = true;
       } else {
         console.log("[NEW_MESSAGE][RATE_LIMIT] Skipping host email", {
@@ -448,6 +430,15 @@ serve(async (req) => {
       }
     }
 
+    // Send push notification to recipient (always, regardless of email rate limiting)
+    await sendNewMessagePush(
+      supabaseAdmin,
+      recipientId,
+      senderName,
+      recipientLang,
+      conversationId
+    );
+
     console.log("[NEW_MESSAGE] Notifications sent", {
       eventId,
       conversationId,
@@ -455,6 +446,7 @@ serve(async (req) => {
       recipientId,
       guestEmailSent,
       hostEmailSent,
+      pushSent: true,
     });
 
     return new Response(

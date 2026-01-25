@@ -309,7 +309,7 @@ const ChatThread = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background p-6 border-b">
         <div className="max-w-lg mx-auto flex items-center gap-4">
@@ -405,7 +405,7 @@ const ChatThread = () => {
       </div>
 
       {/* Input */}
-      <div className="border-t bg-card p-4 flex-shrink-0">
+      <div className="border-t bg-card p-4 flex-shrink-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="max-w-lg mx-auto flex gap-2">
           <Input
             value={message}
