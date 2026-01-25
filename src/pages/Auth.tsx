@@ -72,7 +72,7 @@ const Auth = () => {
         if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
-          navigate("/");
+          navigate("/profile");
         }
       }
     };
@@ -118,7 +118,7 @@ const Auth = () => {
         if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
-          navigate("/");
+          navigate("/profile");
         }
       } else {
         // Sign up

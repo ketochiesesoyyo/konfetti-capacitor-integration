@@ -43,7 +43,6 @@ const CreateEvent = () => {
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimeoutRef = useState<NodeJS.Timeout | null>(null);
   
-  
   const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
   
   // Helper function to determine matchmaking option from dates
@@ -68,7 +67,6 @@ const CreateEvent = () => {
     matchmakingStartTime: "00:00",
     theme: "sunset",
     agreedToTerms: false,
-    
     expectedGuests: 0,
   });
 
@@ -171,7 +169,6 @@ const CreateEvent = () => {
           matchmakingStartTime: draft.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
-          
           expectedGuests: 0,
         };
         
@@ -223,7 +220,6 @@ const CreateEvent = () => {
           matchmakingStartTime: event.matchmaking_start_time || "00:00",
           theme: "sunset",
           agreedToTerms: true,
-          
           expectedGuests: 0,
         };
         

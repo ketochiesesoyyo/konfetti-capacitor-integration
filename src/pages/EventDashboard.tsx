@@ -80,17 +80,13 @@ const EventDashboard = () => {
 
   useEffect(() => {
     fetchEventData();
-    
+
     // Set active tab from URL parameter
     const tab = searchParams.get('tab');
     if (tab === 'settings' || tab === 'guests' || tab === 'stats') {
       setActiveTab(tab as "guests" | "stats" | "settings");
     }
   }, [eventId]);
-
-  const handleContactSupport = () => {
-    window.location.href = "mailto:support@konfetti.app?subject=Event%20Inquiry";
-  };
 
   useEffect(() => {
     if (activeTab === "stats") {
@@ -842,11 +838,8 @@ const EventDashboard = () => {
             ) : (
               <Card className="p-6 border-destructive/50">
                 <h3 className="font-semibold mb-2 text-destructive">Danger Zone</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Close the event early. Matches and chats will remain.
-                </p>
-                <p className="text-xs text-destructive/80 mb-4">
-                  ⚠️ This action cannot be undone. No reimbursements will be provided after closing.
+                <p className="text-sm text-muted-foreground mb-4">
+                  Close the event early. This action cannot be undone. Matches and chats will remain accessible.
                 </p>
                 <Button 
                   variant="destructive" 
@@ -915,8 +908,6 @@ const EventDashboard = () => {
             <AlertDialogTitle>Close Event Now?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. The event will be permanently closed and no further matchmaking will be possible.
-              <br /><br />
-              <strong>Important:</strong> No reimbursements will be provided after closing the event.
               <br /><br />
               Existing matches and chats will remain accessible to guests.
             </AlertDialogDescription>

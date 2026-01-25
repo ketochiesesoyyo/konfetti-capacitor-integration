@@ -2,12 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import "./i18n/config";
 import { isAdminDomainAllowed } from "./lib/domain";
+import { supabase } from "@/integrations/supabase/client";
+import { usePushNotifications } from "./hooks/use-push-notifications";
 
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -34,12 +36,44 @@ const showAdminRoute = isAdminDomainAllowed();
 
 const queryClient = new QueryClient();
 
+// Redirect component that checks auth state and routes accordingly
+const IndexRedirect = () => {
+  const [isChecking, setIsChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setIsChecking(false);
+    };
+    checkAuth();
+  }, []);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <Navigate to="/profile" replace /> : <Navigate to="/auth" replace />;
+};
+
+// Component to initialize push notifications
+const PushNotificationHandler = ({ children }: { children: React.ReactNode }) => {
+  usePushNotifications();
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PushNotificationHandler>
         <BrowserRouter
           future={{
             v7_startTransition: true,
@@ -48,7 +82,8 @@ const App = () => (
         >
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<IndexRedirect />} />
+              <Route path="/landing" element={<Landing />} />
               <Route path="/para-novios" element={<ForCouples />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
               <Route path="/contact" element={<Contact />} />
@@ -71,6 +106,7 @@ const App = () => (
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </PushNotificationHandler>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

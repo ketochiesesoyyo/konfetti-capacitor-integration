@@ -302,14 +302,14 @@ const Settings = () => {
         </Card>
 
         {/* Delete Account */}
-        <Card className="p-6 shadow-card hover-lift border-destructive/20">
+        <Card className="p-8 shadow-card hover-lift border-destructive/20">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 rounded-2xl bg-destructive/10">
               <Trash2 className="w-6 h-6 text-destructive" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-destructive">{t('settings.deleteAccount.title')}</h2>
-              <p className="text-sm text-muted-foreground">{t('settings.deleteAccount.subtitle')}</p>
+              <h2 className="text-xl font-semibold">{t('deleteAccount.title')}</h2>
+              <p className="text-sm text-muted-foreground">{t('deleteAccount.subtitle')}</p>
             </div>
           </div>
           <Button
@@ -319,7 +319,7 @@ const Settings = () => {
             size="lg"
           >
             <Trash2 className="w-5 h-5 mr-2" />
-            {t('settings.deleteAccount.button')}
+            {t('deleteAccount.button')}
           </Button>
         </Card>
 
@@ -348,12 +348,12 @@ const Settings = () => {
         </div>
       </div>
 
-      <CommunityGuidelinesDialog 
-        open={showGuidelines} 
+      <CommunityGuidelinesDialog
+        open={showGuidelines}
         onOpenChange={setShowGuidelines}
       />
-      <TermsConditionsDialog 
-        open={showTerms} 
+      <TermsConditionsDialog
+        open={showTerms}
         onOpenChange={setShowTerms}
       />
       <PrivacyPolicyDialog

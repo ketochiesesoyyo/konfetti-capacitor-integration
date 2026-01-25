@@ -567,7 +567,7 @@ const Home = () => {
         </div>
 
         {/* Floating Action Button */}
-        <div className="fixed bottom-28 left-0 right-0 z-40 pointer-events-none">
+        <div className="fixed bottom-36 left-0 right-0 z-40 pointer-events-none">
           <div className="max-w-lg mx-auto px-4">
             <div className="relative flex justify-end">
               <div className="pointer-events-auto">
