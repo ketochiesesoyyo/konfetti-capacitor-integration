@@ -483,7 +483,30 @@
     "failedSignIn": "Failed to sign in with {{provider}}",
     "communityGuidelines": "Community Guidelines",
     "termsConditions": "Terms & Conditions",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "forgotPassword": {
+      "link": "Forgot password?",
+      "title": "Reset Password",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "cancel": "Cancel",
+      "emailSent": "Password reset email sent! Check your inbox.",
+      "enterEmail": "Please enter your email address",
+      "error": "Failed to send reset email. Please try again."
+    },
+    "resetPassword": {
+      "title": "Set New Password",
+      "subtitle": "Enter your new password below",
+      "newPassword": "New Password",
+      "submit": "Update Password",
+      "success": "Password updated successfully!",
+      "error": "Failed to update password. Please try again.",
+      "invalidLink": "Invalid or expired reset link. Please request a new one.",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "backToLogin": "Back to Login"
+    }
   },
   "notFound": {
     "title": "404",

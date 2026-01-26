@@ -34,6 +34,9 @@ const Auth = () => {
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -203,6 +206,36 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail) {
+      toast.error(t('auth.forgotPassword.enterEmail'));
+      return;
+    }
+
+    setIsSendingReset(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success(t('auth.forgotPassword.emailSent'));
+      setShowForgotPassword(false);
+      setForgotPasswordEmail("");
+    } catch (error: any) {
+      toast.error(t('auth.forgotPassword.error'));
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md p-8 animate-slide-up">
@@ -246,6 +279,17 @@ const Auth = () => {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {isLogin && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {t('auth.forgotPassword.link')}
+                </button>
+              </div>
+            )}
           </div>
 
           {!isLogin && (
@@ -398,6 +442,52 @@ const Auth = () => {
           </button>
         </div>
       </Card>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md p-6 animate-slide-up">
+            <h2 className="text-xl font-semibold mb-2">{t('auth.forgotPassword.title')}</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('auth.forgotPassword.subtitle')}
+            </p>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">{t('auth.forgotPassword.email')}</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder={t('auth.forgotPassword.emailPlaceholder')}
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail("");
+                  }}
+                >
+                  {t('auth.forgotPassword.cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="default"
+                  className="flex-1"
+                  disabled={isSendingReset}
+                >
+                  {isSendingReset ? t('auth.loading') : t('auth.forgotPassword.submit')}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
 
       <CommunityGuidelinesDialog 
         open={showGuidelines} 
