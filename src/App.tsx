@@ -13,6 +13,7 @@ import { usePushNotifications } from "./hooks/use-push-notifications";
 
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Landing = lazy(() => import("./pages/Landing"));
 const ForCouples = lazy(() => import("./pages/ForCouples"));
 const WeddingPlanners = lazy(() => import("./pages/WeddingPlanners"));
@@ -90,6 +91,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/support" element={<Support />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Layout><Home /></Layout>} />
               <Route path="/profile" element={<Layout><Profile /></Layout>} />
               <Route path="/edit-profile" element={<EditProfile />} />
