@@ -819,7 +819,8 @@
     },
     "footer": {
       "contact": {
-        "title": "Contáctanos"
+        "title": "Contáctanos",
+        "support": "Centro de Ayuda"
       },
       "social": {
         "title": "Síguenos"

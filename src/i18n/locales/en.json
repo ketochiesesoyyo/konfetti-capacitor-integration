@@ -820,7 +820,8 @@
     },
     "footer": {
       "contact": {
-        "title": "Contact Us"
+        "title": "Contact Us",
+        "support": "Help Center"
       },
       "social": {
         "title": "Follow Us"
