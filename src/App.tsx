@@ -17,6 +17,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const ForCouples = lazy(() => import("./pages/ForCouples"));
 const WeddingPlanners = lazy(() => import("./pages/WeddingPlanners"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Support = lazy(() => import("./pages/Support"));
 const Home = lazy(() => import("./pages/Home"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
@@ -87,6 +88,7 @@ const App = () => (
               <Route path="/para-novios" element={<ForCouples />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Layout><Home /></Layout>} />
               <Route path="/profile" element={<Layout><Profile /></Layout>} />
