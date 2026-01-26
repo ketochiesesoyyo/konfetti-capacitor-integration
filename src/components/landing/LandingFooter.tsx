@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { Mail, Instagram } from "lucide-react";
+import { Mail, Instagram, HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
 import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
@@ -30,6 +31,13 @@ export const LandingFooter = () => {
                   <Mail className="h-5 w-5" />
                   <span className="text-sm">support@konfetti.app</span>
                 </a>
+                <Link
+                  to="/support"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  <span className="text-sm">{t("landing.footer.contact.support")}</span>
+                </Link>
               </div>
             </div>
 
