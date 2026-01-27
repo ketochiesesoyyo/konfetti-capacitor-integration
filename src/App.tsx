@@ -60,7 +60,7 @@ const IndexRedirect = () => {
     );
   }
 
-  return isAuthenticated ? <Navigate to="/profile" replace /> : <Navigate to="/auth" replace />;
+  return isAuthenticated ? <Navigate to="/profile" replace /> : <Navigate to="/landing" replace />;
 };
 
 // Component to initialize push notifications
