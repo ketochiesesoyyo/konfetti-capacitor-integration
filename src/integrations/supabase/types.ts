@@ -157,6 +157,7 @@ export type Database = {
       }
       event_requests: {
         Row: {
+          contact_name: string | null
           created_at: string
           email: string
           event_id: string | null
@@ -172,6 +173,7 @@ export type Database = {
           wedding_date: string
         }
         Insert: {
+          contact_name?: string | null
           created_at?: string
           email: string
           event_id?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           wedding_date: string
         }
         Update: {
+          contact_name?: string | null
           created_at?: string
           email?: string
           event_id?: string | null
