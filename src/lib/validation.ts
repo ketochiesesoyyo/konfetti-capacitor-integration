@@ -52,6 +52,7 @@ export type SubmitterType = typeof submitterTypeOptions[number];
 // Event request form validation
 export const eventRequestSchema = z.object({
   submitter_type: z.enum(submitterTypeOptions, { required_error: 'Please select who is submitting' }),
+  contact_name: z.string().trim().min(1, 'Contact name is required').max(100, 'Name must be less than 100 characters'),
   partner1_name: z.string().trim().min(1, 'Partner 1 name is required').max(100, 'Name must be less than 100 characters'),
   partner2_name: z.string().trim().min(1, 'Partner 2 name is required').max(100, 'Name must be less than 100 characters'),
   wedding_date: z.date({ required_error: 'Wedding date is required' }),

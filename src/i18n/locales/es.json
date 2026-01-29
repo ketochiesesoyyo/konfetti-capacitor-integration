@@ -826,6 +826,8 @@
       "submitterType": "¿Quién está enviando esta solicitud?",
       "submitterCouple": "Somos los novios",
       "submitterPlanner": "Soy wedding planner",
+      "contactName": "Tu Nombre",
+      "contactNamePlaceholder": "ej., María García",
       "partner1": "Nombre del Novio/a 1",
       "partner2": "Nombre del Novio/a 2",
       "weddingDate": "Fecha de la Boda",

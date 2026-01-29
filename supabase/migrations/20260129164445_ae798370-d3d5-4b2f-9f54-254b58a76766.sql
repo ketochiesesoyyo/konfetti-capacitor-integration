@@ -1,0 +1,1 @@
+ALTER TABLE event_requests ADD COLUMN contact_name text;

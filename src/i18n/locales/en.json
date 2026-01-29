@@ -827,6 +827,8 @@
       "submitterType": "Who is submitting this request?",
       "submitterCouple": "We are the couple",
       "submitterPlanner": "I'm a wedding planner",
+      "contactName": "Your Name",
+      "contactNamePlaceholder": "e.g., Maria Garcia",
       "partner1": "Partner 1 Name",
       "partner2": "Partner 2 Name",
       "weddingDate": "Wedding Date",
