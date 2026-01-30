@@ -91,6 +91,22 @@ export const HeroSection = () => {
               {t("landing.hero.signUp")}
             </button>
           </p>
+
+          {/* App Store Badge */}
+          <div className="pt-6">
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-transform hover:scale-105"
+            >
+              <img
+                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                alt="Download on the App Store"
+                className="h-12"
+              />
+            </a>
+          </div>
         </div>
       </div>
 
