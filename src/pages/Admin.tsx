@@ -333,7 +333,7 @@ const Admin = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Pareja</TableHead>
+                          <TableHead>Evento / Pareja</TableHead>
                           <TableHead>Fecha Boda</TableHead>
                           <TableHead>Invitados</TableHead>
                           <TableHead>Tipo</TableHead>
@@ -346,17 +346,14 @@ const Admin = () => {
                         {requests.map((request) => (
                           <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(request)}>
                             <TableCell className="font-medium">
-                              <div className="flex flex-col gap-1">
+                              {request.event_id && request.events?.name ? (
                                 <div className="flex items-center gap-2">
-                                  {request.partner1_name} & {request.partner2_name}
+                                  <LinkIcon className="w-3 h-3 text-muted-foreground" />
+                                  {request.events.name}
                                 </div>
-                                {request.event_id && request.events?.name && (
-                                  <Badge variant="secondary" className="text-xs w-fit">
-                                    <LinkIcon className="w-3 h-3 mr-1" />
-                                    {request.events.name}
-                                  </Badge>
-                                )}
-                              </div>
+                              ) : (
+                                <span>{request.partner1_name} & {request.partner2_name}</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {format(new Date(request.wedding_date), "dd MMM yyyy", { locale: es })}
