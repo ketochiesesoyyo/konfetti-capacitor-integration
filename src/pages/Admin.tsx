@@ -30,6 +30,8 @@ interface EventRequest {
   created_at: string;
   updated_at: string;
   event_id: string | null;
+  contact_name: string | null;
+  events: { name: string } | null;
 }
 
 interface HostedEvent {
@@ -106,7 +108,7 @@ const Admin = () => {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('event_requests')
-      .select('*')
+      .select('*, events(name)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -344,12 +346,14 @@ const Admin = () => {
                         {requests.map((request) => (
                           <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(request)}>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                {request.partner1_name} & {request.partner2_name}
-                                {request.event_id && (
-                                  <Badge variant="secondary" className="text-xs">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  {request.partner1_name} & {request.partner2_name}
+                                </div>
+                                {request.event_id && request.events?.name && (
+                                  <Badge variant="secondary" className="text-xs w-fit">
                                     <LinkIcon className="w-3 h-3 mr-1" />
-                                    Evento
+                                    {request.events.name}
                                   </Badge>
                                 )}
                               </div>
