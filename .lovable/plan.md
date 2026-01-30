@@ -1,87 +1,121 @@
 
 
-## Add Contact Name Field to Event Request Form
+## Simplify Likes Page: Show Only "My Likes" (People You've Liked)
 
 ### Overview
-Add a new "contact name" field to the event request form so you always know who is writing to you, regardless of whether they are a couple or a wedding planner. This name will appear prominently in the notification email you receive.
+Transform the Likes page from showing "People who liked you" to showing "People you've liked" with an Unlike button to retract likes. People who liked you will continue to appear in the matchmaking stack as they do today.
+
+---
+
+### Current vs New Behavior
+
+| Aspect | Current | New |
+|--------|---------|-----|
+| **Shows** | People who liked you | People you liked |
+| **Purpose** | Respond to incoming likes | View/manage your outgoing likes |
+| **Buttons** | Like ❤️ / Pass ✕ | Unlike ✕ (retract) or Go Chat (if matched) |
+| **Incoming likes** | Appear here first | Appear in matchmaking stack only |
+
+---
+
+### User Flow After Changes
+
+```text
+You like someone in matchmaking
+        │
+        ▼
+They appear in YOUR "Likes" tab
+        │
+        ├── They like you back ──► MATCH!
+        │                              │
+        │                              └──► "Go Chat" button appears
+        │                                   (they move to Chats too)
+        │
+        └── You tap ✕ (Unlike) ──► Retract your like
+                                   They are removed from list
+                                   You can see them again in matchmaking
+```
 
 ---
 
 ### Changes Required
 
-#### 1. Database Migration
-Add a new `contact_name` column to the `event_requests` table:
-- Column: `contact_name` (text, nullable for backward compatibility)
-- This stores the name of the person filling out the form
+#### 1. Simplify State Management
+The page currently maintains three lists (`newLikes`, `passedLikes`, `allLikes`). We'll simplify to just one list: `myLikes` (people you've liked).
 
-#### 2. Form Validation Schema
-Update `src/lib/validation.ts`:
-- Add `contact_name` field to `eventRequestSchema`
-- Required field with max 100 characters
+**Remove:**
+- `newLikes` state
+- `passedLikes` state  
+- `activeTab` state (no longer needed)
 
-#### 3. Contact Form Component  
-Update `src/components/landing/ContactForm.tsx`:
-- Add new form field for contact name after the submitter type selection
-- Include proper label and placeholder
-- Pass the new field to both the database insert and edge function call
+**Keep:**
+- `allLikes` → rename to `myLikes` for clarity
 
-#### 4. Translations
-Update both language files with new labels:
+#### 2. Remove Incoming Likes Fetching
+Remove the logic that fetches people who liked the current user (lines 49-165). The page will only fetch outgoing swipes.
 
-**English** (`src/i18n/locales/en.json`):
-- `"contactName": "Your Name"`
-- `"contactNamePlaceholder": "e.g., Maria Garcia"`
+#### 3. Remove Unused Handler Functions
+Remove functions that are no longer needed:
+- `handleLike()` - no longer liking back from this page
+- `handlePass()` - no longer passing from this page
 
-**Spanish** (`src/i18n/locales/es.json`):
-- `"contactName": "Tu Nombre"`  
-- `"contactNamePlaceholder": "ej., María García"`
+Keep:
+- `handleUnlike()` - for retracting likes
 
-#### 5. Edge Function - Admin Notification
-Update `supabase/functions/event-request-notification/index.ts`:
-- Add `contact_name` to the `EventRequestData` interface
-- Display the contact name prominently in the email you receive:
-  - Add a "Submitted By" section showing the contact name
-  - Update the "Reply to" button to show the contact name
-  - Update the email subject to include the contact name
+#### 4. Simplify ProfileCard Component
+Update the `ProfileCard` to only show:
+- If matched: "Go Chat" button (navigates to chat)
+- If not matched: "Unlike" button (retracts the like)
 
-#### 6. Edge Function - User Confirmation Email
-Update the confirmation email:
-- Use the contact name in the greeting for wedding planners instead of generic "Hola,"
+Remove the `showActions` and `isPassed` props since they're no longer used.
+
+#### 5. Update Empty State Messages
+Change the empty state to reflect the new purpose:
+- "You haven't liked anyone yet"
+- "Start swiping in matchmaking to see profiles here"
+
+(These are already in the code, just need to use translation keys)
+
+#### 6. Update Translations
+The translations are already correct for this new behavior:
+- `title`: "Your Likes" / "Tus Me Gusta" ✓
+- `subtitle`: "People you've shown interest in" / "Personas en las que has mostrado interés" ✓
+- `noLikesDesc`: "Start swiping to show interest!" ✓
 
 ---
 
 ### Technical Details
 
-**Form Field Placement:**
-The new field will appear right after the submitter type radio buttons and before the partner names, since knowing who is writing is primary contact information.
-
-**Email Template Changes:**
-The admin notification email will include a new section:
-
+**Data Flow:**
 ```text
-┌─────────────────────────────────────────┐
-│ CONTACT INFORMATION                     │
-│ ─────────────────────────────────────── │
-│ Contact Name:    Maria Garcia           │
-│ Submitter Type:  Wedding Planner        │
-│ Email:           maria@example.com      │
-│ Phone:           +52 55 1234 5678       │
-└─────────────────────────────────────────┘
+Query: SELECT from swipes 
+       WHERE user_id = current_user 
+       AND direction = 'right'
+       
+Then: Check if each liked user has matched back
+      by querying the matches table
+      
+Display: Profile cards with appropriate button
+         - Matched → "Go Chat" 
+         - Not matched → "Unlike"
 ```
 
-**Database Schema:**
-```sql
-ALTER TABLE event_requests 
-ADD COLUMN contact_name text;
-```
+**Files to Modify:**
+1. `src/pages/LikedYou.tsx` - Main logic changes
+   - Remove incoming likes fetching (lines 49-165)
+   - Remove `newLikes`, `passedLikes`, `activeTab` state
+   - Rename `allLikes` to `myLikes`
+   - Remove `handleLike()` and `handlePass()` functions
+   - Simplify `ProfileCard` props
+   - Remove commented-out tab selector
+   - Update empty state to use translation keys
 
 ---
 
-### Files to Modify
-1. `src/lib/validation.ts` - Add contact_name to schema
-2. `src/components/landing/ContactForm.tsx` - Add form field and pass data
-3. `src/i18n/locales/en.json` - Add English translations
-4. `src/i18n/locales/es.json` - Add Spanish translations  
-5. `supabase/functions/event-request-notification/index.ts` - Update email template
-6. Database migration for `event_requests` table
+### What Stays the Same
+- The overall page layout and design
+- The ProfileViewDialog for viewing full profiles
+- The "Go Chat" button when matched
+- The Unlike functionality
+- All existing translation keys (they already match the new behavior)
 
