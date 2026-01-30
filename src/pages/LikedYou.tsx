@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, X, Calendar, MessageCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { X, Calendar, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
@@ -28,16 +27,13 @@ const LikedYou = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"new" | "passed" | "all-likes">("new");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [newLikes, setNewLikes] = useState<ProfileWithEvent[]>([]);
-  const [passedLikes, setPassedLikes] = useState<ProfileWithEvent[]>([]);
-  const [allLikes, setAllLikes] = useState<ProfileWithEvent[]>([]);
+  const [myLikes, setMyLikes] = useState<ProfileWithEvent[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<ProfileWithEvent | null>(null);
 
   useEffect(() => {
-    const loadLikes = async () => {
+    const loadMyLikes = async () => {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -46,80 +42,84 @@ const LikedYou = () => {
       }
       setUserId(session.user.id);
 
-      // Fetch people who liked current user (get swipe data and event info first)
-      const { data: incomingSwipes, error } = await supabase
+      // Fetch people current user has liked (outgoing right swipes)
+      const { data: outgoingSwipes, error } = await supabase
         .from("swipes")
         .select(`
           id,
-          user_id,
+          swiped_user_id,
           event_id,
           events(id, name)
         `)
-        .eq("swiped_user_id", session.user.id)
+        .eq("user_id", session.user.id)
         .eq("direction", "right");
 
       if (error) {
         console.error("Error loading likes:", error);
-        toast.error("Failed to load likes");
+        toast.error(t('likedYou.failedLoad'));
         setLoading(false);
         return;
       }
 
-      if (!incomingSwipes || incomingSwipes.length === 0) {
+      if (!outgoingSwipes || outgoingSwipes.length === 0) {
+        setMyLikes([]);
         setLoading(false);
         return;
       }
 
-      // Get unique user IDs who liked current user
-      const likerUserIds = [...new Set(incomingSwipes.map((s: any) => s.user_id))];
+      const likedUserIds = [...new Set(outgoingSwipes.map((s: any) => s.swiped_user_id))];
 
-      // Fetch profiles for these users
-      const { data: profiles, error: profilesError } = await supabase
+      // Fetch profiles for liked users
+      const { data: likedProfiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, user_id, name, age, photos, bio, interests, gender, interested_in")
-        .in("user_id", likerUserIds);
+        .select("id, user_id, name, age, photos, bio, interests")
+        .in("user_id", likedUserIds);
 
       if (profilesError) {
         console.error("Error loading profiles:", profilesError);
-        toast.error("Failed to load profiles");
+        toast.error(t('likedYou.failedLoad'));
         setLoading(false);
         return;
       }
 
-      // Create a map for quick profile lookup
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const likedProfileMap = new Map(likedProfiles?.map(p => [p.user_id, p]) || []);
 
-      // Fetch current user's profile for gender preferences
-      const { data: currentUserProfile } = await supabase
-        .from("profiles")
-        .select("gender, interested_in")
-        .eq("user_id", session.user.id)
-        .single();
+      // Fetch unmatches to filter out unmatched users
+      const { data: unmatchedUsers } = await supabase
+        .from("unmatches")
+        .select("unmatched_user_id, event_id")
+        .eq("unmatcher_id", session.user.id);
 
-      if (!currentUserProfile || !currentUserProfile.gender || !currentUserProfile.interested_in) {
-        // User needs to complete profile
-        setNewLikes([]);
-        setPassedLikes([]);
-        setLoading(false);
-        return;
-      }
-
-      // Check if current user has responded to these swipes
-      const { data: userSwipes } = await supabase
-        .from("swipes")
-        .select("swiped_user_id, direction")
-        .eq("user_id", session.user.id);
-
-      const userSwipeMap = new Map(
-        userSwipes?.map(s => [s.swiped_user_id, s.direction]) || []
+      // Create a set of unmatched user_id + event_id combinations
+      const unmatchedSet = new Set(
+        unmatchedUsers?.map(u => `${u.unmatched_user_id}_${u.event_id}`) || []
       );
 
-      // Combine swipe data with profile data
-      const formattedLikes = incomingSwipes
+      // Fetch matches for these liked profiles
+      const { data: matches } = await supabase
+        .from("matches")
+        .select("id, user1_id, user2_id, event_id")
+        .or(`and(user1_id.eq.${session.user.id},user2_id.in.(${likedUserIds.join(",")})),and(user2_id.eq.${session.user.id},user1_id.in.(${likedUserIds.join(",")}))`);
+
+      // Create a map of matches by user_id and event_id
+      const matchMap = new Map<string, string>();
+      matches?.forEach((match: any) => {
+        const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
+        matchMap.set(`${otherUserId}_${match.event_id}`, match.id);
+      });
+
+      const formattedLikes = outgoingSwipes
         ?.map((swipe: any) => {
-          const profile = profileMap.get(swipe.user_id);
-          if (!profile) return null; // Skip if profile not found
-          
+          const profile = likedProfileMap.get(swipe.swiped_user_id);
+          if (!profile) return null;
+
+          // Filter out unmatched users
+          if (unmatchedSet.has(`${swipe.swiped_user_id}_${swipe.event_id}`)) {
+            return null;
+          }
+
+          const matchId = matchMap.get(`${swipe.swiped_user_id}_${swipe.event_id}`);
+
           return {
             id: profile.id,
             user_id: profile.user_id,
@@ -131,125 +131,21 @@ const LikedYou = () => {
             eventName: swipe.events.name,
             eventId: swipe.event_id,
             swipeId: swipe.id,
-            userResponse: userSwipeMap.get(swipe.user_id),
-            gender: profile.gender,
-            interested_in: profile.interested_in,
+            matchId: matchId || null,
           };
         })
         .filter(Boolean) || [];
 
-      // Filter for gender compatibility
-      const genderCompatibleLikes = formattedLikes.filter((like: any) => {
-        const profile = like;
-        
-        if (!profile.gender || !profile.interested_in) {
-          return false;
-        }
-        
-        // Same bidirectional check as matchmaking
-        const userInterestedInProfile = 
-          currentUserProfile.interested_in === 'both' ||
-          (currentUserProfile.interested_in === 'men' && profile.gender === 'man') ||
-          (currentUserProfile.interested_in === 'women' && profile.gender === 'woman');
-        
-        const profileInterestedInUser =
-          profile.interested_in === 'both' ||
-          (profile.interested_in === 'men' && currentUserProfile.gender === 'man') ||
-          (profile.interested_in === 'women' && currentUserProfile.gender === 'woman');
-        
-        return userInterestedInProfile && profileInterestedInUser;
-      });
-
-      // Separate into new likes (no response) and passed
-      setNewLikes(genderCompatibleLikes.filter((like: any) => !like.userResponse));
-      setPassedLikes(genderCompatibleLikes.filter((like: any) => like.userResponse === "left"));
-
-      // Fetch all likes - people current user has liked
-      const { data: outgoingSwipes } = await supabase
-        .from("swipes")
-        .select(`
-          id,
-          swiped_user_id,
-          event_id,
-          events(id, name)
-        `)
-        .eq("user_id", session.user.id)
-        .eq("direction", "right");
-
-      if (outgoingSwipes && outgoingSwipes.length > 0) {
-        const likedUserIds = [...new Set(outgoingSwipes.map((s: any) => s.swiped_user_id))];
-        
-        const { data: likedProfiles } = await supabase
-          .from("profiles")
-          .select("id, user_id, name, age, photos, bio, interests")
-          .in("user_id", likedUserIds);
-
-        const likedProfileMap = new Map(likedProfiles?.map(p => [p.user_id, p]) || []);
-
-        // Fetch unmatches to filter out unmatched users
-        const { data: unmatchedUsers } = await supabase
-          .from("unmatches")
-          .select("unmatched_user_id, event_id")
-          .eq("unmatcher_id", session.user.id);
-
-        // Create a set of unmatched user_id + event_id combinations
-        const unmatchedSet = new Set(
-          unmatchedUsers?.map(u => `${u.unmatched_user_id}_${u.event_id}`) || []
-        );
-
-        // Fetch matches for these liked profiles
-        const { data: matches } = await supabase
-          .from("matches")
-          .select("id, user1_id, user2_id, event_id")
-          .or(`and(user1_id.eq.${session.user.id},user2_id.in.(${likedUserIds.join(",")})),and(user2_id.eq.${session.user.id},user1_id.in.(${likedUserIds.join(",")}))`);
-
-        // Create a map of matches by user_id and event_id
-        const matchMap = new Map<string, string>();
-        matches?.forEach((match: any) => {
-          const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
-          matchMap.set(`${otherUserId}_${match.event_id}`, match.id);
-        });
-
-        const formattedAllLikes = outgoingSwipes
-          ?.map((swipe: any) => {
-            const profile = likedProfileMap.get(swipe.swiped_user_id);
-            if (!profile) return null;
-            
-            // Filter out unmatched users
-            if (unmatchedSet.has(`${swipe.swiped_user_id}_${swipe.event_id}`)) {
-              return null;
-            }
-            
-            const matchId = matchMap.get(`${swipe.swiped_user_id}_${swipe.event_id}`);
-            
-            return {
-              id: profile.id,
-              user_id: profile.user_id,
-              name: profile.name,
-              age: profile.age,
-              photo: profile.photos?.[0] || "/placeholder.svg",
-              bio: profile.bio,
-              interests: profile.interests,
-              eventName: swipe.events.name,
-              eventId: swipe.event_id,
-              swipeId: swipe.id,
-              matchId: matchId || null,
-            };
-          })
-          .filter(Boolean) || [];
-
-        setAllLikes(formattedAllLikes);
-      }
-
+      setMyLikes(formattedLikes);
       setLoading(false);
     };
 
-    loadLikes();
+    loadMyLikes();
 
     // Refresh when page becomes visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        loadLikes();
+        loadMyLikes();
       }
     };
 
@@ -258,110 +154,7 @@ const LikedYou = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [navigate, location.pathname]);
-
-  const handleLike = async (profile: ProfileWithEvent) => {
-    if (!userId) return;
-
-    try {
-      // Upsert swipe record (update if exists, insert if new)
-      const { error: swipeError } = await supabase
-        .from("swipes")
-        .upsert({
-          user_id: userId,
-          swiped_user_id: profile.user_id,
-          event_id: profile.eventId,
-          direction: "right",
-        }, {
-          onConflict: "user_id,swiped_user_id,event_id"
-        });
-
-      if (swipeError) throw swipeError;
-
-      // Check if there's a match (both users in either order)
-      const { data: match } = await supabase
-        .from("matches")
-        .select("*")
-        .eq("event_id", profile.eventId)
-        .or(`and(user1_id.eq.${userId},user2_id.eq.${profile.user_id}),and(user1_id.eq.${profile.user_id},user2_id.eq.${userId})`)
-        .maybeSingle();
-
-      if (!match) {
-        // Create match
-        const { data: newMatch } = await supabase
-          .from("matches")
-          .insert({
-            user1_id: userId,
-            user2_id: profile.user_id,
-            event_id: profile.eventId,
-          })
-          .select()
-          .single();
-
-        if (newMatch) {
-          toast(t('likedYou.itsAMatch'), {
-            description: t('likedYou.youAndXLiked', { name: profile.name }),
-          });
-          
-          setTimeout(() => {
-            navigate(`/chat/${newMatch.id}`, {
-              state: {
-                matchId: newMatch.id,
-                userId: profile.user_id,
-                name: profile.name,
-                photo: profile.photo,
-                eventName: profile.eventName,
-              }
-            });
-          }, 1000);
-        }
-      } else {
-        // Match already exists, just navigate to it
-        toast(t('likedYou.itsAMatch'), {
-          description: t('likedYou.youAndXLiked', { name: profile.name }),
-        });
-        
-        setTimeout(() => {
-          navigate(`/chat/${match.id}`, {
-            state: {
-              matchId: match.id,
-              userId: profile.user_id,
-              name: profile.name,
-              photo: profile.photo,
-              eventName: profile.eventName,
-            }
-          });
-        }, 1000);
-      }
-
-      // Remove from both lists
-      setNewLikes(prev => prev.filter(p => p.id !== profile.id));
-      setPassedLikes(prev => prev.filter(p => p.id !== profile.id));
-    } catch (error) {
-      console.error("Error creating match:", error);
-      toast.error("Failed to create match");
-    }
-  };
-
-  const handlePass = async (profile: ProfileWithEvent) => {
-    if (!userId) return;
-
-    try {
-      await supabase.from("swipes").insert({
-        user_id: userId,
-        swiped_user_id: profile.user_id,
-        event_id: profile.eventId,
-        direction: "left",
-      });
-
-      toast(t('likedYou.passedOn', { name: profile.name }));
-      setNewLikes(prev => prev.filter(p => p.id !== profile.id));
-      setPassedLikes(prev => [...prev, profile]);
-    } catch (error) {
-      console.error("Error passing:", error);
-      toast.error(t('likedYou.failedPass'));
-    }
-  };
+  }, [navigate, location.pathname, t]);
 
   const handleUnlike = async (profile: ProfileWithEvent) => {
     if (!userId) return;
@@ -376,14 +169,14 @@ const LikedYou = () => {
       if (error) throw error;
 
       toast(t('likedYou.unliked', { name: profile.name }));
-      setAllLikes(prev => prev.filter(p => p.swipeId !== profile.swipeId));
+      setMyLikes(prev => prev.filter(p => p.swipeId !== profile.swipeId));
     } catch (error) {
       console.error("Error unliking:", error);
       toast.error(t('likedYou.failedUnlike'));
     }
   };
 
-  const ProfileCard = ({ profile, isPassed = false, showActions = true, showUnlike = false }: { profile: ProfileWithEvent; isPassed?: boolean; showActions?: boolean; showUnlike?: boolean }) => (
+  const ProfileCard = ({ profile }: { profile: ProfileWithEvent }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex gap-4 p-4">
         <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0 gradient-sunset">
@@ -392,7 +185,7 @@ const LikedYou = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h3 
+              <h3
                 className="font-semibold text-lg cursor-pointer hover:text-primary transition-colors"
                 onClick={() => setSelectedProfile(profile)}
               >
@@ -416,75 +209,37 @@ const LikedYou = () => {
               ))}
             </div>
           )}
-          {showActions && (
-            <div className="flex gap-2">
-              {isPassed ? (
-                <Button
-                  size="sm"
-                  variant="gradient"
-                  className="flex-1"
-                  onClick={() => handleLike(profile)}
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  {t('likedYou.like')}
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => handlePass(profile)}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    {t('likedYou.pass')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="gradient"
-                    className="flex-1"
-                    onClick={() => handleLike(profile)}
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    {t('likedYou.like')}
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-          {showUnlike && (
-            <div className="flex gap-2">
-              {profile.matchId ? (
-                <Button
-                  size="sm"
-                  variant="gradient"
-                  className="flex-1"
-                  onClick={() => navigate(`/chat/${profile.matchId}`, {
-                    state: {
-                      matchId: profile.matchId,
-                      userId: profile.user_id,
-                      name: profile.name,
-                      photo: profile.photo,
-                      eventName: profile.eventName,
-                    }
-                  })}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {t('likedYou.goChat')}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleUnlike(profile)}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  {t('likedYou.unlike')}
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex gap-2">
+            {profile.matchId ? (
+              <Button
+                size="sm"
+                variant="gradient"
+                className="flex-1"
+                onClick={() => navigate(`/chat/${profile.matchId}`, {
+                  state: {
+                    matchId: profile.matchId,
+                    userId: profile.user_id,
+                    name: profile.name,
+                    photo: profile.photo,
+                    eventName: profile.eventName,
+                  }
+                })}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                {t('likedYou.goChat')}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => handleUnlike(profile)}
+              >
+                <X className="w-4 h-4 mr-2" />
+                {t('likedYou.unlike')}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </Card>
@@ -501,62 +256,21 @@ const LikedYou = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-6">
-        {/* Tab Selector - Hidden but keeping logic */}
-        {/* 
-        <Card className="p-1 mb-6">
-          <div className="grid grid-cols-3 gap-1">
-            <button
-              onClick={() => setActiveTab("new")}
-              className={cn(
-                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-                activeTab === "new"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              New ({newLikes.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("passed")}
-              className={cn(
-                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-                activeTab === "passed"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Passed ({passedLikes.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("all-likes")}
-              className={cn(
-                "py-2 px-2 rounded-lg font-medium transition-all text-xs sm:text-sm",
-                activeTab === "all-likes"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              All Likes ({allLikes.length})
-            </button>
-          </div>
-        </Card>
-        */}
-
-        {/* Likes List - Always show All Likes */}
+        {/* Likes List */}
         <div className="space-y-4 pb-6 pt-6">
           {loading ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Loading your likes...</p>
+              <p className="text-muted-foreground">{t('likedYou.loading')}</p>
             </Card>
-          ) : allLikes.length > 0 ? (
-            allLikes.map((profile) => (
-              <ProfileCard key={profile.swipeId} profile={profile} showActions={false} showUnlike={true} />
+          ) : myLikes.length > 0 ? (
+            myLikes.map((profile) => (
+              <ProfileCard key={profile.swipeId} profile={profile} />
             ))
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">You haven't liked anyone yet</p>
+              <p className="text-muted-foreground">{t('likedYou.noLikes')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Start swiping in matchmaking to see profiles here
+                {t('likedYou.noLikesDesc')}
               </p>
             </Card>
           )}
