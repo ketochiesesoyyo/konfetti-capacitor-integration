@@ -92,8 +92,8 @@ export const HeroSection = () => {
             </button>
           </p>
 
-          {/* App Store Badge */}
-          <div className="pt-6">
+          {/* App Store Badge - Hidden until we have the official App Store link */}
+          {/* <div className="pt-6">
             <a
               href="#"
               target="_blank"
@@ -106,7 +106,7 @@ export const HeroSection = () => {
                 className="h-12"
               />
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
 
