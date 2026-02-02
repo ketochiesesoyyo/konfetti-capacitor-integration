@@ -92,6 +92,10 @@ const App = () => (
               <Route path="/para-novios" element={<ForCouples />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
               <Route path="/contact" element={<Contact />} />
+              {/* Apple App Store required redirects */}
+              <Route path="/help" element={<Navigate to="/support" replace />} />
+              <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+              <Route path="/terms" element={<Navigate to="/terms-conditions" replace />} />
               <Route path="/support" element={<Support />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
