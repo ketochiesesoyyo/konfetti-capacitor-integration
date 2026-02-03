@@ -111,7 +111,8 @@
     "noHosts": "Aún no hay mensajes del anfitrión",
     "noHostsDesc": "Los anfitriones de eventos pueden enviarle mensajes directamente",
     "reportAndUnmatch": "Reportar y desemparejar",
-    "unmatch": "Inigualable",
+    "unmatch": "Desemparejar",
+    "blockUser": "Bloquear usuario",
     "failedLoadMatches": "No se pudieron cargar las coincidencias"
   },
   "chatThread": {
@@ -1035,6 +1036,32 @@
         "cta": "Sí, quiero esto para mi boda",
         "note": "Cupos limitados por mes"
       }
+    }
+  },
+  "blockDialog": {
+    "title": "Bloquear a {{name}}",
+    "description": "Bloquear a este usuario lo eliminará de tus matches, borrará la conversación y evitará que aparezca en tu feed.",
+    "whatHappens": "Qué pasa cuando bloqueas:",
+    "effect1": "El match y los mensajes serán eliminados",
+    "effect2": "No verás a esta persona en matchmaking",
+    "effect3": "No podrá encontrarte ni enviarte mensajes",
+    "effect4": "Nuestro equipo será notificado del bloqueo",
+    "reasonLabel": "¿Por qué estás bloqueando? (opcional)",
+    "detailsLabel": "Por favor proporciona detalles",
+    "detailsPlaceholder": "Cuéntanos más...",
+    "selectReason": "Por favor selecciona una razón",
+    "mustBeLoggedIn": "Debes iniciar sesión para bloquear usuarios",
+    "unauthorized": "No tienes permiso para bloquear a este usuario",
+    "success": "{{name}} ha sido bloqueado",
+    "failed": "Error al bloquear usuario",
+    "blocking": "Bloqueando...",
+    "confirm": "Bloquear usuario",
+    "reasons": {
+      "inappropriate_behavior": "Comportamiento inapropiado",
+      "harassment": "Acoso",
+      "made_uncomfortable": "Me hizo sentir incómodo/a",
+      "spam_fake": "Spam o perfil falso",
+      "other": "Otro"
     }
   }
 }

@@ -45,6 +45,13 @@ export const matchSchema = z.object({
   event_id: z.string().uuid('Invalid event ID'),
 });
 
+// Block validation
+export const blockSchema = z.object({
+  blocked_id: z.string().uuid('Invalid user ID'),
+  event_id: z.string().uuid('Invalid event ID').optional(),
+  reason: z.string().trim().max(500, 'Reason must be less than 500 characters').optional(),
+});
+
 // Submitter type enum
 export const submitterTypeOptions = ['couple', 'wedding_planner'] as const;
 export type SubmitterType = typeof submitterTypeOptions[number];

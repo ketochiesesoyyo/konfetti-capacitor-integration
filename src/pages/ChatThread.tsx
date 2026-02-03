@@ -3,12 +3,13 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Send, MoreVertical, UserX, Flag } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, UserX, Flag, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { handleError } from "@/lib/errorHandling";
 import { ProfileViewDialog } from "@/components/ProfileViewDialog";
 import { ReportDialog } from "@/components/ReportDialog";
+import { BlockUserDialog } from "@/components/BlockUserDialog";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -52,6 +53,7 @@ const ChatThread = () => {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showUnmatchDialog, setShowUnmatchDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [eventId, setEventId] = useState<string>("");
   const [recipientId, setRecipientId] = useState<string>("");
   const [isDirectChat, setIsDirectChat] = useState(false);
@@ -353,6 +355,13 @@ const ChatThread = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                onClick={() => setShowBlockDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <ShieldOff className="w-4 h-4 mr-2" />
+                {t('chats.blockUser')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => setShowReportDialog(true)}
                 className="text-destructive focus:text-destructive"
               >
@@ -461,6 +470,16 @@ const ChatThread = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Block User Dialog */}
+      <BlockUserDialog
+        open={showBlockDialog}
+        onOpenChange={setShowBlockDialog}
+        blockedUserId={chatDetails.userId}
+        blockedUserName={chatDetails.name}
+        matchId={matchId}
+        eventId={eventId}
+      />
     </div>
   );
 };

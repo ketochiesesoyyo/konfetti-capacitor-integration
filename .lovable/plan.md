@@ -1,8 +1,8 @@
 
-## Apple App Store Compliance: Implement User Blocking Feature
+## Apple App Store Compliance: User Blocking Feature ✅ IMPLEMENTED
 
 ### Overview
-To comply with Apple's App Review Guideline 1.2 (User-Generated Content), we need to implement a **Block User** feature that:
+Implemented the **Block User** feature to comply with Apple's App Review Guideline 1.2 (User-Generated Content):
 1. Allows users to block abusive users
 2. Notifies the developer/admin of the block
 3. Removes the blocked user's content from the blocker's feed instantly

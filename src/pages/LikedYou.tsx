@@ -90,6 +90,22 @@ const LikedYou = () => {
         .select("unmatched_user_id, event_id")
         .eq("unmatcher_id", session.user.id);
 
+      // Fetch blocked users (bidirectional)
+      const { data: blockedData } = await supabase
+        .from("blocked_users")
+        .select("blocked_id")
+        .eq("blocker_id", session.user.id);
+      
+      const { data: blockedByData } = await supabase
+        .from("blocked_users")
+        .select("blocker_id")
+        .eq("blocked_id", session.user.id);
+      
+      const blockedUserIds = new Set([
+        ...(blockedData?.map(b => b.blocked_id) || []),
+        ...(blockedByData?.map(b => b.blocker_id) || [])
+      ]);
+
       // Create a set of unmatched user_id + event_id combinations
       const unmatchedSet = new Set(
         unmatchedUsers?.map(u => `${u.unmatched_user_id}_${u.event_id}`) || []
@@ -113,8 +129,13 @@ const LikedYou = () => {
           const profile = likedProfileMap.get(swipe.swiped_user_id);
           if (!profile) return null;
 
-          // Filter out unmatched users
+          // Filter out unmatched and blocked users
           if (unmatchedSet.has(`${swipe.swiped_user_id}_${swipe.event_id}`)) {
+            return null;
+          }
+          
+          // Filter out blocked users
+          if (blockedUserIds.has(swipe.swiped_user_id)) {
             return null;
           }
 
