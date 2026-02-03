@@ -68,6 +68,41 @@ export type Database = {
           },
         ]
       }
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          event_id: string | null
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_tokens: {
         Row: {
           created_at: string | null
@@ -658,6 +693,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      block_user_transaction: {
+        Args: {
+          _blocked_id: string
+          _blocker_id: string
+          _event_id: string
+          _match_id: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       can_join_event: { Args: { _event_id: string }; Returns: boolean }
       delete_user_account: { Args: never; Returns: undefined }
       get_event_guest_count: { Args: { _event_id: string }; Returns: number }

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ChatActionsMenu } from "@/components/ChatActionsMenu";
 import { ReportDialog } from "@/components/ReportDialog";
 import { UnmatchDialog } from "@/components/UnmatchDialog";
+import { BlockUserDialog } from "@/components/BlockUserDialog";
 import { useTranslation } from "react-i18next";
 
 type MatchChat = {
@@ -45,6 +46,7 @@ const Chats = () => {
   const [hostChats, setHostChats] = useState<HostChat[]>([]);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [unmatchDialogOpen, setUnmatchDialogOpen] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<MatchChat | null>(null);
 
   const loadMatches = async () => {
@@ -54,6 +56,23 @@ const Chats = () => {
       return;
     }
     setUserId(session.user.id);
+
+    // Fetch user's blocked users
+    const { data: blockedData } = await supabase
+      .from("blocked_users")
+      .select("blocked_id")
+      .eq("blocker_id", session.user.id);
+    
+    // Also get users who blocked the current user
+    const { data: blockedByData } = await supabase
+      .from("blocked_users")
+      .select("blocker_id")
+      .eq("blocked_id", session.user.id);
+    
+    const blockedUserIds = new Set([
+      ...(blockedData?.map(b => b.blocked_id) || []),
+      ...(blockedByData?.map(b => b.blocker_id) || [])
+    ]);
 
     // Fetch matches
     const { data: matches, error } = await supabase
@@ -78,9 +97,15 @@ const Chats = () => {
       return;
     }
 
+    // Filter out blocked users
+    const filteredMatches = (matches || []).filter((match: any) => {
+      const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
+      return !blockedUserIds.has(otherUserId);
+    });
+
     // For each match, get the last message
     const chatsWithMessages = await Promise.all(
-      (matches || []).map(async (match: any) => {
+      filteredMatches.map(async (match: any) => {
         const otherUser = match.user1_id === session.user.id ? match.user2 : match.user1;
         const otherUserId = match.user1_id === session.user.id ? match.user2_id : match.user1_id;
 
@@ -263,10 +288,15 @@ const Chats = () => {
     setUnmatchDialogOpen(true);
   };
 
+  const handleBlock = (chat: MatchChat) => {
+    setSelectedChat(chat);
+    setBlockDialogOpen(true);
+  };
+
   const handleActionComplete = async () => {
     // Wait a moment for database operations to complete
     await new Promise(resolve => setTimeout(resolve, 500));
-    // Reload chats from database after unmatch/report
+    // Reload chats from database after unmatch/report/block
     await loadMatches();
     setSelectedChat(null);
   };
@@ -309,6 +339,7 @@ const Chats = () => {
               <ChatActionsMenu
                 onReportAndUnmatch={() => handleReportAndUnmatch(chat)}
                 onUnmatch={() => handleUnmatch(chat)}
+                onBlock={() => handleBlock(chat)}
               />
             </div>
           </div>
@@ -467,6 +498,19 @@ const Chats = () => {
           matchId={selectedChat.matchId}
           eventId={selectedChat.eventId}
           onUnmatchComplete={handleActionComplete}
+        />
+      )}
+
+      {/* Block User Dialog */}
+      {selectedChat && (
+        <BlockUserDialog
+          open={blockDialogOpen}
+          onOpenChange={setBlockDialogOpen}
+          blockedUserId={selectedChat.userId}
+          blockedUserName={selectedChat.name}
+          matchId={selectedChat.matchId}
+          eventId={selectedChat.eventId}
+          onBlockComplete={handleActionComplete}
         />
       )}
     </div>

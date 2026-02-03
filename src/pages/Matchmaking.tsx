@@ -378,13 +378,29 @@ const Matchmaking = () => {
 
           const unmatchedUserIds = new Set(unmatchedUsers?.map(u => u.unmatched_user_id) || []);
 
-          // Filter out unmatched users
-          const nonUnmatchedProfiles = ageCompatibleProfiles.filter((profile) => {
-            return !unmatchedUserIds.has(profile.user_id);
+          // Fetch blocked users (bidirectional)
+          const { data: blockedData } = await supabase
+            .from("blocked_users")
+            .select("blocked_id")
+            .eq("blocker_id", userId);
+          
+          const { data: blockedByData } = await supabase
+            .from("blocked_users")
+            .select("blocker_id")
+            .eq("blocked_id", userId);
+          
+          const blockedUserIds = new Set([
+            ...(blockedData?.map(b => b.blocked_id) || []),
+            ...(blockedByData?.map(b => b.blocker_id) || [])
+          ]);
+
+          // Filter out unmatched and blocked users
+          const nonExcludedProfiles = ageCompatibleProfiles.filter((profile) => {
+            return !unmatchedUserIds.has(profile.user_id) && !blockedUserIds.has(profile.user_id);
           });
 
           // Filter profiles with second chance logic
-          const filteredProfiles = nonUnmatchedProfiles.filter((profile) => {
+          const filteredProfiles = nonExcludedProfiles.filter((profile) => {
             const userSwipes = swipesByUser.get(profile.user_id);
 
             // Never swiped = show

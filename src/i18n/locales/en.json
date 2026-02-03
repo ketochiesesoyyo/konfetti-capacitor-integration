@@ -112,6 +112,7 @@
     "noHostsDesc": "Event hosts can send you messages directly",
     "reportAndUnmatch": "Report & Unmatch",
     "unmatch": "Unmatch",
+    "blockUser": "Block User",
     "failedLoadMatches": "Failed to load matches"
   },
   "chatThread": {
@@ -1036,6 +1037,32 @@
         "cta": "Yes, I want this for my wedding",
         "note": "Limited spots available per month"
       }
+    }
+  },
+  "blockDialog": {
+    "title": "Block {{name}}",
+    "description": "Blocking this user will remove them from your matches, delete your conversation, and prevent them from appearing in your feed.",
+    "whatHappens": "What happens when you block:",
+    "effect1": "Match and messages will be deleted",
+    "effect2": "You won't see this person in matchmaking",
+    "effect3": "They won't be able to find or message you",
+    "effect4": "Our team will be notified of the block",
+    "reasonLabel": "Why are you blocking? (optional)",
+    "detailsLabel": "Please provide details",
+    "detailsPlaceholder": "Tell us more...",
+    "selectReason": "Please select a reason",
+    "mustBeLoggedIn": "You must be logged in to block users",
+    "unauthorized": "You don't have permission to block this user",
+    "success": "{{name}} has been blocked",
+    "failed": "Failed to block user",
+    "blocking": "Blocking...",
+    "confirm": "Block User",
+    "reasons": {
+      "inappropriate_behavior": "Inappropriate behavior",
+      "harassment": "Harassment",
+      "made_uncomfortable": "Made me uncomfortable",
+      "spam_fake": "Spam or fake profile",
+      "other": "Other"
     }
   }
 }
