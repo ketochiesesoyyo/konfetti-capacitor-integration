@@ -103,6 +103,7 @@ const Admin = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isClientDetailOpen, setIsClientDetailOpen] = useState(false);
   const [isClientEditOpen, setIsClientEditOpen] = useState(false);
+  const [isClientCreateOpen, setIsClientCreateOpen] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -182,7 +183,33 @@ const Admin = () => {
     }
   };
 
-  const updateClient = async (clientId: string, updates: Partial<Client>) => {
+  const updateClient = async (clientId: string | null, updates: Partial<Client>) => {
+    if (!clientId) {
+      // Create mode - insert new client
+      const { error, data } = await supabase
+        .from('clients')
+        .insert({
+          contact_name: updates.contact_name,
+          client_type: updates.client_type || 'couple',
+          company_name: updates.company_name || null,
+          email: updates.email || null,
+          phone: updates.phone || null,
+          notes: updates.notes || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error("Error al crear cliente");
+        console.error(error);
+      } else {
+        toast.success("Cliente creado");
+        await loadClients();
+      }
+      return;
+    }
+
+    // Edit mode - update existing client
     const { error } = await supabase
       .from('clients')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -714,11 +741,19 @@ const Admin = () => {
 
             {/* Clients Table */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="w-5 h-5" />
                   Clientes
                 </CardTitle>
+                <Button 
+                  onClick={() => setIsClientCreateOpen(true)} 
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Añadir Cliente
+                </Button>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -970,6 +1005,14 @@ const Admin = () => {
         request={requestForEventCreation}
         userId={userId}
         onEventCreated={handleEventCreated}
+        existingClients={clients.map(c => ({
+          id: c.id,
+          client_type: c.client_type,
+          contact_name: c.contact_name,
+          company_name: c.company_name,
+          email: c.email,
+          phone: c.phone,
+        }))}
       />
 
       {/* Event Success Dialog */}
@@ -997,6 +1040,16 @@ const Admin = () => {
         onOpenChange={setIsClientEditOpen}
         client={selectedClient}
         onSave={updateClient}
+        mode="edit"
+      />
+
+      {/* Client Create Dialog */}
+      <ClientEditDialog
+        open={isClientCreateOpen}
+        onOpenChange={setIsClientCreateOpen}
+        client={null}
+        onSave={updateClient}
+        mode="create"
       />
 
       {/* Delete Client Confirmation */}

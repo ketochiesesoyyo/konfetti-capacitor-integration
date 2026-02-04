@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Camera, X, Loader2, User, Building2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar, Camera, X, Loader2, User, Building2, Users } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,12 +26,22 @@ interface EventRequest {
   contact_name?: string | null;
 }
 
+interface Client {
+  id: string;
+  client_type: string;
+  contact_name: string;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
 interface AdminEventCreationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   request: EventRequest | null;
   userId: string;
   onEventCreated: (eventId: string, inviteCode: string) => void;
+  existingClients?: Client[];
 }
 
 const MATCHMAKING_OPTIONS = [
@@ -51,6 +62,7 @@ export const AdminEventCreationDialog = ({
   request,
   userId,
   onEventCreated,
+  existingClients = [],
 }: AdminEventCreationDialogProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [eventImage, setEventImage] = useState<File | null>(null);
@@ -60,7 +72,11 @@ export const AdminEventCreationDialog = ({
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
   const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
 
-  // Client data
+  // Client mode: "new" or "existing"
+  const [clientMode, setClientMode] = useState<"new" | "existing">("new");
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+
+  // Client data for new client creation
   const [clientData, setClientData] = useState({
     clientType: "couple" as "couple" | "wedding_planner",
     contactName: "",
@@ -78,7 +94,9 @@ export const AdminEventCreationDialog = ({
   // Reset form when request changes or dialog opens
   useEffect(() => {
     if (request) {
-      // Pre-fill from request
+      // Pre-fill from request - always use "new" client mode for leads
+      setClientMode("new");
+      setSelectedClientId("");
       setFormData({
         coupleName1: request.partner1_name,
         coupleName2: request.partner2_name,
@@ -100,6 +118,8 @@ export const AdminEventCreationDialog = ({
       setMatchmakingOption("1_week_before");
     } else if (open) {
       // Reset for direct event creation
+      setClientMode("new");
+      setSelectedClientId("");
       setFormData({
         coupleName1: "",
         coupleName2: "",
@@ -225,8 +245,12 @@ export const AdminEventCreationDialog = ({
 
   const handleCreateEvent = async () => {
     // Validation
-    if (!clientData.contactName?.trim()) {
+    if (clientMode === "new" && !clientData.contactName?.trim()) {
       toast.error("El nombre de contacto es requerido");
+      return;
+    }
+    if (clientMode === "existing" && !selectedClientId) {
+      toast.error("Selecciona un cliente existente");
       return;
     }
     if (!formData.coupleName1?.trim()) {
@@ -285,22 +309,31 @@ export const AdminEventCreationDialog = ({
       
       const matchmakingStartDate = calculateMatchmakingStartDate();
 
-      // Create client first
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .insert({
-          client_type: clientData.clientType,
-          contact_name: clientData.contactName.trim(),
-          company_name: clientData.clientType === 'wedding_planner' ? clientData.companyName.trim() || null : null,
-          email: clientData.email.trim() || null,
-          phone: clientData.phone.trim() || null,
-          source_request_id: request?.id || null,
-        })
-        .select()
-        .single();
+      let clientId: string;
 
-      if (clientError) {
-        throw new Error(`Error al crear cliente: ${clientError.message}`);
+      if (clientMode === "existing" && selectedClientId) {
+        // Use existing client
+        clientId = selectedClientId;
+      } else {
+        // Create new client
+        const { data: client, error: clientError } = await supabase
+          .from("clients")
+          .insert({
+            client_type: clientData.clientType,
+            contact_name: clientData.contactName.trim(),
+            company_name: clientData.clientType === 'wedding_planner' ? clientData.companyName.trim() || null : null,
+            email: clientData.email.trim() || null,
+            phone: clientData.phone.trim() || null,
+            source_request_id: request?.id || null,
+          })
+          .select()
+          .single();
+
+        if (clientError) {
+          throw new Error(`Error al crear cliente: ${clientError.message}`);
+        }
+        
+        clientId = client.id;
       }
 
       // Create event with client_id
@@ -313,11 +346,11 @@ export const AdminEventCreationDialog = ({
           description: `Wedding celebration for ${eventName}`,
           invite_code: inviteCode,
           created_by: userId,
+          client_id: clientId,
           image_url: imageUrl,
           status: 'active',
           matchmaking_start_date: matchmakingStartDate,
           matchmaking_start_time: '00:00',
-          client_id: client.id,
         })
         .select()
         .single();
@@ -368,85 +401,133 @@ export const AdminEventCreationDialog = ({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Client Information Section */}
+            {/* Client Selection Section - only show toggle when not from a request */}
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <User className="w-4 h-4" />
-                Información del Cliente
+                Cliente
               </div>
-              
-              {/* Client Type */}
-              <div className="space-y-2">
-                <Label>Tipo de Cliente</Label>
-                <Select 
-                  value={clientData.clientType} 
-                  onValueChange={(value: "couple" | "wedding_planner") => 
-                    setClientData(prev => ({ ...prev, clientType: value }))
-                  }
+
+              {/* Client Mode Toggle - only show when NOT from a request and there are existing clients */}
+              {!request && existingClients.length > 0 && (
+                <RadioGroup
+                  value={clientMode}
+                  onValueChange={(value: "new" | "existing") => setClientMode(value)}
+                  className="flex gap-4"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CLIENT_TYPE_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="new" id="client-new" />
+                    <Label htmlFor="client-new" className="cursor-pointer">Nuevo cliente</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="existing" id="client-existing" />
+                    <Label htmlFor="client-existing" className="cursor-pointer">Cliente existente</Label>
+                  </div>
+                </RadioGroup>
+              )}
 
-              {/* Contact Name */}
-              <div className="space-y-2">
-                <Label htmlFor="contactName">Nombre de Contacto *</Label>
-                <Input
-                  id="contactName"
-                  value={clientData.contactName}
-                  onChange={(e) => setClientData(prev => ({ ...prev, contactName: e.target.value }))}
-                  placeholder="Nombre del contacto principal"
-                />
-              </div>
-
-              {/* Company Name (only for wedding planners) */}
-              {clientData.clientType === 'wedding_planner' && (
+              {/* Existing Client Dropdown */}
+              {clientMode === "existing" && existingClients.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="companyName" className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Empresa
-                  </Label>
-                  <Input
-                    id="companyName"
-                    value={clientData.companyName}
-                    onChange={(e) => setClientData(prev => ({ ...prev, companyName: e.target.value }))}
-                    placeholder="Nombre de la empresa"
-                  />
+                  <Label>Seleccionar Cliente</Label>
+                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar cliente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingClients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span>{client.contact_name}</span>
+                            {client.company_name && (
+                              <span className="text-muted-foreground">- {client.company_name}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
-              {/* Contact Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="clientEmail">Email</Label>
-                  <Input
-                    id="clientEmail"
-                    type="email"
-                    value={clientData.email}
-                    onChange={(e) => setClientData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="email@ejemplo.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="clientPhone">Teléfono</Label>
-                  <Input
-                    id="clientPhone"
-                    type="tel"
-                    value={clientData.phone}
-                    onChange={(e) => setClientData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+34 600 000 000"
-                  />
-                </div>
-              </div>
+              {/* New Client Form - show when clientMode is "new" */}
+              {clientMode === "new" && (
+                <>
+                  {/* Client Type */}
+                  <div className="space-y-2">
+                    <Label>Tipo de Cliente</Label>
+                    <Select 
+                      value={clientData.clientType} 
+                      onValueChange={(value: "couple" | "wedding_planner") => 
+                        setClientData(prev => ({ ...prev, clientType: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CLIENT_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Contact Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="contactName">Nombre de Contacto *</Label>
+                    <Input
+                      id="contactName"
+                      value={clientData.contactName}
+                      onChange={(e) => setClientData(prev => ({ ...prev, contactName: e.target.value }))}
+                      placeholder="Nombre del contacto principal"
+                    />
+                  </div>
+
+                  {/* Company Name (only for wedding planners) */}
+                  {clientData.clientType === 'wedding_planner' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName" className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4" />
+                        Empresa
+                      </Label>
+                      <Input
+                        id="companyName"
+                        value={clientData.companyName}
+                        onChange={(e) => setClientData(prev => ({ ...prev, companyName: e.target.value }))}
+                        placeholder="Nombre de la empresa"
+                      />
+                    </div>
+                  )}
+
+                  {/* Contact Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientEmail">Email</Label>
+                      <Input
+                        id="clientEmail"
+                        type="email"
+                        value={clientData.email}
+                        onChange={(e) => setClientData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="email@ejemplo.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientPhone">Teléfono</Label>
+                      <Input
+                        id="clientPhone"
+                        type="tel"
+                        value={clientData.phone}
+                        onChange={(e) => setClientData(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="+34 600 000 000"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Event Information Section */}

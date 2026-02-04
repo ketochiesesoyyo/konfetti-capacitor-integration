@@ -25,10 +25,11 @@ interface ClientEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client: Client | null;
-  onSave: (clientId: string, updates: Partial<Client>) => Promise<void>;
+  onSave: (clientId: string | null, updates: Partial<Client>) => Promise<void>;
+  mode?: "edit" | "create";
 }
 
-export const ClientEditDialog = ({ open, onOpenChange, client, onSave }: ClientEditDialogProps) => {
+export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "edit" }: ClientEditDialogProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     contact_name: "",
@@ -40,7 +41,7 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave }: ClientE
   });
 
   useEffect(() => {
-    if (client) {
+    if (mode === "edit" && client) {
       setFormData({
         contact_name: client.contact_name || "",
         client_type: client.client_type || "couple",
@@ -49,15 +50,24 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave }: ClientE
         phone: client.phone || "",
         notes: client.notes || "",
       });
+    } else if (mode === "create") {
+      // Reset form for create mode
+      setFormData({
+        contact_name: "",
+        client_type: "couple",
+        company_name: "",
+        email: "",
+        phone: "",
+        notes: "",
+      });
     }
-  }, [client]);
+  }, [client, mode, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!client) return;
 
     setIsSaving(true);
-    await onSave(client.id, {
+    await onSave(mode === "edit" ? client?.id || null : null, {
       contact_name: formData.contact_name,
       client_type: formData.client_type,
       company_name: formData.client_type === "wedding_planner" ? formData.company_name : null,
@@ -69,13 +79,15 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave }: ClientE
     onOpenChange(false);
   };
 
+  const isCreateMode = mode === "create";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Cliente</DialogTitle>
+          <DialogTitle>{isCreateMode ? "Añadir Cliente" : "Editar Cliente"}</DialogTitle>
           <DialogDescription>
-            Actualiza la información del cliente
+            {isCreateMode ? "Crea un nuevo cliente en el CRM" : "Actualiza la información del cliente"}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,7 +167,7 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave }: ClientE
               Cancelar
             </Button>
             <Button type="submit" disabled={isSaving || !formData.contact_name} className="flex-1">
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : isCreateMode ? "Crear" : "Guardar"}
             </Button>
           </div>
         </form>
