@@ -182,15 +182,85 @@ export const loadHostedEventsHardened = async (): Promise<{
   usedFallback: boolean;
 }> => {
   // Try primary query with relational joins
+  // Note: Using simpler query without nested joins to avoid relationship ambiguity errors
   try {
     const { data, error } = await supabase
       .from('events')
-      .select('*, event_attendees(count), contacts!contact_id(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
+      .select('id, name, date, status, invite_code, image_url, close_date, created_at, contact_id')
       .order('date', { ascending: false });
 
     if (!error && data) {
+      // Fetch attendee counts, contacts, and companies in parallel
+      const eventIds = data.map(e => e.id);
+      const contactIds = [...new Set(data.map(e => e.contact_id).filter(Boolean))];
+      
+      // Parallel fetches
+      const [attendeesRes, contactsRes] = await Promise.all([
+        // Get all attendees for these events
+        supabase
+          .from('event_attendees')
+          .select('event_id')
+          .in('event_id', eventIds),
+        // Get contacts
+        contactIds.length > 0 
+          ? supabase.from('contacts').select('id, contact_type, contact_name, email, phone, company_id').in('id', contactIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      // Count attendees per event
+      const attendeeCounts: Record<string, number> = {};
+      if (attendeesRes.data) {
+        attendeesRes.data.forEach(a => {
+          attendeeCounts[a.event_id] = (attendeeCounts[a.event_id] || 0) + 1;
+        });
+      }
+
+      // Get companies for contacts
+      const companyIds = [...new Set((contactsRes.data || []).map(c => c.company_id).filter(Boolean))];
+      let companiesMap: Record<string, { id: string; name: string }> = {};
+      if (companyIds.length > 0) {
+        const { data: companiesData } = await supabase
+          .from('companies')
+          .select('id, name')
+          .in('id', companyIds as string[]);
+        if (companiesData) {
+          companiesData.forEach(c => { companiesMap[c.id] = c; });
+        }
+      }
+
+      // Build contacts map
+      const contactsMap: Record<string, any> = {};
+      (contactsRes.data || []).forEach(c => { contactsMap[c.id] = c; });
+
+      // Map everything together
+      const mappedEvents: HostedEvent[] = data.map(event => {
+        const contact = event.contact_id ? contactsMap[event.contact_id] : null;
+        const company = contact?.company_id ? companiesMap[contact.company_id] : null;
+
+        return {
+          id: event.id,
+          name: event.name,
+          date: event.date,
+          status: event.status,
+          invite_code: event.invite_code,
+          image_url: event.image_url,
+          close_date: event.close_date,
+          created_at: event.created_at,
+          event_attendees: [{ count: attendeeCounts[event.id] || 0 }],
+          contacts: contact ? {
+            id: contact.id,
+            contact_type: contact.contact_type,
+            contact_name: contact.contact_name,
+            email: contact.email,
+            phone: contact.phone,
+            company_id: contact.company_id,
+            companies: company,
+          } : null,
+        };
+      });
+
       return { 
-        data: data as HostedEvent[], 
+        data: mappedEvents, 
         error: null, 
         usedFallback: false 
       };
