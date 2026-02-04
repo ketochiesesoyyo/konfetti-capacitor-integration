@@ -1,200 +1,102 @@
 
+Goal: Fix the production (“Published”) admin panel so it can reliably (1) load Events, (2) load Clients/Contacts, and (3) create events — without the “Error al cargar Eventos / Clientes” failures.
 
-## CRM Enhancement: Add Clients & Select Existing Clients for Events
+What I believe is happening (most likely root cause)
+- You are testing on the Published URL, which uses the Live environment.
+- Many of the recent CRM schema changes (clients → contacts/companies, events.contact_id, updated RLS) were made in Test and/or with code that expects the new schema.
+- If Live has not been fully updated/published to match the new schema + policies, production queries will hard-fail (not just return 0 rows) with errors like:
+  - “column contact_id does not exist”
+  - “Could not find relationship …” (if FKs/views differ)
+  - RLS/permission errors
+These hard failures match the behavior: toasts show the generic “Error al cargar …” (which only happens when Supabase returns an error, not when it returns empty arrays).
 
-### Overview
+Plan of attack (fastest path to a guaranteed fix)
 
-This plan addresses two missing features:
-1. **Add new clients directly** from the Clientes tab (without creating an event)
-2. **Select existing clients** when creating a new event (for repeat Wedding Planners)
+1) Confirm the production failure mode with better visibility (so we stop guessing)
+   1.1 Add an “Admin Diagnostics” panel (visible only for admins) that captures and displays:
+       - the exact error message/code from the backend
+       - which query failed (Events load vs Contacts load vs Companies load)
+       - current environment marker (Published vs Preview)
+   1.2 Replace current generic toasts in Admin.tsx with centralized safe error handling:
+       - In production: show a short user message plus a “Ref: …” code
+       - In development/admin diagnostics: store the full error details (message, code, hint, query context)
 
----
+   Why:
+   - Right now the UI only shows a generic toast; without the raw error we cannot deterministically fix it.
+   - This will also prevent future regressions from becoming “blind” failures.
 
-### Changes Required
+2) Verify Live environment schema alignment (and fix it if it’s behind)
+   2.1 Add a lightweight “schema compatibility check” that runs on entering /admin:
+       - Attempt a tiny select that requires the new schema, e.g.:
+         - events: select contact_id limit 1
+         - contacts table exists
+         - companies table exists
+       - If the check fails with “column/table not found”, show a clear admin-only banner:
+         “Backend schema in Live is behind the app version. Publish the latest backend changes.”
+   2.2 If the compatibility check indicates Live is behind:
+       - Publish so Live receives:
+         - the CRM migration that creates companies/contacts and adds events.contact_id
+         - the updated RLS policies for events/event_attendees/contacts/companies
+       - After publishing, re-test production.
 
-#### 1. Clientes Tab: Add "Añadir Cliente" Button
+   Why:
+   - This is the #1 cause of “works in preview, breaks in published” with database-backed apps.
 
-Add a button in the Clientes tab header to create clients independently:
+3) Harden the admin queries to be robust across relational/RLS edge cases
+   3.1 Events query (Admin.tsx → loadHostedEvents)
+       - Keep the explicit FK join syntax for contacts:
+         contacts!contact_id(...)
+       - Ensure nested companies selection is correct and doesn’t crash if company is null.
+       - Add a fallback: if the relational join fails (relationship ambiguity), run a two-step fetch:
+         - fetch events (no joins)
+         - fetch contacts for the event.contact_id set
+         - fetch companies for contacts.company_id
+         - map in memory
+       This makes the admin panel resilient even if PostgREST relationship discovery differs in Live.
 
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  👥 Clientes                              [ + Añadir Cliente ]│
-├──────────────────────────────────────────────────────────────┤
-│  Stats cards...                                               │
-│  Clients table...                                             │
-└──────────────────────────────────────────────────────────────┘
-```
+   3.2 Contacts query (Admin.tsx → loadContacts)
+       - Similar hardening:
+         - fetch contacts + companies (or do 2-step if join fails)
+         - fetch events by contact_id
+         - map in memory (you already do this mapping part, which is good)
 
-**Implementation:**
-- Add a `createClient` function in Admin.tsx that inserts a new client
-- Modify `ClientEditDialog` to support "create mode" (when no client is passed)
-- Add a new state `isClientCreateOpen` to control the dialog
+   Why:
+   - Admin views are management-critical; we can afford 2-step queries for reliability.
 
----
+4) Ensure RLS policies are correct for admins in Live
+   4.1 Validate in Live:
+       - events SELECT allows admins
+       - event_attendees SELECT allows admins (needed for attendee count)
+       - contacts SELECT allows admins
+       - companies SELECT allows admins
+   4.2 If any policy is missing/misaligned in Live, apply a migration to correct it.
+       - Keep admin access based on server-side role checks (has_role(auth.uid(), 'admin')).
+       - Avoid “restrictive + permissive” traps by ensuring restrictive policies include the admin clause, as you started doing.
 
-#### 2. AdminEventCreationDialog: Select Existing Client Option
+5) End-to-end verification checklist (production)
+   After implementing the diagnostics + schema alignment + query hardening:
+   - Go to Published /admin
+   - Confirm:
+     - Events tab loads and shows non-zero events
+     - Contacts tab loads and shows non-zero contacts
+     - “Crear Evento” succeeds (creates contact/company when needed, creates event, auto-joins creator)
+     - Navigating into an event dashboard from admin works
+   - If anything fails, the Diagnostics panel should show the precise error so the next fix is surgical.
 
-Add a toggle/select to choose between creating a new client or using an existing one:
+Deliverables (what I will change once you approve)
+- Frontend:
+  - src/pages/Admin.tsx
+    - Add diagnostic error capturing
+    - Add schema compatibility check + admin-only banner
+    - Harden loadHostedEvents/loadContacts with safe fallbacks
+  - (Optional) small reusable helper in src/lib/errorHandling.ts usage to standardize admin error reporting
+- Backend (only if diagnostics indicate Live policies are still wrong after publish):
+  - A migration to adjust RLS policies for admin visibility (events, event_attendees, contacts, companies)
 
-```text
-┌────────────────────────────────────────────────────────────┐
-│              Crear Evento                                  │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  ── CLIENTE ───────────────────────────────────────────   │
-│                                                            │
-│  ( ) Nuevo cliente                                         │
-│  (•) Seleccionar cliente existente                         │
-│                                                            │
-│  [ María García - La Boda Perfecta          ▼ ]            │
-│                                                            │
-│  ── INFORMACIÓN DEL EVENTO ────────────────────────────   │
-│  ...                                                       │
-└────────────────────────────────────────────────────────────┘
-```
+Risks / tradeoffs
+- Two-step fallback queries are slightly more code and 1–2 extra network calls, but they dramatically increase reliability for the admin panel and reduce breakage risk across environments.
+- If the root cause is “Live not published,” publishing is the real fix; diagnostics ensure we detect that immediately instead of repeatedly changing code/policies.
 
-**Implementation:**
-- Add `existingClients` prop to receive the list of clients
-- Add `clientMode` state: `"new"` or `"existing"`
-- Add `selectedClientId` state for when using existing client
-- Modify `handleCreateEvent` to:
-  - Skip client creation if using existing client
-  - Use `selectedClientId` for the event's `client_id`
-
----
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/Admin.tsx` | Pass `clients` to `AdminEventCreationDialog`, add "Añadir Cliente" button, add `createClient` function |
-| `src/components/admin/AdminEventCreationDialog.tsx` | Add client selection mode toggle, existing client dropdown |
-| `src/components/admin/ClientEditDialog.tsx` | Support create mode (no client passed = new client form) |
-
----
-
-### Technical Details
-
-#### Admin.tsx Changes
-
-```typescript
-// New function to create a client directly
-const createClient = async (clientData: Partial<Client>) => {
-  const { error, data } = await supabase
-    .from('clients')
-    .insert({
-      contact_name: clientData.contact_name,
-      client_type: clientData.client_type || 'couple',
-      company_name: clientData.company_name || null,
-      email: clientData.email || null,
-      phone: clientData.phone || null,
-      notes: clientData.notes || null,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    toast.error("Error al crear cliente");
-    return;
-  }
-  
-  toast.success("Cliente creado");
-  await loadClients();
-};
-```
-
-#### AdminEventCreationDialog Props
-
-```typescript
-interface AdminEventCreationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  request: EventRequest | null;
-  userId: string;
-  onEventCreated: (eventId: string, inviteCode: string) => void;
-  existingClients: Client[];  // NEW: pass existing clients
-}
-```
-
-#### Client Selection UI
-
-```typescript
-// State
-const [clientMode, setClientMode] = useState<"new" | "existing">("new");
-const [selectedClientId, setSelectedClientId] = useState<string>("");
-
-// In render
-{request === null && (  // Only show when direct creation, not from lead
-  <RadioGroup value={clientMode} onValueChange={setClientMode}>
-    <RadioGroupItem value="new">Nuevo cliente</RadioGroupItem>
-    <RadioGroupItem value="existing">Cliente existente</RadioGroupItem>
-  </RadioGroup>
-)}
-
-{clientMode === "existing" && (
-  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-    <SelectTrigger>
-      <SelectValue placeholder="Seleccionar cliente..." />
-    </SelectTrigger>
-    <SelectContent>
-      {existingClients.map((client) => (
-        <SelectItem key={client.id} value={client.id}>
-          {client.contact_name}
-          {client.company_name && ` - ${client.company_name}`}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-)}
-```
-
-#### Event Creation Logic Update
-
-```typescript
-// In handleCreateEvent
-let clientId: string;
-
-if (clientMode === "existing" && selectedClientId) {
-  // Use existing client
-  clientId = selectedClientId;
-} else {
-  // Create new client (existing code)
-  const { data: client, error: clientError } = await supabase
-    .from("clients")
-    .insert({ ... })
-    .select()
-    .single();
-  
-  clientId = client.id;
-}
-
-// Then use clientId when creating the event
-const { data: event } = await supabase.from("events").insert({
-  ...
-  client_id: clientId,
-});
-```
-
----
-
-### UX Flow Summary
-
-**Adding a new client (without event):**
-1. Go to Clientes tab
-2. Click "Añadir Cliente" button
-3. Fill in contact details
-4. Save → Client appears in table
-
-**Creating event for repeat Wedding Planner:**
-1. Click "Crear Evento"
-2. Select "Cliente existente"
-3. Choose from dropdown (shows contact name + company)
-4. Fill event details
-5. Create → Event linked to existing client
-
-**Creating event from a lead:**
-1. Go to Solicitudes tab
-2. Click on lead → "Crear Evento"
-3. Client form pre-filled from lead data (creates new client)
-4. Create → New client + event created, linked together
+What I need from you during implementation
+- After I add diagnostics, you’ll open Published /admin once and tell me what exact error appears in the Diagnostics panel (if it still fails). That will let us finalize the fix in minutes.
 
