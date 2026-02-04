@@ -77,7 +77,7 @@ interface Contact {
     id: string;
     name: string;
   } | null;
-  events: { id: string; name: string; date: string | null }[];
+  events: { id: string; name: string; date: string | null; status?: string }[];
 }
 
 interface Company {
@@ -174,12 +174,12 @@ const Admin = () => {
   const loadHostedEvents = async (adminUserId: string) => {
     const { data, error } = await supabase
       .from('events')
-      .select('*, event_attendees(count), contacts(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
+      .select('*, event_attendees(count), contacts!contact_id(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
       .eq('created_by', adminUserId)
       .order('date', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar eventos");
+      toast.error("Error al cargar Eventos");
       console.error(error);
     } else {
       setHostedEvents((data || []) as HostedEvent[]);
@@ -187,17 +187,37 @@ const Admin = () => {
   };
 
   const loadContacts = async () => {
-    const { data, error } = await supabase
+    // First get contacts with companies
+    const { data: contactsData, error: contactsError } = await supabase
       .from('contacts')
-      .select('*, companies(id, name), events(id, name, date)')
+      .select('*, companies(id, name)')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      toast.error("Error al cargar contactos");
-      console.error(error);
-    } else {
-      setContacts((data || []) as Contact[]);
+    if (contactsError) {
+      toast.error("Error al cargar Clientes");
+      console.error(contactsError);
+      return;
     }
+
+    // Then get events for each contact (events reference contacts, not the other way around)
+    const { data: eventsData, error: eventsError } = await supabase
+      .from('events')
+      .select('id, name, date, status, contact_id')
+      .not('contact_id', 'is', null);
+
+    if (eventsError) {
+      console.error("Error loading contact events:", eventsError);
+    }
+
+    // Map events to their contacts
+    const contactsWithEvents = (contactsData || []).map(contact => ({
+      ...contact,
+      events: (eventsData || [])
+        .filter(event => event.contact_id === contact.id)
+        .map(event => ({ id: event.id, name: event.name, date: event.date, status: event.status }))
+    }));
+
+    setContacts(contactsWithEvents as Contact[]);
   };
 
   const loadCompanies = async () => {
