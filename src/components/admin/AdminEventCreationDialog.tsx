@@ -84,9 +84,13 @@ export const AdminEventCreationDialog = ({
         coupleName2: request.partner2_name,
         eventDate: request.wedding_date,
       });
+      // Use contact_name if available, otherwise fall back to first partner name for couples
+      const fallbackName = request.submitter_type === 'couple' 
+        ? request.partner1_name 
+        : "";
       setClientData({
         clientType: request.submitter_type as "couple" | "wedding_planner",
-        contactName: request.contact_name || "",
+        contactName: request.contact_name || fallbackName,
         companyName: "",
         email: request.email,
         phone: request.phone,
