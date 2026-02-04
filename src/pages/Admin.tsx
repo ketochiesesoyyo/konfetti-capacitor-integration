@@ -171,11 +171,11 @@ const Admin = () => {
     setIsLoading(false);
   };
 
-  const loadHostedEvents = async (adminUserId: string) => {
+  const loadHostedEvents = async (_adminUserId: string) => {
+    // Admin can view ALL events, not just their own
     const { data, error } = await supabase
       .from('events')
       .select('*, event_attendees(count), contacts!contact_id(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
-      .eq('created_by', adminUserId)
       .order('date', { ascending: false });
 
     if (error) {
