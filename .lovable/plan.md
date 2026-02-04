@@ -1,109 +1,152 @@
 
-## Apple App Store Compliance: User Blocking Feature ✅ IMPLEMENTED
 
-### Overview
-Implemented the **Block User** feature to comply with Apple's App Review Guideline 1.2 (User-Generated Content):
-1. Allows users to block abusive users
-2. Notifies the developer/admin of the block
-3. Removes the blocked user's content from the blocker's feed instantly
+## Admin Panel CRM Enhancement: Client Management System
+
+### Current State Analysis
+
+Your Admin Panel currently has:
+- **Event Requests (Solicitudes)**: Captures leads with partner names, wedding date, expected guests, email, phone, submitter_type (couple/wedding_planner), and contact_name
+- **Events**: Created from requests, linked via `event_id` in `event_requests` table
+- **Problem**: When you create an event directly (without a request), there's no client/contact info attached to it
+
+### The Gap
+
+Currently, events created directly from the "Crear Evento" button have **no client relationship** - you lose track of:
+- Who is your client contact?
+- Are they a couple or a wedding planner?
+- What company does the planner work for?
+- Contact details for billing/communication
 
 ---
 
-### What Apple Requires
+### Proposed Solution: `clients` Table
 
-From the review feedback:
-> "A mechanism for users to block abusive users. Blocking should also notify the developer of the inappropriate content and should remove it from the user's feed instantly."
+Create a dedicated **clients** table that serves as the CRM backbone, separate from event_requests (which is for lead capture).
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        DATA FLOW                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Event Request Form    ──►   event_requests   ──┐              │
+│  (Public lead capture)       (Lead data)        │              │
+│                                                 ▼              │
+│                                            ┌─────────┐         │
+│                                            │ clients │         │
+│                                            └────┬────┘         │
+│                                                 │              │
+│  Admin creates event  ────────────────────────►─┘              │
+│                                                 │              │
+│                                                 ▼              │
+│                                            ┌─────────┐         │
+│                                            │ events  │         │
+│                                            └─────────┘         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-### Implementation Plan
+### Database Schema: `clients` Table
 
-#### 1. Database: Create `blocked_users` Table
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `client_type` | TEXT | `couple` or `wedding_planner` |
+| `contact_name` | TEXT | Primary contact person name |
+| `company_name` | TEXT | Company name (for wedding planners), NULL for couples |
+| `email` | TEXT | Contact email |
+| `phone` | TEXT | Contact phone |
+| `notes` | TEXT | Internal notes about the client |
+| `source_request_id` | UUID | Link to original event_request (if came from a lead) |
+| `created_at` | TIMESTAMPTZ | When client was created |
+| `updated_at` | TIMESTAMPTZ | Last update |
+
+**And add to `events` table:**
+| Column | Type | Description |
+|--------|------|-------------|
+| `client_id` | UUID | Foreign key to clients table |
+
+---
+
+### UI Changes
+
+#### 1. Enhanced Event Creation Dialog
+
+When clicking "Crear Evento", the dialog will have a **Client Information** section:
+
+```text
+┌────────────────────────────────────────────────────────┐
+│              Crear Evento                              │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│  ── INFORMACIÓN DEL CLIENTE ──────────────────────    │
+│                                                        │
+│  Tipo de Cliente:  [ Pareja ▼ ]                       │
+│                                                        │
+│  Nombre de Contacto: [___________________________]    │
+│                                                        │
+│  Empresa (opcional): [___________________________]    │
+│        (visible only when Wedding Planner selected)   │
+│                                                        │
+│  Email: [___________________________]                 │
+│  Teléfono: [___________________________]              │
+│                                                        │
+│  ── INFORMACIÓN DEL EVENTO ───────────────────────    │
+│                                                        │
+│  Nombre 1: [__________]    Nombre 2: [__________]     │
+│  Fecha del Evento: [__________]                       │
+│  Imagen: [ Upload ]                                   │
+│                                                        │
+│             [ Cancelar ]  [ Crear Evento ]            │
+└────────────────────────────────────────────────────────┘
+```
+
+#### 2. Events Table Enhancement
+
+Add a "Cliente" column to the Events tab showing the client relationship:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Evento           │ Cliente              │ Fecha      │ Estado  │ Código │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Ana & Carlos     │ 👤 María García      │ 15 Mar 26  │ Activo  │ ANA... │
+│                  │ La Boda Perfecta     │            │         │        │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Laura & Pedro    │ 💍 Laura Martínez    │ 22 Apr 26  │ Activo  │ LAU... │
+│                  │ (Pareja)             │            │         │        │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 3. Client Details in Event Dashboard
+
+Add a collapsible "Información del Cliente" card in the Event Dashboard settings tab showing:
+- Client type badge
+- Contact name and company (if planner)
+- Email and phone (clickable)
+- Link to original lead request (if exists)
+
+---
+
+### Migration Path for Existing Data
+
+When deploying, we need to:
+1. Create the `clients` table
+2. Auto-generate client records from existing `event_requests` that have `event_id`
+3. Link those clients to their respective events
 
 ```sql
-CREATE TABLE public.blocked_users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  blocker_id UUID NOT NULL,
-  blocked_id UUID NOT NULL,
-  event_id UUID,  -- Optional: context of where block happened
-  reason TEXT,    -- Optional reason for blocking
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (blocker_id, blocked_id)
-);
-
-ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;
+-- Migration pseudo-code
+INSERT INTO clients (client_type, contact_name, email, phone, source_request_id)
+SELECT 
+  submitter_type,
+  COALESCE(contact_name, partner1_name || ' ' || partner2_name),
+  email,
+  phone,
+  id
+FROM event_requests
+WHERE event_id IS NOT NULL;
 ```
-
-**RLS Policies:**
-- Users can view their own blocks
-- Users can create blocks
-- Users can delete (unblock) their own blocks
-
-#### 2. Database: Create `block_user_transaction` Function
-
-A security definer function that atomically:
-1. Inserts into `blocked_users`
-2. Creates a report entry (notifies admin/developer)
-3. Deletes the match between users
-4. Deletes messages between users
-5. Deletes swipes to prevent re-matching
-6. Logs to `audit_logs`
-
-#### 3. Update Matchmaking Profile Filtering
-
-Modify `src/pages/Matchmaking.tsx` to exclude blocked users from the profile stack:
-- Add query to fetch `blocked_users` where `blocker_id = currentUser`
-- Also exclude users who have blocked the current user
-- Filter these users out of the matchmaking profiles
-
-#### 4. Update Chat/Likes Pages
-
-Modify pages to filter out blocked users:
-- `src/pages/LikedYou.tsx` - Hide blocked users from likes
-- `src/pages/Chats.tsx` - Hide blocked user conversations
-
-#### 5. Create `BlockUserDialog` Component
-
-A new dialog component similar to `ReportDialog` that:
-- Shows reason selection (optional)
-- Explains what blocking does
-- Calls the `block_user_transaction` function
-- Redirects user back to chats after blocking
-
-**Reasons to offer:**
-- "Inappropriate behavior"
-- "Harassment"
-- "Made me uncomfortable"
-- "Spam or fake profile"
-- "Other"
-
-#### 6. Update `ChatActionsMenu` and `ChatThread`
-
-Add "Block User" option to the dropdown menu in:
-- `src/components/ChatActionsMenu.tsx`
-- `src/pages/ChatThread.tsx` header menu
-
-**Menu structure after changes:**
-```text
-┌─────────────────────┐
-│ 👤 View Profile     │
-├─────────────────────┤
-│ ❌ Unmatch          │
-├─────────────────────┤
-│ 🚫 Block User       │ ← NEW (red/destructive)
-├─────────────────────┤
-│ 🚨 Report & Unmatch │
-└─────────────────────┘
-```
-
-#### 7. Add Translations
-
-Add translation keys for both English and Spanish:
-- `blockDialog.title`
-- `blockDialog.description`
-- `blockDialog.reasons.*`
-- `blockDialog.confirm`
-- `blockDialog.success`
 
 ---
 
@@ -111,123 +154,42 @@ Add translation keys for both English and Spanish:
 
 | File | Action | Purpose |
 |------|--------|---------|
-| Database migration | Create | `blocked_users` table + RLS + transaction function |
-| `src/components/BlockUserDialog.tsx` | Create | New dialog for blocking |
-| `src/components/ChatActionsMenu.tsx` | Modify | Add "Block User" menu item |
-| `src/pages/ChatThread.tsx` | Modify | Add block dialog state + trigger |
-| `src/pages/Chats.tsx` | Modify | Add block dialog + filter blocked users |
-| `src/pages/Matchmaking.tsx` | Modify | Filter blocked users from stack |
-| `src/pages/LikedYou.tsx` | Modify | Filter blocked users from likes |
-| `src/lib/validation.ts` | Modify | Add block validation schema |
-| `src/i18n/locales/en.json` | Modify | Add English translations |
-| `src/i18n/locales/es.json` | Modify | Add Spanish translations |
+| Database migration | Create | `clients` table + add `client_id` to events + data migration |
+| `src/components/admin/AdminEventCreationDialog.tsx` | Modify | Add client info fields |
+| `src/pages/Admin.tsx` | Modify | Add Client column to Events table, show client info |
+| `src/pages/EventDashboard.tsx` | Modify | Add client info card in settings |
+| `src/integrations/supabase/types.ts` | Auto-updated | New types for clients |
 
 ---
 
-### Technical Details
+### How It Works Together
 
-**Block Transaction Function (PostgreSQL):**
-```sql
-CREATE OR REPLACE FUNCTION public.block_user_transaction(
-  _blocker_id UUID,
-  _blocked_id UUID,
-  _event_id UUID,
-  _match_id UUID,
-  _reason TEXT
-) RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  -- Insert block record
-  INSERT INTO blocked_users (blocker_id, blocked_id, event_id, reason)
-  VALUES (_blocker_id, _blocked_id, _event_id, _reason)
-  ON CONFLICT (blocker_id, blocked_id) DO NOTHING;
-  
-  -- Create report for admin visibility
-  INSERT INTO reports (reporter_id, reported_user_id, event_id, match_id, reason)
-  VALUES (_blocker_id, _blocked_id, _event_id, _match_id, 'User blocked: ' || COALESCE(_reason, 'No reason provided'))
-  ON CONFLICT DO NOTHING;
-  
-  -- Log to audit
-  INSERT INTO audit_logs (action_type, actor_id, target_id, event_id, match_id, reason)
-  VALUES ('block', _blocker_id, _blocked_id, _event_id, _match_id, _reason);
-  
-  -- Delete messages if match exists
-  IF _match_id IS NOT NULL THEN
-    DELETE FROM messages WHERE match_id = _match_id;
-  END IF;
-  
-  -- Delete swipes between users
-  DELETE FROM swipes 
-  WHERE (user_id = _blocker_id AND swiped_user_id = _blocked_id)
-     OR (user_id = _blocked_id AND swiped_user_id = _blocker_id);
-  
-  -- Delete match if exists
-  IF _match_id IS NOT NULL THEN
-    DELETE FROM matches WHERE id = _match_id;
-  END IF;
-END;
-$$;
-```
+**Scenario A: Lead comes through Contact form**
+1. User submits form → `event_requests` record created
+2. Admin sees lead in "Solicitudes" tab
+3. Admin clicks "Crear Evento" on the lead
+4. System auto-creates a `client` from request data
+5. Event is created with `client_id` link
+6. Original `event_request.event_id` is updated
 
-**Filtering in Matchmaking:**
-```typescript
-// Fetch blocked users
-const { data: blockedData } = await supabase
-  .from("blocked_users")
-  .select("blocked_id")
-  .eq("blocker_id", userId);
+**Scenario B: Admin creates event directly**
+1. Admin clicks "Crear Evento" button (no lead)
+2. Dialog shows client info section (must fill out)
+3. System creates `client` record first
+4. Then creates event with `client_id` link
 
-// Also get users who blocked current user (bidirectional hiding)
-const { data: blockedByData } = await supabase
-  .from("blocked_users")
-  .select("blocker_id")
-  .eq("blocked_id", userId);
-
-const blockedUserIds = new Set([
-  ...(blockedData?.map(b => b.blocked_id) || []),
-  ...(blockedByData?.map(b => b.blocker_id) || [])
-]);
-
-// Filter profiles
-const nonBlockedProfiles = profiles.filter(p => !blockedUserIds.has(p.user_id));
-```
+**Viewing client info:**
+- Events table shows client name + company
+- Event Dashboard has client info card
+- Clicking client name could (future) open full client history
 
 ---
 
-### User Experience Flow
+### Future CRM Enhancements (not in this plan)
 
-```text
-User opens chat with someone behaving inappropriately
-        │
-        ▼
-Taps ⋮ menu → selects "Block User"
-        │
-        ▼
-Block dialog appears with reason selection (optional)
-        │
-        ▼
-User confirms block
-        │
-        ▼
-┌──────────────────────────────────────────┐
-│ Instant effects:                         │
-│ • Match deleted                          │
-│ • Messages deleted                       │
-│ • User hidden from matchmaking           │
-│ • Report created for admin review        │
-│ • User redirected to Chats page          │
-└──────────────────────────────────────────┘
-```
+- Client listing page (all clients)
+- Multiple events per client (repeat customers)
+- Client notes and interaction history
+- Payment tracking per client
+- Email templates per client
 
----
-
-### Age Rating Note
-
-For the **Guideline 2.3.6** issue, you need to update the Age Rating in App Store Connect:
-- Go to App Information → Age Rating
-- Set "Age Assurance" to **"None"** (since the app doesn't have parental controls or age verification beyond the 18+ signup requirement)
-
-This is a metadata change in App Store Connect, not a code change.
