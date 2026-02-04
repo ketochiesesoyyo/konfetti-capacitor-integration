@@ -7,11 +7,15 @@ import { Mail, Phone, Building2, Calendar, ExternalLink, Edit } from "lucide-rea
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-interface Client {
+interface Contact {
   id: string;
-  client_type: string;
+  contact_type: string;
   contact_name: string;
-  company_name: string | null;
+  company_id?: string | null;
+  companies?: {
+    id: string;
+    name: string;
+  } | null;
   email: string | null;
   phone: string | null;
   notes: string | null;
@@ -24,14 +28,14 @@ interface Client {
 interface ClientDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  client: Client | null;
+  contact: Contact | null;
   onEdit: () => void;
 }
 
-export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: ClientDetailDialogProps) => {
+export const ClientDetailDialog = ({ open, onOpenChange, contact, onEdit }: ClientDetailDialogProps) => {
   const navigate = useNavigate();
 
-  if (!client) return null;
+  if (!contact) return null;
 
   const getEventStatusBadge = (status?: string) => {
     if (status === 'closed') {
@@ -44,16 +48,16 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl">{client.contact_name}</DialogTitle>
+          <DialogTitle className="text-xl">{contact.contact_name}</DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            {client.company_name && (
+            {contact.companies && (
               <span className="flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5" />
-                {client.company_name}
+                {contact.companies.name}
               </span>
             )}
             <Badge variant="secondary">
-              {client.client_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
+              {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
             </Badge>
           </DialogDescription>
         </DialogHeader>
@@ -61,22 +65,22 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
         <div className="space-y-5">
           {/* Contact Info */}
           <div className="flex flex-wrap gap-4">
-            {client.email && (
+            {contact.email && (
               <a
-                href={`mailto:${client.email}`}
+                href={`mailto:${contact.email}`}
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
               >
                 <Mail className="w-4 h-4" />
-                {client.email}
+                {contact.email}
               </a>
             )}
-            {client.phone && (
+            {contact.phone && (
               <a
-                href={`tel:${client.phone}`}
+                href={`tel:${contact.phone}`}
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
               >
                 <Phone className="w-4 h-4" />
-                {client.phone}
+                {contact.phone}
               </a>
             )}
           </div>
@@ -84,9 +88,9 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
           {/* Events Section */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Eventos ({client.events?.length || 0})
+              Eventos ({contact.events?.length || 0})
             </h4>
-            {client.events && client.events.length > 0 ? (
+            {contact.events && contact.events.length > 0 ? (
               <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -97,7 +101,7 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {client.events.map((event) => (
+                    {contact.events.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell className="font-medium">{event.name}</TableCell>
                         <TableCell>
@@ -135,13 +139,13 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
           </div>
 
           {/* Notes Section */}
-          {client.notes && (
+          {contact.notes && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Notas
               </h4>
               <p className="text-sm bg-muted/50 p-3 rounded-lg">
-                {client.notes}
+                {contact.notes}
               </p>
             </div>
           )}
@@ -149,7 +153,7 @@ export const ClientDetailDialog = ({ open, onOpenChange, client, onEdit }: Clien
           {/* Footer */}
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-xs text-muted-foreground">
-              Cliente desde: {format(new Date(client.created_at), "dd MMM yyyy", { locale: es })}
+              Contacto desde: {format(new Date(contact.created_at), "dd MMM yyyy", { locale: es })}
             </span>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -26,13 +26,21 @@ interface EventRequest {
   contact_name?: string | null;
 }
 
-interface Client {
+interface ExistingContact {
   id: string;
-  client_type: string;
+  contact_type: string;
   contact_name: string;
   company_name: string | null;
   email: string | null;
   phone: string | null;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface AdminEventCreationDialogProps {
@@ -41,7 +49,8 @@ interface AdminEventCreationDialogProps {
   request: EventRequest | null;
   userId: string;
   onEventCreated: (eventId: string, inviteCode: string) => void;
-  existingClients?: Client[];
+  existingContacts?: ExistingContact[];
+  companies?: Company[];
 }
 
 const MATCHMAKING_OPTIONS = [
@@ -51,7 +60,7 @@ const MATCHMAKING_OPTIONS = [
   { value: "day_of_event", label: "El día del evento" },
 ];
 
-const CLIENT_TYPE_OPTIONS = [
+const CONTACT_TYPE_OPTIONS = [
   { value: "couple", label: "Pareja" },
   { value: "wedding_planner", label: "Wedding Planner" },
 ];
@@ -62,7 +71,8 @@ export const AdminEventCreationDialog = ({
   request,
   userId,
   onEventCreated,
-  existingClients = [],
+  existingContacts = [],
+  companies = [],
 }: AdminEventCreationDialogProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [eventImage, setEventImage] = useState<File | null>(null);
@@ -72,13 +82,13 @@ export const AdminEventCreationDialog = ({
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
   const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
 
-  // Client mode: "new" or "existing"
-  const [clientMode, setClientMode] = useState<"new" | "existing">("new");
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  // Contact mode: "new" or "existing"
+  const [contactMode, setContactMode] = useState<"new" | "existing">("new");
+  const [selectedContactId, setSelectedContactId] = useState<string>("");
 
-  // Client data for new client creation
-  const [clientData, setClientData] = useState({
-    clientType: "couple" as "couple" | "wedding_planner",
+  // Contact data for new contact creation
+  const [contactData, setContactData] = useState({
+    contactType: "couple" as "couple" | "wedding_planner",
     contactName: "",
     companyName: "",
     email: "",
@@ -94,9 +104,9 @@ export const AdminEventCreationDialog = ({
   // Reset form when request changes or dialog opens
   useEffect(() => {
     if (request) {
-      // Pre-fill from request - always use "new" client mode for leads
-      setClientMode("new");
-      setSelectedClientId("");
+      // Pre-fill from request - always use "new" contact mode for leads
+      setContactMode("new");
+      setSelectedContactId("");
       setFormData({
         coupleName1: request.partner1_name,
         coupleName2: request.partner2_name,
@@ -106,8 +116,8 @@ export const AdminEventCreationDialog = ({
       const fallbackName = request.submitter_type === 'couple' 
         ? request.partner1_name 
         : "";
-      setClientData({
-        clientType: request.submitter_type as "couple" | "wedding_planner",
+      setContactData({
+        contactType: request.submitter_type as "couple" | "wedding_planner",
         contactName: request.contact_name || fallbackName,
         companyName: "",
         email: request.email,
@@ -118,15 +128,15 @@ export const AdminEventCreationDialog = ({
       setMatchmakingOption("1_week_before");
     } else if (open) {
       // Reset for direct event creation
-      setClientMode("new");
-      setSelectedClientId("");
+      setContactMode("new");
+      setSelectedContactId("");
       setFormData({
         coupleName1: "",
         coupleName2: "",
         eventDate: "",
       });
-      setClientData({
-        clientType: "couple",
+      setContactData({
+        contactType: "couple",
         contactName: "",
         companyName: "",
         email: "",
@@ -245,12 +255,12 @@ export const AdminEventCreationDialog = ({
 
   const handleCreateEvent = async () => {
     // Validation
-    if (clientMode === "new" && !clientData.contactName?.trim()) {
+    if (contactMode === "new" && !contactData.contactName?.trim()) {
       toast.error("El nombre de contacto es requerido");
       return;
     }
-    if (clientMode === "existing" && !selectedClientId) {
-      toast.error("Selecciona un cliente existente");
+    if (contactMode === "existing" && !selectedContactId) {
+      toast.error("Selecciona un contacto existente");
       return;
     }
     if (!formData.coupleName1?.trim()) {
@@ -309,34 +319,59 @@ export const AdminEventCreationDialog = ({
       
       const matchmakingStartDate = calculateMatchmakingStartDate();
 
-      let clientId: string;
+      let contactId: string;
 
-      if (clientMode === "existing" && selectedClientId) {
-        // Use existing client
-        clientId = selectedClientId;
+      if (contactMode === "existing" && selectedContactId) {
+        // Use existing contact
+        contactId = selectedContactId;
       } else {
-        // Create new client
-        const { data: client, error: clientError } = await supabase
-          .from("clients")
+        // Create new contact (and company if needed)
+        let companyId: string | null = null;
+        
+        if (contactData.contactType === 'wedding_planner' && contactData.companyName.trim()) {
+          // Check if company exists
+          const existingCompany = companies.find(
+            c => c.name.toLowerCase() === contactData.companyName.trim().toLowerCase()
+          );
+          
+          if (existingCompany) {
+            companyId = existingCompany.id;
+          } else {
+            // Create new company
+            const { data: newCompany, error: companyError } = await supabase
+              .from("companies")
+              .insert({ name: contactData.companyName.trim() })
+              .select()
+              .single();
+
+            if (companyError) {
+              throw new Error(`Error al crear empresa: ${companyError.message}`);
+            }
+            companyId = newCompany.id;
+          }
+        }
+
+        const { data: contact, error: contactError } = await supabase
+          .from("contacts")
           .insert({
-            client_type: clientData.clientType,
-            contact_name: clientData.contactName.trim(),
-            company_name: clientData.clientType === 'wedding_planner' ? clientData.companyName.trim() || null : null,
-            email: clientData.email.trim() || null,
-            phone: clientData.phone.trim() || null,
+            contact_type: contactData.contactType,
+            contact_name: contactData.contactName.trim(),
+            company_id: companyId,
+            email: contactData.email.trim() || null,
+            phone: contactData.phone.trim() || null,
             source_request_id: request?.id || null,
           })
           .select()
           .single();
 
-        if (clientError) {
-          throw new Error(`Error al crear cliente: ${clientError.message}`);
+        if (contactError) {
+          throw new Error(`Error al crear contacto: ${contactError.message}`);
         }
         
-        clientId = client.id;
+        contactId = contact.id;
       }
 
-      // Create event with client_id
+      // Create event with contact_id
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
@@ -346,7 +381,7 @@ export const AdminEventCreationDialog = ({
           description: `Wedding celebration for ${eventName}`,
           invite_code: inviteCode,
           created_by: userId,
-          client_id: clientId,
+          contact_id: contactId,
           image_url: imageUrl,
           status: 'active',
           matchmaking_start_date: matchmakingStartDate,
@@ -401,47 +436,47 @@ export const AdminEventCreationDialog = ({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Client Selection Section - only show toggle when not from a request */}
+            {/* Contact Selection Section - only show toggle when not from a request */}
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <User className="w-4 h-4" />
-                Cliente
+                Contacto
               </div>
 
-              {/* Client Mode Toggle - only show when NOT from a request and there are existing clients */}
-              {!request && existingClients.length > 0 && (
+              {/* Contact Mode Toggle - only show when NOT from a request and there are existing contacts */}
+              {!request && existingContacts.length > 0 && (
                 <RadioGroup
-                  value={clientMode}
-                  onValueChange={(value: "new" | "existing") => setClientMode(value)}
+                  value={contactMode}
+                  onValueChange={(value: "new" | "existing") => setContactMode(value)}
                   className="flex gap-4"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="new" id="client-new" />
-                    <Label htmlFor="client-new" className="cursor-pointer">Nuevo cliente</Label>
+                    <RadioGroupItem value="new" id="contact-new" />
+                    <Label htmlFor="contact-new" className="cursor-pointer">Nuevo contacto</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="existing" id="client-existing" />
-                    <Label htmlFor="client-existing" className="cursor-pointer">Cliente existente</Label>
+                    <RadioGroupItem value="existing" id="contact-existing" />
+                    <Label htmlFor="contact-existing" className="cursor-pointer">Contacto existente</Label>
                   </div>
                 </RadioGroup>
               )}
 
-              {/* Existing Client Dropdown */}
-              {clientMode === "existing" && existingClients.length > 0 && (
+              {/* Existing Contact Dropdown */}
+              {contactMode === "existing" && existingContacts.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Seleccionar Cliente</Label>
-                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                  <Label>Seleccionar Contacto</Label>
+                  <Select value={selectedContactId} onValueChange={setSelectedContactId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar cliente..." />
+                      <SelectValue placeholder="Seleccionar contacto..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {existingClients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
+                      {existingContacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
                           <div className="flex items-center gap-2">
                             <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span>{client.contact_name}</span>
-                            {client.company_name && (
-                              <span className="text-muted-foreground">- {client.company_name}</span>
+                            <span>{contact.contact_name}</span>
+                            {contact.company_name && (
+                              <span className="text-muted-foreground">- {contact.company_name}</span>
                             )}
                           </div>
                         </SelectItem>
@@ -451,23 +486,23 @@ export const AdminEventCreationDialog = ({
                 </div>
               )}
 
-              {/* New Client Form - show when clientMode is "new" */}
-              {clientMode === "new" && (
+              {/* New Contact Form - show when contactMode is "new" */}
+              {contactMode === "new" && (
                 <>
-                  {/* Client Type */}
+                  {/* Contact Type */}
                   <div className="space-y-2">
-                    <Label>Tipo de Cliente</Label>
+                    <Label>Tipo de Contacto</Label>
                     <Select 
-                      value={clientData.clientType} 
+                      value={contactData.contactType} 
                       onValueChange={(value: "couple" | "wedding_planner") => 
-                        setClientData(prev => ({ ...prev, clientType: value }))
+                        setContactData(prev => ({ ...prev, contactType: value }))
                       }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {CLIENT_TYPE_OPTIONS.map((option) => (
+                        {CONTACT_TYPE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -481,14 +516,14 @@ export const AdminEventCreationDialog = ({
                     <Label htmlFor="contactName">Nombre de Contacto *</Label>
                     <Input
                       id="contactName"
-                      value={clientData.contactName}
-                      onChange={(e) => setClientData(prev => ({ ...prev, contactName: e.target.value }))}
+                      value={contactData.contactName}
+                      onChange={(e) => setContactData(prev => ({ ...prev, contactName: e.target.value }))}
                       placeholder="Nombre del contacto principal"
                     />
                   </div>
 
                   {/* Company Name (only for wedding planners) */}
-                  {clientData.clientType === 'wedding_planner' && (
+                  {contactData.contactType === 'wedding_planner' && (
                     <div className="space-y-2">
                       <Label htmlFor="companyName" className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
@@ -496,32 +531,40 @@ export const AdminEventCreationDialog = ({
                       </Label>
                       <Input
                         id="companyName"
-                        value={clientData.companyName}
-                        onChange={(e) => setClientData(prev => ({ ...prev, companyName: e.target.value }))}
+                        value={contactData.companyName}
+                        onChange={(e) => setContactData(prev => ({ ...prev, companyName: e.target.value }))}
                         placeholder="Nombre de la empresa"
+                        list="company-suggestions"
                       />
+                      {companies.length > 0 && (
+                        <datalist id="company-suggestions">
+                          {companies.map((company) => (
+                            <option key={company.id} value={company.name} />
+                          ))}
+                        </datalist>
+                      )}
                     </div>
                   )}
 
                   {/* Contact Details */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="clientEmail">Email</Label>
+                      <Label htmlFor="contactEmail">Email</Label>
                       <Input
-                        id="clientEmail"
+                        id="contactEmail"
                         type="email"
-                        value={clientData.email}
-                        onChange={(e) => setClientData(prev => ({ ...prev, email: e.target.value }))}
+                        value={contactData.email}
+                        onChange={(e) => setContactData(prev => ({ ...prev, email: e.target.value }))}
                         placeholder="email@ejemplo.com"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="clientPhone">Teléfono</Label>
+                      <Label htmlFor="contactPhone">Teléfono</Label>
                       <Input
-                        id="clientPhone"
+                        id="contactPhone"
                         type="tel"
-                        value={clientData.phone}
-                        onChange={(e) => setClientData(prev => ({ ...prev, phone: e.target.value }))}
+                        value={contactData.phone}
+                        onChange={(e) => setContactData(prev => ({ ...prev, phone: e.target.value }))}
                         placeholder="+34 600 000 000"
                       />
                     </div>

@@ -48,28 +48,44 @@ interface HostedEvent {
   close_date: string;
   created_at: string;
   event_attendees: { count: number }[];
-  clients: {
+  contacts: {
     id: string;
-    client_type: string;
+    contact_type: string;
     contact_name: string;
-    company_name: string | null;
     email: string | null;
     phone: string | null;
+    company_id: string | null;
+    companies: {
+      id: string;
+      name: string;
+    } | null;
   } | null;
 }
 
-interface Client {
+interface Contact {
   id: string;
-  client_type: string;
+  contact_type: string;
   contact_name: string;
-  company_name: string | null;
   email: string | null;
   phone: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
   source_request_id: string | null;
+  company_id: string | null;
+  companies: {
+    id: string;
+    name: string;
+  } | null;
   events: { id: string; name: string; date: string | null }[];
+}
+
+interface Company {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const STATUS_OPTIONS = [
@@ -86,7 +102,8 @@ const Admin = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [hostedEvents, setHostedEvents] = useState<HostedEvent[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<EventRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
@@ -99,12 +116,12 @@ const Admin = () => {
   const [createdEventId, setCreatedEventId] = useState<string>("");
   const [createdInviteCode, setCreatedInviteCode] = useState<string>("");
   
-  // Client dialogs
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isClientDetailOpen, setIsClientDetailOpen] = useState(false);
-  const [isClientEditOpen, setIsClientEditOpen] = useState(false);
-  const [isClientCreateOpen, setIsClientCreateOpen] = useState(false);
-  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+  // Contact dialogs
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [isContactDetailOpen, setIsContactDetailOpen] = useState(false);
+  const [isContactEditOpen, setIsContactEditOpen] = useState(false);
+  const [isContactCreateOpen, setIsContactCreateOpen] = useState(false);
+  const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -135,7 +152,7 @@ const Admin = () => {
     }
 
     setIsAdmin(true);
-    await Promise.all([loadRequests(), loadHostedEvents(session.user.id), loadClients()]);
+    await Promise.all([loadRequests(), loadHostedEvents(session.user.id), loadContacts(), loadCompanies()]);
   };
 
   const loadRequests = async () => {
@@ -157,7 +174,7 @@ const Admin = () => {
   const loadHostedEvents = async (adminUserId: string) => {
     const { data, error } = await supabase
       .from('events')
-      .select('*, event_attendees(count), clients(id, client_type, contact_name, company_name, email, phone)')
+      .select('*, event_attendees(count), contacts(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
       .eq('created_by', adminUserId)
       .order('date', { ascending: false });
 
@@ -169,29 +186,69 @@ const Admin = () => {
     }
   };
 
-  const loadClients = async () => {
+  const loadContacts = async () => {
     const { data, error } = await supabase
-      .from('clients')
-      .select('*, events(id, name, date)')
+      .from('contacts')
+      .select('*, companies(id, name), events(id, name, date)')
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar clientes");
+      toast.error("Error al cargar contactos");
       console.error(error);
     } else {
-      setClients((data || []) as Client[]);
+      setContacts((data || []) as Contact[]);
     }
   };
 
-  const updateClient = async (clientId: string | null, updates: Partial<Client>) => {
-    if (!clientId) {
-      // Create mode - insert new client
-      const { error, data } = await supabase
-        .from('clients')
+  const loadCompanies = async () => {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error("Error loading companies:", error);
+    } else {
+      setCompanies((data || []) as Company[]);
+    }
+  };
+
+  const updateContact = async (contactId: string | null, updates: Partial<Contact> & { company_name?: string }) => {
+    // Handle company creation/lookup if needed
+    let companyId = updates.company_id || null;
+    
+    if (updates.contact_type === 'wedding_planner' && updates.company_name) {
+      // Check if company exists
+      let company = companies.find(c => c.name.toLowerCase() === updates.company_name!.toLowerCase());
+      
+      if (!company) {
+        // Create new company
+        const { data: newCompany, error: companyError } = await supabase
+          .from('companies')
+          .insert({ name: updates.company_name })
+          .select()
+          .single();
+        
+        if (companyError) {
+          toast.error("Error al crear empresa");
+          console.error(companyError);
+          return;
+        }
+        companyId = newCompany.id;
+        await loadCompanies();
+      } else {
+        companyId = company.id;
+      }
+    }
+
+    if (!contactId) {
+      // Create mode - insert new contact
+      const { error } = await supabase
+        .from('contacts')
         .insert({
           contact_name: updates.contact_name,
-          client_type: updates.client_type || 'couple',
-          company_name: updates.company_name || null,
+          contact_type: updates.contact_type || 'couple',
+          company_id: companyId,
           email: updates.email || null,
           phone: updates.phone || null,
           notes: updates.notes || null,
@@ -200,61 +257,69 @@ const Admin = () => {
         .single();
 
       if (error) {
-        toast.error("Error al crear cliente");
+        toast.error("Error al crear contacto");
         console.error(error);
       } else {
-        toast.success("Cliente creado");
-        await loadClients();
+        toast.success("Contacto creado");
+        await loadContacts();
       }
       return;
     }
 
-    // Edit mode - update existing client
+    // Edit mode - update existing contact
     const { error } = await supabase
-      .from('clients')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', clientId);
+      .from('contacts')
+      .update({
+        contact_name: updates.contact_name,
+        contact_type: updates.contact_type,
+        company_id: companyId,
+        email: updates.email,
+        phone: updates.phone,
+        notes: updates.notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', contactId);
 
     if (error) {
-      toast.error("Error al actualizar cliente");
+      toast.error("Error al actualizar contacto");
       console.error(error);
     } else {
-      toast.success("Cliente actualizado");
-      await loadClients();
+      toast.success("Contacto actualizado");
+      await loadContacts();
     }
   };
 
-  const deleteClient = async (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    if (client?.events && client.events.length > 0) {
-      toast.error("No puedes eliminar un cliente con eventos asociados");
-      setDeletingClientId(null);
+  const deleteContact = async (contactId: string) => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact?.events && contact.events.length > 0) {
+      toast.error("No puedes eliminar un contacto con eventos asociados");
+      setDeletingContactId(null);
       return;
     }
 
     const { error } = await supabase
-      .from('clients')
+      .from('contacts')
       .delete()
-      .eq('id', clientId);
+      .eq('id', contactId);
 
     if (error) {
-      toast.error("Error al eliminar cliente");
+      toast.error("Error al eliminar contacto");
       console.error(error);
     } else {
-      toast.success("Cliente eliminado");
-      await loadClients();
+      toast.success("Contacto eliminado");
+      await loadContacts();
     }
-    setDeletingClientId(null);
+    setDeletingContactId(null);
   };
 
-  const openClientDetail = (client: Client) => {
-    setSelectedClient(client);
-    setIsClientDetailOpen(true);
+  const openContactDetail = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsContactDetailOpen(true);
   };
 
-  const openClientEdit = (client: Client) => {
-    setSelectedClient(client);
-    setIsClientEditOpen(true);
+  const openContactEdit = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsContactEditOpen(true);
   };
 
   const getEventStatus = (event: HostedEvent): 'draft' | 'closed' | 'active' => {
@@ -326,9 +391,9 @@ const Admin = () => {
     setRequestForEventCreation(null);
     toast.success("Evento creado exitosamente");
     
-    // Reload hosted events and clients
+    // Reload hosted events and contacts
     if (userId) {
-      await Promise.all([loadHostedEvents(userId), loadClients()]);
+      await Promise.all([loadHostedEvents(userId), loadContacts()]);
     }
   };
 
@@ -365,10 +430,10 @@ const Admin = () => {
     closed: hostedEvents.filter(e => getEventStatus(e) === 'closed').length,
   };
 
-  const clientStats = {
-    total: clients.length,
-    couples: clients.filter(c => c.client_type === 'couple').length,
-    planners: clients.filter(c => c.client_type === 'wedding_planner').length,
+  const contactStats = {
+    total: contacts.length,
+    couples: contacts.filter(c => c.contact_type === 'couple').length,
+    planners: contacts.filter(c => c.contact_type === 'wedding_planner').length,
   };
 
   if (!isAdmin && isLoading) {
@@ -407,7 +472,7 @@ const Admin = () => {
           <TabsList className="grid w-full max-w-xl grid-cols-3">
             <TabsTrigger value="requests">Solicitudes ({requests.length})</TabsTrigger>
             <TabsTrigger value="events">Eventos ({hostedEvents.length})</TabsTrigger>
-            <TabsTrigger value="clients">Clientes ({clients.length})</TabsTrigger>
+            <TabsTrigger value="contacts">Contactos ({contacts.length})</TabsTrigger>
           </TabsList>
 
           {/* Requests Tab */}
@@ -616,23 +681,23 @@ const Admin = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {event.clients ? (
+                              {event.contacts ? (
                                 <div className="space-y-0.5">
                                   <div className="flex items-center gap-1.5">
-                                    {event.clients.client_type === 'wedding_planner' ? (
+                                    {event.contacts.contact_type === 'wedding_planner' ? (
                                       <User className="w-3.5 h-3.5 text-muted-foreground" />
                                     ) : (
                                       <span className="text-sm">💍</span>
                                     )}
-                                    <span className="text-sm font-medium">{event.clients.contact_name}</span>
+                                    <span className="text-sm font-medium">{event.contacts.contact_name}</span>
                                   </div>
-                                  {event.clients.client_type === 'wedding_planner' && event.clients.company_name && (
+                                  {event.contacts.contact_type === 'wedding_planner' && event.contacts.companies && (
                                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                       <Building2 className="w-3 h-3" />
-                                      {event.clients.company_name}
+                                      {event.contacts.companies.name}
                                     </div>
                                   )}
-                                  {event.clients.client_type === 'couple' && (
+                                  {event.contacts.contact_type === 'couple' && (
                                     <span className="text-xs text-muted-foreground">(Pareja)</span>
                                   )}
                                 </div>
@@ -715,44 +780,44 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
-          {/* Clients Tab */}
-          <TabsContent value="clients" className="space-y-6">
-            {/* Client Stats Cards */}
+          {/* Contacts Tab */}
+          <TabsContent value="contacts" className="space-y-6">
+            {/* Contact Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-2xl font-bold">{clientStats.total}</div>
-                  <p className="text-sm text-muted-foreground">Total clientes</p>
+                  <div className="text-2xl font-bold">{contactStats.total}</div>
+                  <p className="text-sm text-muted-foreground">Total contactos</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-2xl font-bold text-pink-500">{clientStats.couples}</div>
+                  <div className="text-2xl font-bold text-pink-500">{contactStats.couples}</div>
                   <p className="text-sm text-muted-foreground">Parejas</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-2xl font-bold text-primary">{clientStats.planners}</div>
+                  <div className="text-2xl font-bold text-primary">{contactStats.planners}</div>
                   <p className="text-sm text-muted-foreground">Wedding Planners</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Clients Table */}
+            {/* Contacts Table */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="w-5 h-5" />
-                  Clientes
+                  Contactos
                 </CardTitle>
                 <Button 
-                  onClick={() => setIsClientCreateOpen(true)} 
+                  onClick={() => setIsContactCreateOpen(true)} 
                   size="sm"
                   className="gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  Añadir Cliente
+                  Añadir Contacto
                 </Button>
               </CardHeader>
               <CardContent>
@@ -760,73 +825,73 @@ const Admin = () => {
                   <div className="flex justify-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
-                ) : clients.length === 0 ? (
+                ) : contacts.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No hay clientes registrados
+                    No hay contactos registrados
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Cliente</TableHead>
-                          <TableHead>Tipo</TableHead>
                           <TableHead>Contacto</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Info</TableHead>
                           <TableHead>Eventos</TableHead>
                           <TableHead>Añadido</TableHead>
                           <TableHead className="w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clients.map((client) => (
-                          <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openClientDetail(client)}>
+                        {contacts.map((contact) => (
+                          <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openContactDetail(contact)}>
                             <TableCell>
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
-                                  {client.client_type === 'wedding_planner' ? (
+                                  {contact.contact_type === 'wedding_planner' ? (
                                     <User className="w-4 h-4 text-muted-foreground" />
                                   ) : (
                                     <span className="text-base">💍</span>
                                   )}
-                                  <span className="font-medium text-primary hover:underline">{client.contact_name}</span>
+                                  <span className="font-medium text-primary hover:underline">{contact.contact_name}</span>
                                 </div>
-                                {client.client_type === 'wedding_planner' && client.company_name && (
+                                {contact.contact_type === 'wedding_planner' && contact.companies && (
                                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                     <Building2 className="w-3.5 h-3.5" />
-                                    {client.company_name}
+                                    {contact.companies.name}
                                   </div>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <Badge variant="secondary">
-                                {client.client_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
+                                {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
                               </Badge>
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="space-y-1">
-                                {client.email && (
+                                {contact.email && (
                                   <div className="flex items-center gap-1.5 text-sm">
                                     <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <a href={`mailto:${client.email}`} className="text-primary hover:underline">
-                                      {client.email}
+                                    <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                                      {contact.email}
                                     </a>
                                   </div>
                                 )}
-                                {client.phone && (
+                                {contact.phone && (
                                   <div className="flex items-center gap-1.5 text-sm">
                                     <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <a href={`tel:${client.phone}`} className="text-primary hover:underline">
-                                      {client.phone}
+                                    <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
+                                      {contact.phone}
                                     </a>
                                   </div>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
-                              {client.events && client.events.length > 0 ? (
+                              {contact.events && contact.events.length > 0 ? (
                                 <div className="space-y-1">
-                                  {client.events.map((event) => (
+                                  {contact.events.map((event) => (
                                     <Button
                                       key={event.id}
                                       variant="link"
@@ -843,7 +908,7 @@ const Admin = () => {
                               )}
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
-                              {format(new Date(client.created_at), "dd/MM/yy")}
+                              {format(new Date(contact.created_at), "dd/MM/yy")}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <DropdownMenu>
@@ -853,14 +918,14 @@ const Admin = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openClientEdit(client)}>
+                                  <DropdownMenuItem onClick={() => openContactEdit(contact)}>
                                     <Edit className="w-4 h-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => setDeletingClientId(client.id)}
+                                    onClick={() => setDeletingContactId(contact.id)}
                                     className="text-destructive focus:text-destructive"
-                                    disabled={client.events && client.events.length > 0}
+                                    disabled={contact.events && contact.events.length > 0}
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Eliminar
@@ -1005,14 +1070,15 @@ const Admin = () => {
         request={requestForEventCreation}
         userId={userId}
         onEventCreated={handleEventCreated}
-        existingClients={clients.map(c => ({
+        existingContacts={contacts.map(c => ({
           id: c.id,
-          client_type: c.client_type,
+          contact_type: c.contact_type,
           contact_name: c.contact_name,
-          company_name: c.company_name,
+          company_name: c.companies?.name || null,
           email: c.email,
           phone: c.phone,
         }))}
+        companies={companies}
       />
 
       {/* Event Success Dialog */}
@@ -1023,48 +1089,50 @@ const Admin = () => {
         inviteCode={createdInviteCode}
       />
 
-      {/* Client Detail Dialog */}
+      {/* Contact Detail Dialog */}
       <ClientDetailDialog
-        open={isClientDetailOpen}
-        onOpenChange={setIsClientDetailOpen}
-        client={selectedClient}
+        open={isContactDetailOpen}
+        onOpenChange={setIsContactDetailOpen}
+        contact={selectedContact}
         onEdit={() => {
-          setIsClientDetailOpen(false);
-          setIsClientEditOpen(true);
+          setIsContactDetailOpen(false);
+          setIsContactEditOpen(true);
         }}
       />
 
-      {/* Client Edit Dialog */}
+      {/* Contact Edit Dialog */}
       <ClientEditDialog
-        open={isClientEditOpen}
-        onOpenChange={setIsClientEditOpen}
-        client={selectedClient}
-        onSave={updateClient}
+        open={isContactEditOpen}
+        onOpenChange={setIsContactEditOpen}
+        contact={selectedContact}
+        onSave={updateContact}
         mode="edit"
+        companies={companies}
       />
 
-      {/* Client Create Dialog */}
+      {/* Contact Create Dialog */}
       <ClientEditDialog
-        open={isClientCreateOpen}
-        onOpenChange={setIsClientCreateOpen}
-        client={null}
-        onSave={updateClient}
+        open={isContactCreateOpen}
+        onOpenChange={setIsContactCreateOpen}
+        contact={null}
+        onSave={updateContact}
         mode="create"
+        companies={companies}
       />
 
-      {/* Delete Client Confirmation */}
-      <AlertDialog open={!!deletingClientId} onOpenChange={() => setDeletingClientId(null)}>
+      {/* Delete Contact Confirmation */}
+      <AlertDialog open={!!deletingContactId} onOpenChange={() => setDeletingContactId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar contacto?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El cliente será eliminado permanentemente.
+              Esta acción no se puede deshacer. El contacto será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletingClientId && deleteClient(deletingClientId)}
+              onClick={() => deletingContactId && deleteContact(deletingContactId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Eliminar
