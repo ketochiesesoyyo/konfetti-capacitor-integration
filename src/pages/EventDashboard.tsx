@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, MessageCircle, UserX, Share2, Copy, Camera, X } from "lucide-react";
+import { ArrowLeft, MessageCircle, UserX, Share2, Copy, Camera, X, User, Building2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { eventSchema } from "@/lib/validation";
@@ -53,6 +53,14 @@ const EventDashboard = () => {
   
   // Event data
   const [event, setEvent] = useState<any>(null);
+  const [client, setClient] = useState<{
+    id: string;
+    client_type: string;
+    contact_name: string;
+    company_name: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null>(null);
   const [guests, setGuests] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalGuests: 0,
@@ -102,16 +110,17 @@ const EventDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch event details
+      // Fetch event details with client data
       const { data: eventData, error: eventError } = await supabase
         .from("events")
-        .select("*")
+        .select("*, clients(id, client_type, contact_name, company_name, email, phone)")
         .eq("id", eventId || "")
         .eq("created_by", user.id)
         .single();
 
       if (eventError) throw eventError;
       setEvent(eventData);
+      setClient(eventData.clients || null);
       setEditedEvent({
         name: eventData.name,
         description: eventData.description || "",
@@ -628,6 +637,61 @@ const EventDashboard = () => {
                 <Button onClick={() => navigate(`/join/${event.invite_code}`)}>
                   Join Event to Matchmake
                 </Button>
+              </Card>
+            )}
+            
+            {/* Client Information Card */}
+            {client && (
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-muted-foreground" />
+                  <h3 className="font-semibold">Client Information</h3>
+                  <Badge variant="secondary" className="ml-auto">
+                    {client.client_type === 'wedding_planner' ? 'Wedding Planner' : 'Couple'}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    {client.client_type === 'wedding_planner' ? (
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <span>💍</span>
+                    )}
+                    <div>
+                      <p className="font-medium">{client.contact_name}</p>
+                      {client.client_type === 'wedding_planner' && client.company_name && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3" />
+                          {client.company_name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {(client.email || client.phone) && (
+                    <div className="flex flex-wrap gap-3 pt-2 border-t">
+                      {client.email && (
+                        <a 
+                          href={`mailto:${client.email}`} 
+                          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Mail className="w-4 h-4" />
+                          {client.email}
+                        </a>
+                      )}
+                      {client.phone && (
+                        <a 
+                          href={`tel:${client.phone}`} 
+                          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Phone className="w-4 h-4" />
+                          {client.phone}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </Card>
             )}
             

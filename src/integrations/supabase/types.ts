@@ -103,6 +103,53 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          client_type: string
+          company_name: string | null
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          source_request_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_type?: string
+          company_name?: string | null
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source_request_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_type?: string
+          company_name?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source_request_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_source_request_id_fkey"
+            columns: ["source_request_id"]
+            isOneToOne: false
+            referencedRelation: "event_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_tokens: {
         Row: {
           created_at: string | null
@@ -251,6 +298,7 @@ export type Database = {
       }
       events: {
         Row: {
+          client_id: string | null
           close_date: string
           created_at: string
           created_by: string
@@ -267,6 +315,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_id?: string | null
           close_date?: string
           created_at?: string
           created_by: string
@@ -283,6 +332,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_id?: string | null
           close_date?: string
           created_at?: string
           created_by?: string
@@ -298,7 +348,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hidden_events: {
         Row: {

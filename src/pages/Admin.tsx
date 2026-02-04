@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,14 @@ interface HostedEvent {
   close_date: string;
   created_at: string;
   event_attendees: { count: number }[];
+  clients: {
+    id: string;
+    client_type: string;
+    contact_name: string;
+    company_name: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
 }
 
 const STATUS_OPTIONS = [
@@ -123,7 +131,7 @@ const Admin = () => {
   const loadHostedEvents = async (adminUserId: string) => {
     const { data, error } = await supabase
       .from('events')
-      .select('*, event_attendees(count)')
+      .select('*, event_attendees(count), clients(id, client_type, contact_name, company_name, email, phone)')
       .eq('created_by', adminUserId)
       .order('date', { ascending: false });
 
@@ -459,6 +467,7 @@ const Admin = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Evento</TableHead>
+                          <TableHead>Cliente</TableHead>
                           <TableHead>Fecha</TableHead>
                           <TableHead>Estado</TableHead>
                           <TableHead>Invitados</TableHead>
@@ -484,6 +493,31 @@ const Admin = () => {
                                 </div>
                                 <span className="font-medium">{event.name}</span>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              {event.clients ? (
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    {event.clients.client_type === 'wedding_planner' ? (
+                                      <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                    ) : (
+                                      <span className="text-sm">💍</span>
+                                    )}
+                                    <span className="text-sm font-medium">{event.clients.contact_name}</span>
+                                  </div>
+                                  {event.clients.client_type === 'wedding_planner' && event.clients.company_name && (
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                      <Building2 className="w-3 h-3" />
+                                      {event.clients.company_name}
+                                    </div>
+                                  )}
+                                  {event.clients.client_type === 'couple' && (
+                                    <span className="text-xs text-muted-foreground">(Pareja)</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {event.date 

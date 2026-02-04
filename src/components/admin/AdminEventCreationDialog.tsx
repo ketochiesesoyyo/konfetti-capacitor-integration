@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Camera, X, Loader2 } from "lucide-react";
+import { Calendar, Camera, X, Loader2, User, Building2 } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ interface EventRequest {
   status: string;
   created_at: string;
   updated_at: string;
+  contact_name?: string | null;
 }
 
 interface AdminEventCreationDialogProps {
@@ -39,6 +40,11 @@ const MATCHMAKING_OPTIONS = [
   { value: "day_of_event", label: "El día del evento" },
 ];
 
+const CLIENT_TYPE_OPTIONS = [
+  { value: "couple", label: "Pareja" },
+  { value: "wedding_planner", label: "Wedding Planner" },
+];
+
 export const AdminEventCreationDialog = ({
   open,
   onOpenChange,
@@ -54,25 +60,59 @@ export const AdminEventCreationDialog = ({
   const [tempImageFile, setTempImageFile] = useState<File | null>(null);
   const [matchmakingOption, setMatchmakingOption] = useState<string>("1_week_before");
 
+  // Client data
+  const [clientData, setClientData] = useState({
+    clientType: "couple" as "couple" | "wedding_planner",
+    contactName: "",
+    companyName: "",
+    email: "",
+    phone: "",
+  });
+
   const [formData, setFormData] = useState({
     coupleName1: "",
     coupleName2: "",
     eventDate: "",
   });
 
-  // Reset form when request changes
+  // Reset form when request changes or dialog opens
   useEffect(() => {
     if (request) {
+      // Pre-fill from request
       setFormData({
         coupleName1: request.partner1_name,
         coupleName2: request.partner2_name,
         eventDate: request.wedding_date,
       });
+      setClientData({
+        clientType: request.submitter_type as "couple" | "wedding_planner",
+        contactName: request.contact_name || "",
+        companyName: "",
+        email: request.email,
+        phone: request.phone,
+      });
+      setEventImage(null);
+      setImagePreview("");
+      setMatchmakingOption("1_week_before");
+    } else if (open) {
+      // Reset for direct event creation
+      setFormData({
+        coupleName1: "",
+        coupleName2: "",
+        eventDate: "",
+      });
+      setClientData({
+        clientType: "couple",
+        contactName: "",
+        companyName: "",
+        email: "",
+        phone: "",
+      });
       setEventImage(null);
       setImagePreview("");
       setMatchmakingOption("1_week_before");
     }
-  }, [request]);
+  }, [request, open]);
 
   const generateInviteCode = () => {
     const name1 = formData.coupleName1.toUpperCase().replace(/\s+/g, '');
@@ -181,6 +221,10 @@ export const AdminEventCreationDialog = ({
 
   const handleCreateEvent = async () => {
     // Validation
+    if (!clientData.contactName?.trim()) {
+      toast.error("El nombre de contacto es requerido");
+      return;
+    }
     if (!formData.coupleName1?.trim()) {
       toast.error("El nombre del primer integrante es requerido");
       return;
@@ -237,7 +281,25 @@ export const AdminEventCreationDialog = ({
       
       const matchmakingStartDate = calculateMatchmakingStartDate();
 
-      // Create event
+      // Create client first
+      const { data: client, error: clientError } = await supabase
+        .from("clients")
+        .insert({
+          client_type: clientData.clientType,
+          contact_name: clientData.contactName.trim(),
+          company_name: clientData.clientType === 'wedding_planner' ? clientData.companyName.trim() || null : null,
+          email: clientData.email.trim() || null,
+          phone: clientData.phone.trim() || null,
+          source_request_id: request?.id || null,
+        })
+        .select()
+        .single();
+
+      if (clientError) {
+        throw new Error(`Error al crear cliente: ${clientError.message}`);
+      }
+
+      // Create event with client_id
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
@@ -251,6 +313,7 @@ export const AdminEventCreationDialog = ({
           status: 'active',
           matchmaking_start_date: matchmakingStartDate,
           matchmaking_start_time: '00:00',
+          client_id: client.id,
         })
         .select()
         .single();
@@ -301,10 +364,97 @@ export const AdminEventCreationDialog = ({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Client Information Section */}
+            <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <User className="w-4 h-4" />
+                Información del Cliente
+              </div>
+              
+              {/* Client Type */}
+              <div className="space-y-2">
+                <Label>Tipo de Cliente</Label>
+                <Select 
+                  value={clientData.clientType} 
+                  onValueChange={(value: "couple" | "wedding_planner") => 
+                    setClientData(prev => ({ ...prev, clientType: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLIENT_TYPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Contact Name */}
+              <div className="space-y-2">
+                <Label htmlFor="contactName">Nombre de Contacto *</Label>
+                <Input
+                  id="contactName"
+                  value={clientData.contactName}
+                  onChange={(e) => setClientData(prev => ({ ...prev, contactName: e.target.value }))}
+                  placeholder="Nombre del contacto principal"
+                />
+              </div>
+
+              {/* Company Name (only for wedding planners) */}
+              {clientData.clientType === 'wedding_planner' && (
+                <div className="space-y-2">
+                  <Label htmlFor="companyName" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Empresa
+                  </Label>
+                  <Input
+                    id="companyName"
+                    value={clientData.companyName}
+                    onChange={(e) => setClientData(prev => ({ ...prev, companyName: e.target.value }))}
+                    placeholder="Nombre de la empresa"
+                  />
+                </div>
+              )}
+
+              {/* Contact Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="clientEmail">Email</Label>
+                  <Input
+                    id="clientEmail"
+                    type="email"
+                    value={clientData.email}
+                    onChange={(e) => setClientData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="email@ejemplo.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="clientPhone">Teléfono</Label>
+                  <Input
+                    id="clientPhone"
+                    type="tel"
+                    value={clientData.phone}
+                    onChange={(e) => setClientData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+34 600 000 000"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Event Information Section */}
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-2">
+              <Calendar className="w-4 h-4" />
+              Información del Evento
+            </div>
+
             {/* Couple Names */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="coupleName1">Nombre 1</Label>
+                <Label htmlFor="coupleName1">Nombre 1 *</Label>
                 <Input
                   id="coupleName1"
                   value={formData.coupleName1}
@@ -313,7 +463,7 @@ export const AdminEventCreationDialog = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="coupleName2">Nombre 2</Label>
+                <Label htmlFor="coupleName2">Nombre 2 *</Label>
                 <Input
                   id="coupleName2"
                   value={formData.coupleName2}
