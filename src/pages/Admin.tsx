@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, User, Building2, Heart } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, User, Building2, Heart, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { isAdminDomainAllowed } from "@/lib/domain";
 import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationDialog";
 import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
+import { ClientEditDialog } from "@/components/admin/ClientEditDialog";
+import { ClientDetailDialog } from "@/components/admin/ClientDetailDialog";
 
 interface EventRequest {
   id: string;
@@ -94,6 +98,12 @@ const Admin = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [createdEventId, setCreatedEventId] = useState<string>("");
   const [createdInviteCode, setCreatedInviteCode] = useState<string>("");
+  
+  // Client dialogs
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isClientDetailOpen, setIsClientDetailOpen] = useState(false);
+  const [isClientEditOpen, setIsClientEditOpen] = useState(false);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -170,6 +180,54 @@ const Admin = () => {
     } else {
       setClients((data || []) as Client[]);
     }
+  };
+
+  const updateClient = async (clientId: string, updates: Partial<Client>) => {
+    const { error } = await supabase
+      .from('clients')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+
+    if (error) {
+      toast.error("Error al actualizar cliente");
+      console.error(error);
+    } else {
+      toast.success("Cliente actualizado");
+      await loadClients();
+    }
+  };
+
+  const deleteClient = async (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (client?.events && client.events.length > 0) {
+      toast.error("No puedes eliminar un cliente con eventos asociados");
+      setDeletingClientId(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', clientId);
+
+    if (error) {
+      toast.error("Error al eliminar cliente");
+      console.error(error);
+    } else {
+      toast.success("Cliente eliminado");
+      await loadClients();
+    }
+    setDeletingClientId(null);
+  };
+
+  const openClientDetail = (client: Client) => {
+    setSelectedClient(client);
+    setIsClientDetailOpen(true);
+  };
+
+  const openClientEdit = (client: Client) => {
+    setSelectedClient(client);
+    setIsClientEditOpen(true);
   };
 
   const getEventStatus = (event: HostedEvent): 'draft' | 'closed' | 'active' => {
@@ -681,11 +739,12 @@ const Admin = () => {
                           <TableHead>Contacto</TableHead>
                           <TableHead>Eventos</TableHead>
                           <TableHead>Añadido</TableHead>
+                          <TableHead className="w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {clients.map((client) => (
-                          <TableRow key={client.id}>
+                          <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openClientDetail(client)}>
                             <TableCell>
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
@@ -694,7 +753,7 @@ const Admin = () => {
                                   ) : (
                                     <span className="text-base">💍</span>
                                   )}
-                                  <span className="font-medium">{client.contact_name}</span>
+                                  <span className="font-medium text-primary hover:underline">{client.contact_name}</span>
                                 </div>
                                 {client.client_type === 'wedding_planner' && client.company_name && (
                                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -709,7 +768,7 @@ const Admin = () => {
                                 {client.client_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="space-y-1">
                                 {client.email && (
                                   <div className="flex items-center gap-1.5 text-sm">
@@ -729,7 +788,7 @@ const Admin = () => {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               {client.events && client.events.length > 0 ? (
                                 <div className="space-y-1">
                                   {client.events.map((event) => (
@@ -750,6 +809,29 @@ const Admin = () => {
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {format(new Date(client.created_at), "dd/MM/yy")}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => openClientEdit(client)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => setDeletingClientId(client.id)}
+                                    className="text-destructive focus:text-destructive"
+                                    disabled={client.events && client.events.length > 0}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Eliminar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -897,6 +979,46 @@ const Admin = () => {
         eventId={createdEventId}
         inviteCode={createdInviteCode}
       />
+
+      {/* Client Detail Dialog */}
+      <ClientDetailDialog
+        open={isClientDetailOpen}
+        onOpenChange={setIsClientDetailOpen}
+        client={selectedClient}
+        onEdit={() => {
+          setIsClientDetailOpen(false);
+          setIsClientEditOpen(true);
+        }}
+      />
+
+      {/* Client Edit Dialog */}
+      <ClientEditDialog
+        open={isClientEditOpen}
+        onOpenChange={setIsClientEditOpen}
+        client={selectedClient}
+        onSave={updateClient}
+      />
+
+      {/* Delete Client Confirmation */}
+      <AlertDialog open={!!deletingClientId} onOpenChange={() => setDeletingClientId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El cliente será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingClientId && deleteClient(deletingClientId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
