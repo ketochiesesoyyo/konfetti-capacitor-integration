@@ -1,214 +1,200 @@
 
 
-## Enhanced Admin Panel: Client Management with Actions Menu and Detail View
+## CRM Enhancement: Add Clients & Select Existing Clients for Events
 
-### What You Need
+### Overview
 
-1. **"..." Actions Menu** on each client row to:
-   - Edit client details (name, email, phone, company, notes)
-   - Delete client (with confirmation)
-
-2. **Client Detail Dialog** when clicking on client name showing:
-   - Client type badge (Pareja / Wedding Planner)
-   - Contact name and company
-   - Email and phone (clickable)
-   - Event count and history (interactive table)
-   - Notes section
-   - Edit button
+This plan addresses two missing features:
+1. **Add new clients directly** from the Clientes tab (without creating an event)
+2. **Select existing clients** when creating a new event (for repeat Wedding Planners)
 
 ---
 
-### Implementation Plan
+### Changes Required
 
-#### 1. Create `ClientEditDialog` Component
+#### 1. Clientes Tab: Add "Añadir Cliente" Button
 
-A dialog for editing client information with form fields:
-- Contact Name (required)
-- Client Type (couple / wedding_planner)
-- Company Name (for wedding planners)
-- Email
-- Phone
-- Notes (textarea)
-
-#### 2. Create `ClientDetailDialog` Component
-
-A comprehensive view dialog showing:
+Add a button in the Clientes tab header to create clients independently:
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│                    María García                              │
-│                    La Boda Perfecta                          │
-│            [ Wedding Planner ]                               │
+│  👥 Clientes                              [ + Añadir Cliente ]│
 ├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  📧 maria@labodaperfecta.com     📞 +34 612 345 678         │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│  EVENTOS (3)                                                 │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │ Ana & Carlos        │ 15 Mar 2026 │ Activo  │ Ver →   │  │
-│  │ Laura & Pedro       │ 22 Apr 2026 │ Activo  │ Ver →   │  │
-│  │ Sofia & Juan        │ 10 Jun 2025 │ Cerrado │ Ver →   │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│  NOTAS                                                       │
-│  Cliente muy organizado, prefiere comunicación por email.   │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│  Cliente desde: 15 Ene 2026                                 │
-│                                                              │
-│               [ Editar ]  [ Cerrar ]                         │
+│  Stats cards...                                               │
+│  Clients table...                                             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-#### 3. Add Actions Menu to Clients Table
-
-Add a "..." dropdown menu with MoreHorizontal icon:
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ Cliente          │ Tipo     │ Contacto      │ Eventos │ Añadido │ Acciones │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ María García     │ Planner  │ maria@...     │ 3       │ 15/01   │   ⋯      │
-│ La Boda Perfecta │          │ +34 612...    │         │         │ ┌──────┐ │
-│                  │          │               │         │         │ │ Editar │
-│                  │          │               │         │         │ │ Borrar │
-│                  │          │               │         │         │ └──────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### 4. Make Client Name Clickable
-
-Clicking on the client name (María García) opens the ClientDetailDialog.
+**Implementation:**
+- Add a `createClient` function in Admin.tsx that inserts a new client
+- Modify `ClientEditDialog` to support "create mode" (when no client is passed)
+- Add a new state `isClientCreateOpen` to control the dialog
 
 ---
 
-### Files to Create/Modify
+#### 2. AdminEventCreationDialog: Select Existing Client Option
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/components/admin/ClientEditDialog.tsx` | Create | Dialog for editing client info |
-| `src/components/admin/ClientDetailDialog.tsx` | Create | Full client card view with events table |
-| `src/pages/Admin.tsx` | Modify | Add actions menu, click handlers, dialog states |
+Add a toggle/select to choose between creating a new client or using an existing one:
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│              Crear Evento                                  │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  ── CLIENTE ───────────────────────────────────────────   │
+│                                                            │
+│  ( ) Nuevo cliente                                         │
+│  (•) Seleccionar cliente existente                         │
+│                                                            │
+│  [ María García - La Boda Perfecta          ▼ ]            │
+│                                                            │
+│  ── INFORMACIÓN DEL EVENTO ────────────────────────────   │
+│  ...                                                       │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Implementation:**
+- Add `existingClients` prop to receive the list of clients
+- Add `clientMode` state: `"new"` or `"existing"`
+- Add `selectedClientId` state for when using existing client
+- Modify `handleCreateEvent` to:
+  - Skip client creation if using existing client
+  - Use `selectedClientId` for the event's `client_id`
+
+---
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Admin.tsx` | Pass `clients` to `AdminEventCreationDialog`, add "Añadir Cliente" button, add `createClient` function |
+| `src/components/admin/AdminEventCreationDialog.tsx` | Add client selection mode toggle, existing client dropdown |
+| `src/components/admin/ClientEditDialog.tsx` | Support create mode (no client passed = new client form) |
 
 ---
 
 ### Technical Details
 
-**State Management in Admin.tsx:**
-```typescript
-// New state for client dialogs
-const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-const [isClientDetailOpen, setIsClientDetailOpen] = useState(false);
-const [isClientEditOpen, setIsClientEditOpen] = useState(false);
-const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
-```
+#### Admin.tsx Changes
 
-**Update Client Function:**
 ```typescript
-const updateClient = async (clientId: string, updates: Partial<Client>) => {
-  const { error } = await supabase
+// New function to create a client directly
+const createClient = async (clientData: Partial<Client>) => {
+  const { error, data } = await supabase
     .from('clients')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', clientId);
-  
-  if (error) {
-    toast.error("Error al actualizar cliente");
-  } else {
-    toast.success("Cliente actualizado");
-    await loadClients();
-  }
-};
-```
+    .insert({
+      contact_name: clientData.contact_name,
+      client_type: clientData.client_type || 'couple',
+      company_name: clientData.company_name || null,
+      email: clientData.email || null,
+      phone: clientData.phone || null,
+      notes: clientData.notes || null,
+    })
+    .select()
+    .single();
 
-**Delete Client Function:**
-```typescript
-const deleteClient = async (clientId: string) => {
-  // Check if client has events first
-  const client = clients.find(c => c.id === clientId);
-  if (client?.events && client.events.length > 0) {
-    toast.error("No puedes eliminar un cliente con eventos asociados");
+  if (error) {
+    toast.error("Error al crear cliente");
     return;
   }
   
-  const { error } = await supabase
-    .from('clients')
-    .delete()
-    .eq('id', clientId);
-  
-  if (error) {
-    toast.error("Error al eliminar cliente");
-  } else {
-    toast.success("Cliente eliminado");
-    await loadClients();
-  }
+  toast.success("Cliente creado");
+  await loadClients();
 };
+```
+
+#### AdminEventCreationDialog Props
+
+```typescript
+interface AdminEventCreationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  request: EventRequest | null;
+  userId: string;
+  onEventCreated: (eventId: string, inviteCode: string) => void;
+  existingClients: Client[];  // NEW: pass existing clients
+}
+```
+
+#### Client Selection UI
+
+```typescript
+// State
+const [clientMode, setClientMode] = useState<"new" | "existing">("new");
+const [selectedClientId, setSelectedClientId] = useState<string>("");
+
+// In render
+{request === null && (  // Only show when direct creation, not from lead
+  <RadioGroup value={clientMode} onValueChange={setClientMode}>
+    <RadioGroupItem value="new">Nuevo cliente</RadioGroupItem>
+    <RadioGroupItem value="existing">Cliente existente</RadioGroupItem>
+  </RadioGroup>
+)}
+
+{clientMode === "existing" && (
+  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+    <SelectTrigger>
+      <SelectValue placeholder="Seleccionar cliente..." />
+    </SelectTrigger>
+    <SelectContent>
+      {existingClients.map((client) => (
+        <SelectItem key={client.id} value={client.id}>
+          {client.contact_name}
+          {client.company_name && ` - ${client.company_name}`}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+)}
+```
+
+#### Event Creation Logic Update
+
+```typescript
+// In handleCreateEvent
+let clientId: string;
+
+if (clientMode === "existing" && selectedClientId) {
+  // Use existing client
+  clientId = selectedClientId;
+} else {
+  // Create new client (existing code)
+  const { data: client, error: clientError } = await supabase
+    .from("clients")
+    .insert({ ... })
+    .select()
+    .single();
+  
+  clientId = client.id;
+}
+
+// Then use clientId when creating the event
+const { data: event } = await supabase.from("events").insert({
+  ...
+  client_id: clientId,
+});
 ```
 
 ---
 
-### ClientDetailDialog Layout
+### UX Flow Summary
 
-The dialog will include:
+**Adding a new client (without event):**
+1. Go to Clientes tab
+2. Click "Añadir Cliente" button
+3. Fill in contact details
+4. Save → Client appears in table
 
-1. **Header Section**
-   - Large contact name
-   - Company name (if wedding planner)
-   - Type badge
-   
-2. **Contact Section**
-   - Email with mailto link
-   - Phone with tel link
-   
-3. **Events Section**
-   - Table showing all associated events
-   - Event name, date, status
-   - "Ver" button linking to EventDashboard
-   - Shows count: "EVENTOS (3)"
-   
-4. **Notes Section**
-   - Display client notes
-   - Visible only if notes exist
-   
-5. **Footer**
-   - "Cliente desde" date
-   - Edit button
-   - Close button
+**Creating event for repeat Wedding Planner:**
+1. Click "Crear Evento"
+2. Select "Cliente existente"
+3. Choose from dropdown (shows contact name + company)
+4. Fill event details
+5. Create → Event linked to existing client
 
----
-
-### ClientEditDialog Form
-
-Form fields with validation:
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Contact Name | Input | Yes | |
-| Client Type | Select | Yes | couple / wedding_planner |
-| Company Name | Input | No | Only visible when type = wedding_planner |
-| Email | Input | No | Email validation |
-| Phone | Input | No | |
-| Notes | Textarea | No | Internal notes |
-
----
-
-### UX Improvements
-
-1. **Row Click Behavior**: 
-   - Clicking anywhere on the row (except actions column) opens the detail dialog
-   
-2. **Actions Menu**:
-   - Uses DropdownMenu with MoreHorizontal icon
-   - "Editar" opens edit dialog
-   - "Eliminar" shows confirmation alert (disabled if client has events)
-
-3. **Edit Flow**:
-   - Can edit from both the actions menu and the detail dialog
-   - After saving, both dialogs close and list refreshes
-
-4. **Visual Feedback**:
-   - Loading states during save/delete
-   - Success/error toasts
-   - Cursor pointer on clickable areas
+**Creating event from a lead:**
+1. Go to Solicitudes tab
+2. Click on lead → "Crear Evento"
+3. Client form pre-filled from lead data (creates new client)
+4. Create → New client + event created, linked together
 
