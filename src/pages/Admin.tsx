@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, User, Building2 } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, User, Building2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,20 @@ interface HostedEvent {
   } | null;
 }
 
+interface Client {
+  id: string;
+  client_type: string;
+  contact_name: string;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  source_request_id: string | null;
+  events: { id: string; name: string; date: string | null }[];
+}
+
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pendiente", color: "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400" },
   { value: "contacted", label: "Contactado", color: "bg-blue-500/20 text-blue-700 border-blue-500/30 dark:text-blue-400" },
@@ -68,6 +82,7 @@ const Admin = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [hostedEvents, setHostedEvents] = useState<HostedEvent[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<EventRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
@@ -109,7 +124,7 @@ const Admin = () => {
     }
 
     setIsAdmin(true);
-    await Promise.all([loadRequests(), loadHostedEvents(session.user.id)]);
+    await Promise.all([loadRequests(), loadHostedEvents(session.user.id), loadClients()]);
   };
 
   const loadRequests = async () => {
@@ -140,6 +155,20 @@ const Admin = () => {
       console.error(error);
     } else {
       setHostedEvents((data || []) as HostedEvent[]);
+    }
+  };
+
+  const loadClients = async () => {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*, events(id, name, date)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error("Error al cargar clientes");
+      console.error(error);
+    } else {
+      setClients((data || []) as Client[]);
     }
   };
 
@@ -212,9 +241,9 @@ const Admin = () => {
     setRequestForEventCreation(null);
     toast.success("Evento creado exitosamente");
     
-    // Reload hosted events
+    // Reload hosted events and clients
     if (userId) {
-      await loadHostedEvents(userId);
+      await Promise.all([loadHostedEvents(userId), loadClients()]);
     }
   };
 
@@ -251,6 +280,12 @@ const Admin = () => {
     closed: hostedEvents.filter(e => getEventStatus(e) === 'closed').length,
   };
 
+  const clientStats = {
+    total: clients.length,
+    couples: clients.filter(c => c.client_type === 'couple').length,
+    planners: clients.filter(c => c.client_type === 'wedding_planner').length,
+  };
+
   if (!isAdmin && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -284,9 +319,10 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-xl grid-cols-3">
             <TabsTrigger value="requests">Solicitudes ({requests.length})</TabsTrigger>
             <TabsTrigger value="events">Eventos ({hostedEvents.length})</TabsTrigger>
+            <TabsTrigger value="clients">Clientes ({clients.length})</TabsTrigger>
           </TabsList>
 
           {/* Requests Tab */}
@@ -583,6 +619,137 @@ const Admin = () => {
                                   </Button>
                                 )}
                               </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Clients Tab */}
+          <TabsContent value="clients" className="space-y-6">
+            {/* Client Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold">{clientStats.total}</div>
+                  <p className="text-sm text-muted-foreground">Total clientes</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold text-pink-500">{clientStats.couples}</div>
+                  <p className="text-sm text-muted-foreground">Parejas</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold text-primary">{clientStats.planners}</div>
+                  <p className="text-sm text-muted-foreground">Wedding Planners</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Clients Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="w-5 h-5" />
+                  Clientes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : clients.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No hay clientes registrados
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Contacto</TableHead>
+                          <TableHead>Eventos</TableHead>
+                          <TableHead>Añadido</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clients.map((client) => (
+                          <TableRow key={client.id}>
+                            <TableCell>
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  {client.client_type === 'wedding_planner' ? (
+                                    <User className="w-4 h-4 text-muted-foreground" />
+                                  ) : (
+                                    <span className="text-base">💍</span>
+                                  )}
+                                  <span className="font-medium">{client.contact_name}</span>
+                                </div>
+                                {client.client_type === 'wedding_planner' && client.company_name && (
+                                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <Building2 className="w-3.5 h-3.5" />
+                                    {client.company_name}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {client.client_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                {client.email && (
+                                  <div className="flex items-center gap-1.5 text-sm">
+                                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <a href={`mailto:${client.email}`} className="text-primary hover:underline">
+                                      {client.email}
+                                    </a>
+                                  </div>
+                                )}
+                                {client.phone && (
+                                  <div className="flex items-center gap-1.5 text-sm">
+                                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <a href={`tel:${client.phone}`} className="text-primary hover:underline">
+                                      {client.phone}
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {client.events && client.events.length > 0 ? (
+                                <div className="space-y-1">
+                                  {client.events.map((event) => (
+                                    <Button
+                                      key={event.id}
+                                      variant="link"
+                                      size="sm"
+                                      className="h-auto p-0 text-sm"
+                                      onClick={() => navigate(`/event-dashboard/${event.id}?from=admin`)}
+                                    >
+                                      {event.name}
+                                    </Button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Sin eventos</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {format(new Date(client.created_at), "dd/MM/yy")}
                             </TableCell>
                           </TableRow>
                         ))}
