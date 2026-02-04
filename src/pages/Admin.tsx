@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +19,16 @@ import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationD
 import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
 import { ClientEditDialog } from "@/components/admin/ClientEditDialog";
 import { ClientDetailDialog } from "@/components/admin/ClientDetailDialog";
+import { AdminDiagnosticsPanel } from "@/components/admin/AdminDiagnosticsPanel";
+import { 
+  loadHostedEventsHardened, 
+  loadContactsHardened, 
+  loadCompaniesHardened,
+  checkSchemaCompatibility,
+  type HostedEvent,
+  type Contact,
+  type Company,
+} from "@/hooks/useAdminQueries";
 
 interface EventRequest {
   id: string;
@@ -38,55 +48,7 @@ interface EventRequest {
   events: { name: string } | null;
 }
 
-interface HostedEvent {
-  id: string;
-  name: string;
-  date: string | null;
-  status: string;
-  invite_code: string;
-  image_url: string | null;
-  close_date: string;
-  created_at: string;
-  event_attendees: { count: number }[];
-  contacts: {
-    id: string;
-    contact_type: string;
-    contact_name: string;
-    email: string | null;
-    phone: string | null;
-    company_id: string | null;
-    companies: {
-      id: string;
-      name: string;
-    } | null;
-  } | null;
-}
-
-interface Contact {
-  id: string;
-  contact_type: string;
-  contact_name: string;
-  email: string | null;
-  phone: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  source_request_id: string | null;
-  company_id: string | null;
-  companies: {
-    id: string;
-    name: string;
-  } | null;
-  events: { id: string; name: string; date: string | null; status?: string }[];
-}
-
-interface Company {
-  id: string;
-  name: string;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// HostedEvent, Contact, and Company interfaces are imported from useAdminQueries
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pendiente", color: "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400" },
@@ -123,6 +85,49 @@ const Admin = () => {
   const [isContactCreateOpen, setIsContactCreateOpen] = useState(false);
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
 
+  // Diagnostics state
+  const [schemaCompatible, setSchemaCompatible] = useState(true);
+  const [usedFallback, setUsedFallback] = useState(false);
+
+  const loadAllData = useCallback(async () => {
+    setIsLoading(true);
+    
+    // Check schema compatibility first
+    const { compatible } = await checkSchemaCompatibility();
+    setSchemaCompatible(compatible);
+
+    // Load all data with hardened queries
+    const [eventsResult, contactsResult, companiesResult] = await Promise.all([
+      loadHostedEventsHardened(),
+      loadContactsHardened(),
+      loadCompaniesHardened(),
+    ]);
+
+    // Update fallback status
+    setUsedFallback(eventsResult.usedFallback || contactsResult.usedFallback);
+
+    // Set data
+    setHostedEvents(eventsResult.data);
+    setContacts(contactsResult.data);
+    setCompanies(companiesResult.data);
+
+    // Show errors if any (but don't block UI)
+    if (eventsResult.error) {
+      toast.error(eventsResult.error);
+    }
+    if (contactsResult.error) {
+      toast.error(contactsResult.error);
+    }
+    if (companiesResult.error) {
+      console.warn(companiesResult.error);
+    }
+
+    // Load requests separately (simple query)
+    await loadRequests();
+    
+    setIsLoading(false);
+  }, []);
+
   useEffect(() => {
     checkAdminAndLoadData();
   }, []);
@@ -152,7 +157,7 @@ const Admin = () => {
     }
 
     setIsAdmin(true);
-    await Promise.all([loadRequests(), loadHostedEvents(session.user.id), loadContacts(), loadCompanies()]);
+    await loadAllData();
   };
 
   const loadRequests = async () => {
@@ -171,67 +176,7 @@ const Admin = () => {
     setIsLoading(false);
   };
 
-  const loadHostedEvents = async (_adminUserId: string) => {
-    // Admin can view ALL events, not just their own
-    const { data, error } = await supabase
-      .from('events')
-      .select('*, event_attendees(count), contacts!contact_id(id, contact_type, contact_name, email, phone, company_id, companies(id, name))')
-      .order('date', { ascending: false });
-
-    if (error) {
-      toast.error("Error al cargar Eventos");
-      console.error(error);
-    } else {
-      setHostedEvents((data || []) as HostedEvent[]);
-    }
-  };
-
-  const loadContacts = async () => {
-    // First get contacts with companies
-    const { data: contactsData, error: contactsError } = await supabase
-      .from('contacts')
-      .select('*, companies(id, name)')
-      .order('created_at', { ascending: false });
-
-    if (contactsError) {
-      toast.error("Error al cargar Clientes");
-      console.error(contactsError);
-      return;
-    }
-
-    // Then get events for each contact (events reference contacts, not the other way around)
-    const { data: eventsData, error: eventsError } = await supabase
-      .from('events')
-      .select('id, name, date, status, contact_id')
-      .not('contact_id', 'is', null);
-
-    if (eventsError) {
-      console.error("Error loading contact events:", eventsError);
-    }
-
-    // Map events to their contacts
-    const contactsWithEvents = (contactsData || []).map(contact => ({
-      ...contact,
-      events: (eventsData || [])
-        .filter(event => event.contact_id === contact.id)
-        .map(event => ({ id: event.id, name: event.name, date: event.date, status: event.status }))
-    }));
-
-    setContacts(contactsWithEvents as Contact[]);
-  };
-
-  const loadCompanies = async () => {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error("Error loading companies:", error);
-    } else {
-      setCompanies((data || []) as Company[]);
-    }
-  };
+  // Old loadHostedEvents, loadContacts, loadCompanies removed - using hardened queries from useAdminQueries
 
   const updateContact = async (contactId: string | null, updates: Partial<Contact> & { company_name?: string }) => {
     // Handle company creation/lookup if needed
@@ -255,7 +200,7 @@ const Admin = () => {
           return;
         }
         companyId = newCompany.id;
-        await loadCompanies();
+        await loadAllData();
       } else {
         companyId = company.id;
       }
@@ -281,7 +226,7 @@ const Admin = () => {
         console.error(error);
       } else {
         toast.success("Contacto creado");
-        await loadContacts();
+        await loadAllData();
       }
       return;
     }
@@ -305,7 +250,7 @@ const Admin = () => {
       console.error(error);
     } else {
       toast.success("Contacto actualizado");
-      await loadContacts();
+      await loadAllData();
     }
   };
 
@@ -327,7 +272,7 @@ const Admin = () => {
       console.error(error);
     } else {
       toast.success("Contacto eliminado");
-      await loadContacts();
+      await loadAllData();
     }
     setDeletingContactId(null);
   };
@@ -411,10 +356,8 @@ const Admin = () => {
     setRequestForEventCreation(null);
     toast.success("Evento creado exitosamente");
     
-    // Reload hosted events and contacts
-    if (userId) {
-      await Promise.all([loadHostedEvents(userId), loadContacts()]);
-    }
+    // Reload hosted events and contacts using hardened queries
+    await loadAllData();
   };
 
   const getStatusBadge = (status: string) => {
@@ -486,6 +429,13 @@ const Admin = () => {
             Crear Evento
           </Button>
         </div>
+
+        {/* Diagnostics Panel - Shows errors and schema issues */}
+        <AdminDiagnosticsPanel 
+          onRefresh={loadAllData}
+          schemaCompatible={schemaCompatible}
+          usedFallback={usedFallback}
+        />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
