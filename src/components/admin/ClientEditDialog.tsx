@@ -7,11 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-interface Client {
+interface Contact {
   id: string;
-  client_type: string;
+  contact_type: string;
   contact_name: string;
-  company_name: string | null;
+  company_id?: string | null;
+  companies?: {
+    id: string;
+    name: string;
+  } | null;
   email: string | null;
   phone: string | null;
   notes: string | null;
@@ -21,19 +25,28 @@ interface Client {
   events: { id: string; name: string; date: string | null }[];
 }
 
+interface Company {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface ClientEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  client: Client | null;
-  onSave: (clientId: string | null, updates: Partial<Client>) => Promise<void>;
+  contact: Contact | null;
+  onSave: (contactId: string | null, updates: Partial<Contact> & { company_name?: string }) => Promise<void>;
   mode?: "edit" | "create";
+  companies?: Company[];
 }
 
-export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "edit" }: ClientEditDialogProps) => {
+export const ClientEditDialog = ({ open, onOpenChange, contact, onSave, mode = "edit", companies = [] }: ClientEditDialogProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     contact_name: "",
-    client_type: "couple",
+    contact_type: "couple",
     company_name: "",
     email: "",
     phone: "",
@@ -41,36 +54,36 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "e
   });
 
   useEffect(() => {
-    if (mode === "edit" && client) {
+    if (mode === "edit" && contact) {
       setFormData({
-        contact_name: client.contact_name || "",
-        client_type: client.client_type || "couple",
-        company_name: client.company_name || "",
-        email: client.email || "",
-        phone: client.phone || "",
-        notes: client.notes || "",
+        contact_name: contact.contact_name || "",
+        contact_type: contact.contact_type || "couple",
+        company_name: contact.companies?.name || "",
+        email: contact.email || "",
+        phone: contact.phone || "",
+        notes: contact.notes || "",
       });
     } else if (mode === "create") {
       // Reset form for create mode
       setFormData({
         contact_name: "",
-        client_type: "couple",
+        contact_type: "couple",
         company_name: "",
         email: "",
         phone: "",
         notes: "",
       });
     }
-  }, [client, mode, open]);
+  }, [contact, mode, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsSaving(true);
-    await onSave(mode === "edit" ? client?.id || null : null, {
+    await onSave(mode === "edit" ? contact?.id || null : null, {
       contact_name: formData.contact_name,
-      client_type: formData.client_type,
-      company_name: formData.client_type === "wedding_planner" ? formData.company_name : null,
+      contact_type: formData.contact_type,
+      company_name: formData.contact_type === "wedding_planner" ? formData.company_name : undefined,
       email: formData.email || null,
       phone: formData.phone || null,
       notes: formData.notes || null,
@@ -80,14 +93,15 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "e
   };
 
   const isCreateMode = mode === "create";
+  const existingCompanyNames = companies.map(c => c.name);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isCreateMode ? "Añadir Cliente" : "Editar Cliente"}</DialogTitle>
+          <DialogTitle>{isCreateMode ? "Añadir Contacto" : "Editar Contacto"}</DialogTitle>
           <DialogDescription>
-            {isCreateMode ? "Crea un nuevo cliente en el CRM" : "Actualiza la información del cliente"}
+            {isCreateMode ? "Crea un nuevo contacto en el CRM" : "Actualiza la información del contacto"}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,10 +117,10 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "e
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="client_type">Tipo de cliente</Label>
+            <Label htmlFor="contact_type">Tipo de contacto</Label>
             <Select
-              value={formData.client_type}
-              onValueChange={(value) => setFormData({ ...formData, client_type: value })}
+              value={formData.contact_type}
+              onValueChange={(value) => setFormData({ ...formData, contact_type: value })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -118,7 +132,7 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "e
             </Select>
           </div>
 
-          {formData.client_type === "wedding_planner" && (
+          {formData.contact_type === "wedding_planner" && (
             <div className="space-y-2">
               <Label htmlFor="company_name">Nombre de empresa</Label>
               <Input
@@ -126,7 +140,15 @@ export const ClientEditDialog = ({ open, onOpenChange, client, onSave, mode = "e
                 value={formData.company_name}
                 onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                 placeholder="Ej: La Boda Perfecta"
+                list="company-suggestions"
               />
+              {existingCompanyNames.length > 0 && (
+                <datalist id="company-suggestions">
+                  {existingCompanyNames.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
+              )}
             </div>
           )}
 

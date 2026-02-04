@@ -55,7 +55,7 @@ const EventDashboard = () => {
   const [event, setEvent] = useState<any>(null);
   const [client, setClient] = useState<{
     id: string;
-    client_type: string;
+    contact_type: string;
     contact_name: string;
     company_name: string | null;
     email: string | null;
@@ -110,17 +110,30 @@ const EventDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch event details with client data
+      // Fetch event details with contact data
       const { data: eventData, error: eventError } = await supabase
         .from("events")
-        .select("*, clients(id, client_type, contact_name, company_name, email, phone)")
+        .select("*, contacts(id, contact_type, contact_name, email, phone, company_id, companies(id, name))")
         .eq("id", eventId || "")
         .eq("created_by", user.id)
         .single();
 
       if (eventError) throw eventError;
       setEvent(eventData);
-      setClient(eventData.clients || null);
+      // Map contacts to client format for backwards compatibility
+      const contactData = eventData.contacts;
+      if (contactData) {
+        setClient({
+          id: contactData.id,
+          contact_type: contactData.contact_type,
+          contact_name: contactData.contact_name,
+          company_name: contactData.companies?.name || null,
+          email: contactData.email,
+          phone: contactData.phone,
+        });
+      } else {
+        setClient(null);
+      }
       setEditedEvent({
         name: eventData.name,
         description: eventData.description || "",
@@ -647,20 +660,20 @@ const EventDashboard = () => {
                   <User className="w-5 h-5 text-muted-foreground" />
                   <h3 className="font-semibold">Client Information</h3>
                   <Badge variant="secondary" className="ml-auto">
-                    {client.client_type === 'wedding_planner' ? 'Wedding Planner' : 'Couple'}
+                    {client.contact_type === 'wedding_planner' ? 'Wedding Planner' : 'Couple'}
                   </Badge>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    {client.client_type === 'wedding_planner' ? (
+                    {client.contact_type === 'wedding_planner' ? (
                       <User className="w-4 h-4 text-muted-foreground" />
                     ) : (
                       <span>💍</span>
                     )}
                     <div>
                       <p className="font-medium">{client.contact_name}</p>
-                      {client.client_type === 'wedding_planner' && client.company_name && (
+                      {client.contact_type === 'wedding_planner' && client.company_name && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                           <Building2 className="w-3 h-3" />
                           {client.company_name}
