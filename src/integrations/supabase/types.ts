@@ -103,84 +103,6 @@ export type Database = {
           },
         ]
       }
-      companies: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          notes: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          notes?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          notes?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      contacts: {
-        Row: {
-          company_id: string | null
-          contact_name: string
-          contact_type: string
-          created_at: string
-          email: string | null
-          id: string
-          notes: string | null
-          phone: string | null
-          source_request_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          company_id?: string | null
-          contact_name: string
-          contact_type?: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          notes?: string | null
-          phone?: string | null
-          source_request_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          company_id?: string | null
-          contact_name?: string
-          contact_type?: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          notes?: string | null
-          phone?: string | null
-          source_request_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contacts_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contacts_source_request_id_fkey"
-            columns: ["source_request_id"]
-            isOneToOne: false
-            referencedRelation: "event_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       device_tokens: {
         Row: {
           created_at: string | null
@@ -330,7 +252,6 @@ export type Database = {
       events: {
         Row: {
           close_date: string
-          contact_id: string | null
           created_at: string
           created_by: string
           date: string | null
@@ -347,7 +268,6 @@ export type Database = {
         }
         Insert: {
           close_date?: string
-          contact_id?: string | null
           created_at?: string
           created_by: string
           date?: string | null
@@ -364,7 +284,6 @@ export type Database = {
         }
         Update: {
           close_date?: string
-          contact_id?: string | null
           created_at?: string
           created_by?: string
           date?: string | null
@@ -379,15 +298,7 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       hidden_events: {
         Row: {
