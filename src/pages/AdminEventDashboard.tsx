@@ -711,56 +711,77 @@ const AdminEventDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Client Info Card */}
-          {contact && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-lg">{contact.contact_name}</p>
-                    <Badge variant="secondary" className="mt-1">
-                      {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
-                    </Badge>
+          {/* Client Info Card - Always visible */}
+          <Card>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Cliente
+              </CardTitle>
+              {contact && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={openEditFinancialDialog}
+                >
+                  <Pencil className="w-4 h-4 mr-1" />
+                  Cambiar
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {contact ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-lg">{contact.contact_name}</p>
+                      <Badge variant="secondary" className="mt-1">
+                        {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
+                      </Badge>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/client/${contact.id}`)}
+                    >
+                      Ver Perfil
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/admin/client/${contact.id}`)}
-                  >
-                    Ver Perfil
+                  {contact.companies?.name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Building2 className="w-4 h-4 text-muted-foreground" />
+                      <span>{contact.companies.name}</span>
+                    </div>
+                  )}
+                  {contact.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                        {contact.email}
+                      </a>
+                    </div>
+                  )}
+                  {contact.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
+                        {contact.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <User className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-sm text-muted-foreground mb-3">Sin cliente asignado</p>
+                  <Button variant="outline" size="sm" onClick={openEditFinancialDialog}>
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Asignar Cliente
                   </Button>
                 </div>
-                {contact.companies?.name && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="w-4 h-4 text-muted-foreground" />
-                    <span>{contact.companies.name}</span>
-                  </div>
-                )}
-                {contact.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
-                      {contact.email}
-                    </a>
-                  </div>
-                )}
-                {contact.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
-                      {contact.phone}
-                    </a>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
 
           {/* Financial Card */}
           <Card>

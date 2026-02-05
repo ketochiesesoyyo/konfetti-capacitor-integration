@@ -384,22 +384,13 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          {getEventStatus(event) === 'draft' ? (
+                          {getEventStatus(event) === 'draft' && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/create-event?edit=${event.id}`)}
                             >
                               Completar
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/admin/event/${event.id}`)}
-                            >
-                              <ExternalLink className="w-4 h-4 mr-1" />
-                              Gestionar
                             </Button>
                           )}
                         </div>
