@@ -483,16 +483,21 @@ const AdminEventDashboard = () => {
   };
 
   const openEditFinancialDialog = async () => {
-    await loadClients();
-    setFinancialFormData({
-      contactId: event?.contact_id || "",
-      price: event?.price?.toString() || "",
-      currency: event?.currency || "MXN",
-      commissionType: event?.commission_type || "",
-      commissionValue: event?.commission_value?.toString() || "",
-      paymentStatus: event?.payment_status || "pending",
-    });
-    setEditFinancialDialogOpen(true);
+    try {
+      await loadClients();
+      setFinancialFormData({
+        contactId: event?.contact_id || "__none__",
+        price: event?.price?.toString() || "",
+        currency: event?.currency || "MXN",
+        commissionType: event?.commission_type || "",
+        commissionValue: event?.commission_value?.toString() || "",
+        paymentStatus: event?.payment_status || "pending",
+      });
+      setEditFinancialDialogOpen(true);
+    } catch (error) {
+      console.error("Error opening financial dialog:", error);
+      toast.error("Error al cargar datos");
+    }
   };
 
   const handleSaveFinancial = async () => {
@@ -501,11 +506,12 @@ const AdminEventDashboard = () => {
 
       const priceValue = financialFormData.price ? parseFloat(financialFormData.price) : null;
       const commissionValue = financialFormData.commissionValue ? parseFloat(financialFormData.commissionValue) : null;
+      const contactIdValue = financialFormData.contactId === "__none__" ? null : financialFormData.contactId;
 
       const { error } = await supabase
         .from("events")
         .update({
-          contact_id: financialFormData.contactId || null,
+          contact_id: contactIdValue || null,
           price: priceValue,
           currency: financialFormData.currency,
           commission_type: financialFormData.commissionType || null,
@@ -796,18 +802,22 @@ const AdminEventDashboard = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              {event.price ? (
+              {event.price != null ? (
                 <>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-2xl font-bold">
-                        {formatCurrency(event.price, event.currency || 'MXN')}
+                        {event.price === 0 ? (
+                          <span className="text-muted-foreground">Gratis / Regalo</span>
+                        ) : (
+                          formatCurrency(event.price, event.currency || 'MXN')
+                        )}
                       </p>
                       <p className="text-sm text-muted-foreground">Precio del evento</p>
                     </div>
-                    {getPaymentStatusBadge(event.payment_status || 'pending')}
+                    {event.price > 0 && getPaymentStatusBadge(event.payment_status || 'pending')}
                   </div>
-                  {event.commission_type && event.commission_value && (
+                  {event.commission_type && event.commission_value && event.price > 0 && (
                     <div className="mt-4 pt-4 border-t space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Comisión</span>
@@ -817,7 +827,7 @@ const AdminEventDashboard = () => {
                             : formatCurrency(event.commission_value, event.currency || 'MXN')}
                         </span>
                       </div>
-                      {event.commission_type === 'percentage' && event.price && (
+                      {event.commission_type === 'percentage' && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Monto comisión</span>
                           <span className="font-medium text-emerald-600">
@@ -1203,7 +1213,7 @@ const AdminEventDashboard = () => {
                   <SelectValue placeholder="Seleccionar cliente..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin cliente asignado</SelectItem>
+                  <SelectItem value="__none__">Sin cliente asignado</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.contact_name}

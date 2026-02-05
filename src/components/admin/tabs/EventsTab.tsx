@@ -105,7 +105,7 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
     e.stopPropagation();
     setSelectedEvent(event);
     setFormData({
-      contactId: event.contact_id || "",
+      contactId: event.contact_id || "__none__",
       price: event.price?.toString() || "",
       currency: event.currency || "MXN",
       commissionType: (event.commission_type as "" | "percentage" | "fixed") || "",
@@ -123,11 +123,12 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
 
       const priceValue = formData.price ? parseFloat(formData.price) : null;
       const commissionValue = formData.commissionValue ? parseFloat(formData.commissionValue) : null;
+      const contactIdValue = formData.contactId === "__none__" ? null : formData.contactId;
 
       const { error } = await supabase
         .from("events")
         .update({
-          contact_id: formData.contactId || null,
+          contact_id: contactIdValue || null,
           price: priceValue,
           currency: formData.currency,
           commission_type: formData.commissionType || null,
@@ -347,8 +348,12 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                         </div>
                       </TableCell>
                       <TableCell>
-                        {event.price ? (
-                          <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                        {event.price != null ? (
+                          event.price === 0 ? (
+                            <span className="text-muted-foreground">Gratis</span>
+                          ) : (
+                            <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                          )
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
@@ -436,7 +441,7 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                   <SelectValue placeholder="Seleccionar cliente..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin cliente asignado</SelectItem>
+                  <SelectItem value="__none__">Sin cliente asignado</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.contact_name}

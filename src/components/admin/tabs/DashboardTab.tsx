@@ -275,8 +275,12 @@ export const DashboardTab = ({
                         </div>
                       </TableCell>
                       <TableCell>
-                        {event.price ? (
-                          <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                        {event.price != null ? (
+                          event.price === 0 ? (
+                            <span className="text-muted-foreground">Gratis</span>
+                          ) : (
+                            <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                          )
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
