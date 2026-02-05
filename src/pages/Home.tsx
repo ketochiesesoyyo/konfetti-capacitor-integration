@@ -83,30 +83,46 @@ const Home = () => {
         if (hiddenError) throw hiddenError;
         setHiddenEventIds(new Set(hiddenData?.map(h => h.event_id) || []));
 
-        // Fetch events user is attending (joined via event_attendees)
-        const { data: attending, error: attendingError } = await supabase
+        // HARDENED: Step 1 - Fetch event_ids only (no relational join)
+        const { data: attendeeData, error: attendeeError } = await supabase
           .from("event_attendees")
-          .select("event_id, events(*)")
+          .select("event_id")
           .eq("user_id", session.user.id);
 
-        if (attendingError) throw attendingError;
+        if (attendeeError) throw attendeeError;
+        
+        const eventIds = attendeeData?.map((a) => a.event_id).filter(Boolean) || [];
+        
+        if (eventIds.length === 0) {
+          setAttendingEvents([]);
+          setLoading(false);
+          return;
+        }
+
+        // HARDENED: Step 2 - Fetch events separately using .in()
+        const { data: eventsData, error: eventsError } = await supabase
+          .from("events")
+          .select("*")
+          .in("id", eventIds);
+
+        if (eventsError) throw eventsError;
         
         // Filter out events where close_date has passed and where user is host
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const attendingEventsData = (attending || [])
-          .filter((a: any) => {
+        const attendingEventsData = (eventsData || [])
+          .filter((event: any) => {
             // Filter out events where user is the host
-            if (a.events?.created_by === session.user.id) return false;
+            if (event.created_by === session.user.id) return false;
             
-            if (!a.events?.close_date) return true;
-            const closeDate = new Date(a.events.close_date);
+            if (!event.close_date) return true;
+            const closeDate = new Date(event.close_date);
             closeDate.setHours(0, 0, 0, 0);
             return closeDate >= today;
           })
-          .map((a: any) => ({
-            ...a.events,
+          .map((event: any) => ({
+            ...event,
             invite_code: null // Attendees never see invite codes
           }));
         setAttendingEvents(attendingEventsData);
