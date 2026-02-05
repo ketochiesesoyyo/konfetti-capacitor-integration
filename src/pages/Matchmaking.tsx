@@ -95,11 +95,12 @@ const Matchmaking = () => {
       }
       setUserId(session.user.id);
 
-      // HARDENED: Step 1 - Fetch event_ids only (no relational join)
+      // HARDENED: Step 1 - Fetch event_ids with joined_at (no relational join)
       const { data: attendeeData, error: attendeeError } = await supabase
         .from("event_attendees")
-        .select("event_id")
-        .eq("user_id", session.user.id);
+        .select("event_id, joined_at")
+        .eq("user_id", session.user.id)
+        .order("joined_at", { ascending: false });
 
       if (attendeeError) {
         console.error("Error loading event_attendees:", attendeeError);
@@ -120,8 +121,7 @@ const Matchmaking = () => {
       const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("id, name, date, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date")
-        .in("id", eventIds)
-        .order("date", { ascending: true });
+        .in("id", eventIds);
 
       if (eventsError) {
         console.error("Error loading events:", eventsError);
@@ -130,11 +130,25 @@ const Matchmaking = () => {
         return;
       }
 
-      const userEvents = eventsData || [];
+      // Sort events: active/open first (by close_date desc), then closed
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const sortedEvents = (eventsData || []).sort((a, b) => {
+        const aIsOpen = a.status === 'active' && (!a.close_date || new Date(a.close_date) >= today);
+        const bIsOpen = b.status === 'active' && (!b.close_date || new Date(b.close_date) >= today);
+        
+        // Open events first
+        if (aIsOpen && !bIsOpen) return -1;
+        if (!aIsOpen && bIsOpen) return 1;
+        
+        // Within same category, sort by date descending (newest first)
+        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+      });
       
       // Fetch profile counts for each event
       const eventsWithCounts = await Promise.all(
-        userEvents.map(async (event: Event) => {
+        sortedEvents.map(async (event: Event) => {
           const { count } = await supabase
             .from("event_attendees")
             .select("*", { count: "exact", head: true })
@@ -145,18 +159,28 @@ const Matchmaking = () => {
       
       setEvents(eventsWithCounts);
 
-      // Prioritize URL eventId, then saved eventId, then nearest upcoming event
-      let defaultEventId = eventId && userEvents.find((e: Event) => e.id === eventId)?.id;
+      // Prioritize: URL eventId > saved eventId > first OPEN event (latest joined)
+      let defaultEventId = eventId && sortedEvents.find((e: Event) => e.id === eventId)?.id;
 
       if (!defaultEventId) {
         const savedEventId = localStorage.getItem("matchmaking_selected_event");
-        defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
+        // Only use saved if it's an open event
+        const savedEvent = savedEventId && sortedEvents.find((e: Event) => e.id === savedEventId);
+        if (savedEvent) {
+          const savedIsOpen = savedEvent.status === 'active' && 
+            (!savedEvent.close_date || new Date(savedEvent.close_date) >= today);
+          if (savedIsOpen) {
+            defaultEventId = savedEventId;
+          }
+        }
       }
 
-      if (!defaultEventId && userEvents.length > 0) {
-        const today = new Date();
-        const upcomingEvent = userEvents.find((e: Event) => new Date(e.date) >= today);
-        defaultEventId = upcomingEvent?.id || userEvents[0].id;
+      if (!defaultEventId && sortedEvents.length > 0) {
+        // Pick the first open event (already sorted: open first)
+        const firstOpenEvent = sortedEvents.find((e: Event) => 
+          e.status === 'active' && (!e.close_date || new Date(e.close_date) >= today)
+        );
+        defaultEventId = firstOpenEvent?.id || sortedEvents[0].id;
       }
 
       if (defaultEventId) {
