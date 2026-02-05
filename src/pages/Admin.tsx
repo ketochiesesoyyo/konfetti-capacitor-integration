@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, ImageIcon, Copy, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +72,14 @@ const Admin = () => {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [createdEventId, setCreatedEventId] = useState<string>("");
   const [createdInviteCode, setCreatedInviteCode] = useState<string>("");
+
+  // Sorting state for requests table
+  const [requestsSortBy, setRequestsSortBy] = useState<'name' | 'date' | 'guests' | 'type' | 'status' | 'created'>('created');
+  const [requestsSortDir, setRequestsSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Sorting state for events table
+  const [eventsSortBy, setEventsSortBy] = useState<'name' | 'date' | 'status' | 'guests'>('date');
+  const [eventsSortDir, setEventsSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -230,6 +238,71 @@ const Admin = () => {
     toast.success(message);
   };
 
+  // Sorting helpers
+  const toggleRequestsSort = (column: typeof requestsSortBy) => {
+    if (requestsSortBy === column) {
+      setRequestsSortDir(requestsSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setRequestsSortBy(column);
+      setRequestsSortDir('asc');
+    }
+  };
+
+  const toggleEventsSort = (column: typeof eventsSortBy) => {
+    if (eventsSortBy === column) {
+      setEventsSortDir(eventsSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setEventsSortBy(column);
+      setEventsSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ column, currentSort, currentDir }: { column: string; currentSort: string; currentDir: 'asc' | 'desc' }) => {
+    if (column !== currentSort) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return currentDir === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  // Sorted requests
+  const sortedRequests = [...requests].sort((a, b) => {
+    const dir = requestsSortDir === 'asc' ? 1 : -1;
+    switch (requestsSortBy) {
+      case 'name':
+        return dir * `${a.partner1_name} & ${a.partner2_name}`.localeCompare(`${b.partner1_name} & ${b.partner2_name}`);
+      case 'date':
+        return dir * (new Date(a.wedding_date).getTime() - new Date(b.wedding_date).getTime());
+      case 'guests':
+        return dir * (a.expected_guests - b.expected_guests);
+      case 'type':
+        return dir * a.submitter_type.localeCompare(b.submitter_type);
+      case 'status':
+        return dir * a.status.localeCompare(b.status);
+      case 'created':
+        return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      default:
+        return 0;
+    }
+  });
+
+  // Sorted events
+  const sortedEvents = [...hostedEvents].sort((a, b) => {
+    const dir = eventsSortDir === 'asc' ? 1 : -1;
+    switch (eventsSortBy) {
+      case 'name':
+        return dir * a.name.localeCompare(b.name);
+      case 'date':
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return dir * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'status':
+        return dir * getEventStatus(a).localeCompare(getEventStatus(b));
+      case 'guests':
+        return dir * ((a.event_attendees?.[0]?.count || 0) - (b.event_attendees?.[0]?.count || 0));
+      default:
+        return 0;
+    }
+  });
+
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.status === 'pending').length,
@@ -334,17 +407,29 @@ const Admin = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Evento / Pareja</TableHead>
-                          <TableHead>Fecha Boda</TableHead>
-                          <TableHead>Invitados</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead>Recibido</TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('name')}>
+                            <div className="flex items-center">Evento / Pareja<SortIcon column="name" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('date')}>
+                            <div className="flex items-center">Fecha Boda<SortIcon column="date" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('guests')}>
+                            <div className="flex items-center">Invitados<SortIcon column="guests" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('type')}>
+                            <div className="flex items-center">Tipo<SortIcon column="type" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('status')}>
+                            <div className="flex items-center">Estado<SortIcon column="status" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRequestsSort('created')}>
+                            <div className="flex items-center">Recibido<SortIcon column="created" currentSort={requestsSortBy} currentDir={requestsSortDir} /></div>
+                          </TableHead>
                           <TableHead></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {requests.map((request) => (
+                        {sortedRequests.map((request) => (
                           <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(request)}>
                             <TableCell className="font-medium">
                               {request.event_id && request.events?.name ? (
@@ -459,16 +544,24 @@ const Admin = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Evento</TableHead>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead>Invitados</TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleEventsSort('name')}>
+                            <div className="flex items-center">Evento<SortIcon column="name" currentSort={eventsSortBy} currentDir={eventsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleEventsSort('date')}>
+                            <div className="flex items-center">Fecha<SortIcon column="date" currentSort={eventsSortBy} currentDir={eventsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleEventsSort('status')}>
+                            <div className="flex items-center">Estado<SortIcon column="status" currentSort={eventsSortBy} currentDir={eventsSortDir} /></div>
+                          </TableHead>
+                          <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => toggleEventsSort('guests')}>
+                            <div className="flex items-center">Invitados<SortIcon column="guests" currentSort={eventsSortBy} currentDir={eventsSortDir} /></div>
+                          </TableHead>
                           <TableHead>Código</TableHead>
                           <TableHead></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {hostedEvents.map((event) => (
+                        {sortedEvents.map((event) => (
                           <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/event-dashboard/${event.id}?from=admin`)}>
                             <TableCell>
                               <div className="flex items-center gap-3">
