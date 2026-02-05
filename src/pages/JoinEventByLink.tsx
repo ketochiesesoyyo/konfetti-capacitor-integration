@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 
 const JoinEventByLink = () => {
   const { t } = useTranslation();
@@ -215,7 +216,7 @@ const JoinEventByLink = () => {
               <div>
                 <p className="text-sm font-medium text-foreground">Wedding Date</p>
                 <p className="text-sm">
-                  {event?.eventDate && format(new Date(event.eventDate), 'EEEE, dd / MMM / yyyy')}
+                  {event?.eventDate && format(parseLocalDate(event.eventDate), 'EEEE, dd / MMM / yyyy')}
                 </p>
               </div>
             </div>

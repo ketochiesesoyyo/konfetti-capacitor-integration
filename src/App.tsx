@@ -13,10 +13,12 @@ import { usePushNotifications } from "./hooks/use-push-notifications";
 
 // Lazy load all page components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Landing = lazy(() => import("./pages/Landing"));
 const ForCouples = lazy(() => import("./pages/ForCouples"));
 const WeddingPlanners = lazy(() => import("./pages/WeddingPlanners"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Support = lazy(() => import("./pages/Support"));
 const Home = lazy(() => import("./pages/Home"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
@@ -31,6 +33,9 @@ const JoinEventByLink = lazy(() => import("./pages/JoinEventByLink"));
 const EventDashboard = lazy(() => import("./pages/EventDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const CommunityGuidelines = lazy(() => import("./pages/CommunityGuidelines"));
+const TermsConditions = lazy(() => import("./pages/TermsConditions"));
 
 const showAdminRoute = isAdminDomainAllowed();
 
@@ -58,7 +63,7 @@ const IndexRedirect = () => {
     );
   }
 
-  return isAuthenticated ? <Navigate to="/profile" replace /> : <Navigate to="/auth" replace />;
+  return isAuthenticated ? <Navigate to="/profile" replace /> : <Navigate to="/landing" replace />;
 };
 
 // Component to initialize push notifications
@@ -87,7 +92,13 @@ const App = () => (
               <Route path="/para-novios" element={<ForCouples />} />
               <Route path="/wedding-planners" element={<WeddingPlanners />} />
               <Route path="/contact" element={<Contact />} />
+              {/* Apple App Store required redirects */}
+              <Route path="/help" element={<Navigate to="/support" replace />} />
+              <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+              <Route path="/terms" element={<Navigate to="/terms-conditions" replace />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Layout><Home /></Layout>} />
               <Route path="/profile" element={<Layout><Profile /></Layout>} />
               <Route path="/edit-profile" element={<EditProfile />} />
@@ -102,6 +113,9 @@ const App = () => (
               <Route path="/join/:code" element={<JoinEventByLink />} />
               <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
               {showAdminRoute && <Route path="/admin" element={<Admin />} />}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+              <Route path="/terms-conditions" element={<TermsConditions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -8,6 +8,7 @@ import { Calendar, Camera, X, Loader2 } from "lucide-react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatLocalDate, parseLocalDate } from "@/lib/utils";
 
 interface EventRequest {
   id: string;
@@ -91,7 +92,7 @@ export const AdminEventCreationDialog = ({
   const calculateMatchmakingStartDate = () => {
     if (!formData.eventDate) return null;
     
-    const eventDate = new Date(formData.eventDate);
+    const eventDate = parseLocalDate(formData.eventDate);
     
     switch (matchmakingOption) {
       case "immediately":
@@ -99,11 +100,11 @@ export const AdminEventCreationDialog = ({
       case "1_week_before":
         const oneWeek = new Date(eventDate);
         oneWeek.setDate(oneWeek.getDate() - 7);
-        return oneWeek.toISOString().split('T')[0];
+        return formatLocalDate(oneWeek);
       case "2_weeks_before":
         const twoWeeks = new Date(eventDate);
         twoWeeks.setDate(twoWeeks.getDate() - 14);
-        return twoWeeks.toISOString().split('T')[0];
+        return formatLocalDate(twoWeeks);
       case "day_of_event":
         return formData.eventDate;
       default:
@@ -230,8 +231,8 @@ export const AdminEventCreationDialog = ({
         imageUrl = publicUrl;
       }
 
-      // Calculate dates
-      const eventDate = new Date(formData.eventDate);
+      // Calculate dates using local timezone helpers
+      const eventDate = parseLocalDate(formData.eventDate);
       const closeDate = new Date(eventDate);
       closeDate.setDate(closeDate.getDate() + 3);
       
@@ -243,7 +244,7 @@ export const AdminEventCreationDialog = ({
         .insert({
           name: eventName,
           date: formData.eventDate,
-          close_date: closeDate.toISOString().split('T')[0],
+          close_date: formatLocalDate(closeDate),
           description: `Wedding celebration for ${eventName}`,
           invite_code: inviteCode,
           created_by: userId,

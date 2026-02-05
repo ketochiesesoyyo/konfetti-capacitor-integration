@@ -1,20 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { Mail, Instagram } from "lucide-react";
+import { Mail, Instagram, HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
-import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
-import { TermsConditionsDialog } from "@/components/TermsConditionsDialog";
-import { PrivacyPolicyDialog } from "@/components/PrivacyPolicyDialog";
 
 export const LandingFooter = () => {
   const { t } = useTranslation();
-  const [showGuidelines, setShowGuidelines] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
 
   return (
-    <>
-      <footer className="bg-card border-t border-border">
+    <footer className="bg-card border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="grid md:grid-cols-3 gap-12 mb-12">
             {/* Contact Us */}
@@ -30,6 +23,13 @@ export const LandingFooter = () => {
                   <Mail className="h-5 w-5" />
                   <span className="text-sm">support@konfetti.app</span>
                 </a>
+                <Link
+                  to="/support"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  <span className="text-sm">{t("landing.footer.contact.support")}</span>
+                </Link>
               </div>
             </div>
 
@@ -57,24 +57,24 @@ export const LandingFooter = () => {
                 {t("landing.footer.legal.title")}
               </h3>
               <div className="space-y-2">
-                <button
-                  onClick={() => setShowPrivacy(true)}
+                <Link
+                  to="/privacy-policy"
                   className="block text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("landing.footer.legal.privacy")}
-                </button>
-                <button
-                  onClick={() => setShowGuidelines(true)}
+                </Link>
+                <Link
+                  to="/community-guidelines"
                   className="block text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("landing.footer.legal.guidelines")}
-                </button>
-                <button
-                  onClick={() => setShowTerms(true)}
+                </Link>
+                <Link
+                  to="/terms-conditions"
                   className="block text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   {t("landing.footer.legal.terms")}
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -92,19 +92,5 @@ export const LandingFooter = () => {
           </div>
         </div>
       </footer>
-
-      <CommunityGuidelinesDialog
-        open={showGuidelines}
-        onOpenChange={setShowGuidelines}
-      />
-      <TermsConditionsDialog
-        open={showTerms}
-        onOpenChange={setShowTerms}
-      />
-      <PrivacyPolicyDialog
-        open={showPrivacy}
-        onOpenChange={setShowPrivacy}
-      />
-    </>
   );
 };

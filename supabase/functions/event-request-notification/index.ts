@@ -14,6 +14,7 @@ const corsHeaders = {
 
 interface EventRequestData {
   submitter_type: 'couple' | 'wedding_planner';
+  contact_name: string;
   partner1_name: string;
   partner2_name: string;
   wedding_date: string;
@@ -78,6 +79,26 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <div class="section">
+              <div class="section-title">Contact Information</div>
+              <div class="info-row">
+                <span class="info-label">Contact Name:</span>
+                <span class="info-value"><strong>${data.contact_name}</strong></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Submitter Type:</span>
+                <span class="info-value">${submitterLabel}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value"><a href="mailto:${data.email}" style="color: #9b2c2c;">${data.email}</a></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value"><a href="tel:${data.phone}" style="color: #9b2c2c;">${data.phone}</a></span>
+              </div>
+            </div>
+            
+            <div class="section">
               <div class="section-title">Couple Information</div>
               <div class="info-row">
                 <span class="info-label">Partner 1:</span>
@@ -101,18 +122,6 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             </div>
             
-            <div class="section">
-              <div class="section-title">Contact Information</div>
-              <div class="info-row">
-                <span class="info-label">Email:</span>
-                <span class="info-value"><a href="mailto:${data.email}" style="color: #9b2c2c;">${data.email}</a></span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Phone:</span>
-                <span class="info-value"><a href="tel:${data.phone}" style="color: #9b2c2c;">${data.phone}</a></span>
-              </div>
-            </div>
-            
             ${data.message ? `
             <div class="section">
               <div class="section-title">Additional Message</div>
@@ -121,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
             ` : ''}
             
             <div style="text-align: center;">
-              <a href="mailto:${data.email}?subject=Re: Konfetti for your wedding" class="cta-button">Reply to ${data.partner1_name}</a>
+              <a href="mailto:${data.email}?subject=Re: Konfetti for your wedding" class="cta-button">Reply to ${data.contact_name}</a>
             </div>
           </div>
           
@@ -136,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
     const payload = {
       from: "Konfetti <info@konfetti.app>",
       to: [NOTIFICATION_EMAIL],
-      subject: `🎉 New Event Request: ${data.partner1_name} & ${data.partner2_name}`,
+      subject: `🎉 New Event Request from ${data.contact_name}: ${data.partner1_name} & ${data.partner2_name}`,
       html: emailHtml,
       reply_to: data.email,
     };
@@ -153,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
       : `¡Hemos recibido tu solicitud, ${data.partner1_name} & ${data.partner2_name}!`;
 
     const greeting = isWeddingPlanner
-      ? 'Hola,'
+      ? `Hola ${data.contact_name},`
       : `Hola ${data.partner1_name} & ${data.partner2_name},`;
 
     const confirmationHtml = `

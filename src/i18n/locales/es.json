@@ -111,7 +111,8 @@
     "noHosts": "Aún no hay mensajes del anfitrión",
     "noHostsDesc": "Los anfitriones de eventos pueden enviarle mensajes directamente",
     "reportAndUnmatch": "Reportar y desemparejar",
-    "unmatch": "Inigualable",
+    "unmatch": "Desemparejar",
+    "blockUser": "Bloquear usuario",
     "failedLoadMatches": "No se pudieron cargar las coincidencias"
   },
   "chatThread": {
@@ -482,7 +483,31 @@
     "failedSignIn": "No se pudo iniciar sesión con {{provider}}",
     "communityGuidelines": "Directrices de la Comunidad",
     "termsConditions": "Términos y Condiciones",
-    "privacyPolicy": "Política de Privacidad"
+    "privacyPolicy": "Política de Privacidad",
+    "backToHome": "Volver al inicio",
+    "forgotPassword": {
+      "link": "¿Olvidaste tu contraseña?",
+      "title": "Restablecer Contraseña",
+      "subtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "submit": "Enviar Enlace",
+      "cancel": "Cancelar",
+      "emailSent": "¡Correo de restablecimiento enviado! Revisa tu bandeja de entrada.",
+      "enterEmail": "Por favor, ingresa tu correo electrónico",
+      "error": "No se pudo enviar el correo. Por favor, intenta de nuevo."
+    },
+    "resetPassword": {
+      "title": "Nueva Contraseña",
+      "subtitle": "Ingresa tu nueva contraseña abajo",
+      "newPassword": "Nueva Contraseña",
+      "submit": "Actualizar Contraseña",
+      "success": "¡Contraseña actualizada con éxito!",
+      "error": "No se pudo actualizar la contraseña. Por favor, intenta de nuevo.",
+      "invalidLink": "Enlace inválido o expirado. Por favor, solicita uno nuevo.",
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+      "backToLogin": "Volver al Inicio de Sesión"
+    }
   },
   "notFound": {
     "title": "404",
@@ -802,6 +827,8 @@
       "submitterType": "¿Quién está enviando esta solicitud?",
       "submitterCouple": "Somos los novios",
       "submitterPlanner": "Soy wedding planner",
+      "contactName": "Tu Nombre",
+      "contactNamePlaceholder": "ej., María García",
       "partner1": "Nombre del Novio/a 1",
       "partner2": "Nombre del Novio/a 2",
       "weddingDate": "Fecha de la Boda",
@@ -819,7 +846,8 @@
     },
     "footer": {
       "contact": {
-        "title": "Contáctanos"
+        "title": "Contáctanos",
+        "support": "Centro de Ayuda"
       },
       "social": {
         "title": "Síguenos"
@@ -1008,6 +1036,32 @@
         "cta": "Sí, quiero esto para mi boda",
         "note": "Cupos limitados por mes"
       }
+    }
+  },
+  "blockDialog": {
+    "title": "Bloquear a {{name}}",
+    "description": "Bloquear a este usuario lo eliminará de tus matches, borrará la conversación y evitará que aparezca en tu feed.",
+    "whatHappens": "Qué pasa cuando bloqueas:",
+    "effect1": "El match y los mensajes serán eliminados",
+    "effect2": "No verás a esta persona en matchmaking",
+    "effect3": "No podrá encontrarte ni enviarte mensajes",
+    "effect4": "Nuestro equipo será notificado del bloqueo",
+    "reasonLabel": "¿Por qué estás bloqueando? (opcional)",
+    "detailsLabel": "Por favor proporciona detalles",
+    "detailsPlaceholder": "Cuéntanos más...",
+    "selectReason": "Por favor selecciona una razón",
+    "mustBeLoggedIn": "Debes iniciar sesión para bloquear usuarios",
+    "unauthorized": "No tienes permiso para bloquear a este usuario",
+    "success": "{{name}} ha sido bloqueado",
+    "failed": "Error al bloquear usuario",
+    "blocking": "Bloqueando...",
+    "confirm": "Bloquear usuario",
+    "reasons": {
+      "inappropriate_behavior": "Comportamiento inapropiado",
+      "harassment": "Acoso",
+      "made_uncomfortable": "Me hizo sentir incómodo/a",
+      "spam_fake": "Spam o perfil falso",
+      "other": "Otro"
     }
   }
 }

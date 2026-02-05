@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
@@ -83,30 +83,46 @@ const Home = () => {
         if (hiddenError) throw hiddenError;
         setHiddenEventIds(new Set(hiddenData?.map(h => h.event_id) || []));
 
-        // Fetch events user is attending (joined via event_attendees)
-        const { data: attending, error: attendingError } = await supabase
+        // HARDENED: Step 1 - Fetch event_ids only (no relational join)
+        const { data: attendeeData, error: attendeeError } = await supabase
           .from("event_attendees")
-          .select("event_id, events(*)")
+          .select("event_id")
           .eq("user_id", session.user.id);
 
-        if (attendingError) throw attendingError;
+        if (attendeeError) throw attendeeError;
+        
+        const eventIds = attendeeData?.map((a) => a.event_id).filter(Boolean) || [];
+        
+        if (eventIds.length === 0) {
+          setAttendingEvents([]);
+          setLoading(false);
+          return;
+        }
+
+        // HARDENED: Step 2 - Fetch events separately using .in()
+        const { data: eventsData, error: eventsError } = await supabase
+          .from("events")
+          .select("*")
+          .in("id", eventIds);
+
+        if (eventsError) throw eventsError;
         
         // Filter out events where close_date has passed and where user is host
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const attendingEventsData = (attending || [])
-          .filter((a: any) => {
+        const attendingEventsData = (eventsData || [])
+          .filter((event: any) => {
             // Filter out events where user is the host
-            if (a.events?.created_by === session.user.id) return false;
+            if (event.created_by === session.user.id) return false;
             
-            if (!a.events?.close_date) return true;
-            const closeDate = new Date(a.events.close_date);
+            if (!event.close_date) return true;
+            const closeDate = parseLocalDate(event.close_date);
             closeDate.setHours(0, 0, 0, 0);
             return closeDate >= today;
           })
-          .map((a: any) => ({
-            ...a.events,
+          .map((event: any) => ({
+            ...event,
             invite_code: null // Attendees never see invite codes
           }));
         setAttendingEvents(attendingEventsData);
@@ -130,7 +146,7 @@ const Home = () => {
     today.setHours(0, 0, 0, 0);
     
     if (event.close_date) {
-      const closeDate = new Date(event.close_date);
+      const closeDate = parseLocalDate(event.close_date);
       closeDate.setHours(0, 0, 0, 0);
       if (closeDate < today) return 'closed';
     }
@@ -190,7 +206,7 @@ const Home = () => {
         case "name":
           return a.name.localeCompare(b.name);
         case "date":
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+          return parseLocalDate(a.date).getTime() - parseLocalDate(b.date).getTime();
         case "status":
           return getEventStatus(a).localeCompare(getEventStatus(b));
         default:
@@ -459,7 +475,7 @@ const Home = () => {
                             <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                               <Calendar className="w-4 h-4" />
-                              <span>{format(new Date(event.date), 'dd / MMM / yyyy')}</span>
+                              <span>{format(parseLocalDate(event.date), 'dd / MMM / yyyy')}</span>
                             </div>
                           </div>
                           <div className="flex flex-col items-center gap-1">

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const usePushNotifications = () => {
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'prompt'>('prompt');
@@ -102,7 +103,25 @@ export const usePushNotifications = () => {
     // Listen for push notifications received while app is in foreground
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       console.log('Push notification received:', notification);
-      // You can show an in-app notification here using toast
+      
+      // Show in-app toast notification
+      const title = notification.title || 'New Notification';
+      const body = notification.body || '';
+      const data = notification.data;
+      
+      toast(title, {
+        description: body,
+        action: data?.type ? {
+          label: data.type === 'message' ? 'View Chat' : 'View',
+          onClick: () => {
+            if (data.type === 'match' || data.type === 'like') {
+              window.location.href = '/liked';
+            } else if (data.type === 'message') {
+              window.location.href = data.chatId ? `/chat/${data.chatId}` : '/chats';
+            }
+          },
+        } : undefined,
+      });
     });
 
     // Listen for push notification action (user tapped notification)

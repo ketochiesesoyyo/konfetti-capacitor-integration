@@ -112,6 +112,7 @@
     "noHostsDesc": "Event hosts can send you messages directly",
     "reportAndUnmatch": "Report & Unmatch",
     "unmatch": "Unmatch",
+    "blockUser": "Block User",
     "failedLoadMatches": "Failed to load matches"
   },
   "chatThread": {
@@ -483,7 +484,31 @@
     "failedSignIn": "Failed to sign in with {{provider}}",
     "communityGuidelines": "Community Guidelines",
     "termsConditions": "Terms & Conditions",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "backToHome": "Back to home",
+    "forgotPassword": {
+      "link": "Forgot password?",
+      "title": "Reset Password",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "cancel": "Cancel",
+      "emailSent": "Password reset email sent! Check your inbox.",
+      "enterEmail": "Please enter your email address",
+      "error": "Failed to send reset email. Please try again."
+    },
+    "resetPassword": {
+      "title": "Set New Password",
+      "subtitle": "Enter your new password below",
+      "newPassword": "New Password",
+      "submit": "Update Password",
+      "success": "Password updated successfully!",
+      "error": "Failed to update password. Please try again.",
+      "invalidLink": "Invalid or expired reset link. Please request a new one.",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "backToLogin": "Back to Login"
+    }
   },
   "notFound": {
     "title": "404",
@@ -803,6 +828,8 @@
       "submitterType": "Who is submitting this request?",
       "submitterCouple": "We are the couple",
       "submitterPlanner": "I'm a wedding planner",
+      "contactName": "Your Name",
+      "contactNamePlaceholder": "e.g., Maria Garcia",
       "partner1": "Partner 1 Name",
       "partner2": "Partner 2 Name",
       "weddingDate": "Wedding Date",
@@ -820,7 +847,8 @@
     },
     "footer": {
       "contact": {
-        "title": "Contact Us"
+        "title": "Contact Us",
+        "support": "Help Center"
       },
       "social": {
         "title": "Follow Us"
@@ -1009,6 +1037,32 @@
         "cta": "Yes, I want this for my wedding",
         "note": "Limited spots available per month"
       }
+    }
+  },
+  "blockDialog": {
+    "title": "Block {{name}}",
+    "description": "Blocking this user will remove them from your matches, delete your conversation, and prevent them from appearing in your feed.",
+    "whatHappens": "What happens when you block:",
+    "effect1": "Match and messages will be deleted",
+    "effect2": "You won't see this person in matchmaking",
+    "effect3": "They won't be able to find or message you",
+    "effect4": "Our team will be notified of the block",
+    "reasonLabel": "Why are you blocking? (optional)",
+    "detailsLabel": "Please provide details",
+    "detailsPlaceholder": "Tell us more...",
+    "selectReason": "Please select a reason",
+    "mustBeLoggedIn": "You must be logged in to block users",
+    "unauthorized": "You don't have permission to block this user",
+    "success": "{{name}} has been blocked",
+    "failed": "Failed to block user",
+    "blocking": "Blocking...",
+    "confirm": "Block User",
+    "reasons": {
+      "inappropriate_behavior": "Inappropriate behavior",
+      "harassment": "Harassment",
+      "made_uncomfortable": "Made me uncomfortable",
+      "spam_fake": "Spam or fake profile",
+      "other": "Other"
     }
   }
 }

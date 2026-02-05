@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { swipeSchema, matchSchema } from "@/lib/validation";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { format, isBefore, isAfter } from "date-fns";
 import {
@@ -95,25 +95,60 @@ const Matchmaking = () => {
       }
       setUserId(session.user.id);
 
-      // Fetch all events user is attending with complete data
+      // HARDENED: Step 1 - Fetch event_ids with joined_at (no relational join)
       const { data: attendeeData, error: attendeeError } = await supabase
         .from("event_attendees")
-        .select("event_id, events(id, name, date, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date)")
+        .select("event_id, joined_at")
         .eq("user_id", session.user.id)
-        .order("events(date)", { ascending: true });
+        .order("joined_at", { ascending: false });
 
       if (attendeeError) {
-        console.error("Error loading events:", attendeeError);
+        console.error("Error loading event_attendees:", attendeeError);
         toast.error("Failed to load events");
         setLoading(false);
         return;
       }
 
-      const userEvents = attendeeData?.map((a: any) => a.events).filter(Boolean) || [];
+      const eventIds = attendeeData?.map((a) => a.event_id).filter(Boolean) || [];
+      
+      if (eventIds.length === 0) {
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+
+      // HARDENED: Step 2 - Fetch events separately using .in()
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("events")
+        .select("id, name, date, status, close_date, matchmaking_start_date, matchmaking_start_time, matchmaking_close_date")
+        .in("id", eventIds);
+
+      if (eventsError) {
+        console.error("Error loading events:", eventsError);
+        toast.error("Failed to load events");
+        setLoading(false);
+        return;
+      }
+
+      // Sort events: active/open first (by close_date desc), then closed
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const sortedEvents = (eventsData || []).sort((a, b) => {
+        const aIsOpen = a.status === 'active' && (!a.close_date || parseLocalDate(a.close_date) >= today);
+        const bIsOpen = b.status === 'active' && (!b.close_date || parseLocalDate(b.close_date) >= today);
+
+        // Open events first
+        if (aIsOpen && !bIsOpen) return -1;
+        if (!aIsOpen && bIsOpen) return 1;
+
+        // Within same category, sort by date descending (newest first)
+        return parseLocalDate(b.date || '1970-01-01').getTime() - parseLocalDate(a.date || '1970-01-01').getTime();
+      });
       
       // Fetch profile counts for each event
       const eventsWithCounts = await Promise.all(
-        userEvents.map(async (event: Event) => {
+        sortedEvents.map(async (event: Event) => {
           const { count } = await supabase
             .from("event_attendees")
             .select("*", { count: "exact", head: true })
@@ -124,18 +159,28 @@ const Matchmaking = () => {
       
       setEvents(eventsWithCounts);
 
-      // Prioritize URL eventId, then saved eventId, then nearest upcoming event
-      let defaultEventId = eventId && userEvents.find((e: Event) => e.id === eventId)?.id;
+      // Prioritize: URL eventId > saved eventId > first OPEN event (latest joined)
+      let defaultEventId = eventId && sortedEvents.find((e: Event) => e.id === eventId)?.id;
 
       if (!defaultEventId) {
         const savedEventId = localStorage.getItem("matchmaking_selected_event");
-        defaultEventId = savedEventId && userEvents.find((e: Event) => e.id === savedEventId)?.id;
+        // Only use saved if it's an open event
+        const savedEvent = savedEventId && sortedEvents.find((e: Event) => e.id === savedEventId);
+        if (savedEvent) {
+          const savedIsOpen = savedEvent.status === 'active' &&
+            (!savedEvent.close_date || parseLocalDate(savedEvent.close_date) >= today);
+          if (savedIsOpen) {
+            defaultEventId = savedEventId;
+          }
+        }
       }
 
-      if (!defaultEventId && userEvents.length > 0) {
-        const today = new Date();
-        const upcomingEvent = userEvents.find((e: Event) => new Date(e.date) >= today);
-        defaultEventId = upcomingEvent?.id || userEvents[0].id;
+      if (!defaultEventId && sortedEvents.length > 0) {
+        // Pick the first open event (already sorted: open first)
+        const firstOpenEvent = sortedEvents.find((e: Event) =>
+          e.status === 'active' && (!e.close_date || parseLocalDate(e.close_date) >= today)
+        );
+        defaultEventId = firstOpenEvent?.id || sortedEvents[0].id;
       }
 
       if (defaultEventId) {
@@ -236,7 +281,7 @@ const Matchmaking = () => {
 
         // Check if matchmaking has closed
         if (eventData?.matchmaking_close_date) {
-          const closeDateObj = new Date(eventData.matchmaking_close_date);
+          const closeDateObj = parseLocalDate(eventData.matchmaking_close_date);
           if (new Date() > closeDateObj) {
             setProfiles([]);
             setLoading(false);
@@ -246,7 +291,7 @@ const Matchmaking = () => {
 
         // Check if event close_date has passed (prevents swiping on old events)
         if (closeDate) {
-          const eventCloseDateObj = new Date(closeDate);
+          const eventCloseDateObj = parseLocalDate(closeDate);
           if (new Date() > eventCloseDateObj) {
             console.log('Event close_date has passed - marking as closed');
             setProfiles([]);
@@ -378,13 +423,41 @@ const Matchmaking = () => {
 
           const unmatchedUserIds = new Set(unmatchedUsers?.map(u => u.unmatched_user_id) || []);
 
-          // Filter out unmatched users
-          const nonUnmatchedProfiles = ageCompatibleProfiles.filter((profile) => {
-            return !unmatchedUserIds.has(profile.user_id);
+          // Fetch blocked users (bidirectional) - HARDENED with error handling
+          const { data: blockedData, error: blockedError } = await supabase
+            .from("blocked_users")
+            .select("blocked_id")
+            .eq("blocker_id", userId);
+          
+          // Note: blockedByData query may fail due to RLS - treat as empty if so
+          let blockedByIds: string[] = [];
+          try {
+            const { data: blockedByData, error: blockedByError } = await supabase
+              .from("blocked_users")
+              .select("blocker_id")
+              .eq("blocked_id", userId);
+            
+            // If RLS denies access, blockedByError will be set - treat as empty
+            if (!blockedByError && blockedByData) {
+              blockedByIds = blockedByData.map(b => b.blocker_id);
+            }
+          } catch (e) {
+            // Silently handle - bidirectional block check is best-effort
+            console.log("Bidirectional block check unavailable (expected with current RLS)");
+          }
+          
+          const blockedUserIds = new Set([
+            ...(blockedData?.map(b => b.blocked_id) || []),
+            ...blockedByIds
+          ]);
+
+          // Filter out unmatched and blocked users
+          const nonExcludedProfiles = ageCompatibleProfiles.filter((profile) => {
+            return !unmatchedUserIds.has(profile.user_id) && !blockedUserIds.has(profile.user_id);
           });
 
           // Filter profiles with second chance logic
-          const filteredProfiles = nonUnmatchedProfiles.filter((profile) => {
+          const filteredProfiles = nonExcludedProfiles.filter((profile) => {
             const userSwipes = swipesByUser.get(profile.user_id);
 
             // Never swiped = show
@@ -453,8 +526,8 @@ const Matchmaking = () => {
       // Past: matchmaking closed or event closed
       if (
         event.status === "closed" ||
-        (event.matchmaking_close_date && isAfter(now, new Date(event.matchmaking_close_date))) ||
-        (event.close_date && isAfter(now, new Date(event.close_date)))
+        (event.matchmaking_close_date && isAfter(now, parseLocalDate(event.matchmaking_close_date))) ||
+        (event.close_date && isAfter(now, parseLocalDate(event.close_date)))
       ) {
         past.push(event);
       }
@@ -479,8 +552,8 @@ const Matchmaking = () => {
 
   const formatDateRange = (startDate?: string, endDate?: string) => {
     if (!startDate) return "Date TBD";
-    const start = format(new Date(startDate), "dd / MMM");
-    const end = endDate ? format(new Date(endDate), "dd / MMM / yyyy") : "";
+    const start = format(parseLocalDate(startDate), "dd / MMM");
+    const end = endDate ? format(parseLocalDate(endDate), "dd / MMM / yyyy") : "";
     return end ? `${start} - ${end}` : start;
   };
 
@@ -909,11 +982,11 @@ const Matchmaking = () => {
                 </p>
                 <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>
-            ) : matchmakingCloseDate && new Date() > new Date(matchmakingCloseDate) ? (
+            ) : matchmakingCloseDate && new Date() > parseLocalDate(matchmakingCloseDate) ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingClosed')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  {t('matchmaking.matchmakingClosedDesc', { date: format(new Date(matchmakingCloseDate), 'dd / MMM / yyyy') })}
+                  {t('matchmaking.matchmakingClosedDesc', { date: format(parseLocalDate(matchmakingCloseDate), 'dd / MMM / yyyy') })}
                 </p>
                 <Button onClick={() => navigate("/chats")}>{t('matchmaking.viewChats')}</Button>
               </>
@@ -921,9 +994,9 @@ const Matchmaking = () => {
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.eventClosedTitle')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  {t('matchmaking.eventClosedMessage', { 
+                  {t('matchmaking.eventClosedMessage', {
                     date: selectedEventCloseDate
-                      ? format(new Date(selectedEventCloseDate), 'dd / MMM / yyyy')
+                      ? format(parseLocalDate(selectedEventCloseDate), 'dd / MMM / yyyy')
                       : "3 days after the event was closed"
                   })}
                 </p>

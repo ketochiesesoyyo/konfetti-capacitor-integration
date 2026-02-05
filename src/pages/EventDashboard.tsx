@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, MessageCircle, UserX, Share2, Copy, Camera, X } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { eventSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
@@ -310,7 +310,7 @@ const EventDashboard = () => {
       // Calculate new close_date if date changed
       let closeDate = editedEvent.close_date;
       if (editedEvent.date !== event.date) {
-        closeDate = format(addDays(new Date(editedEvent.date), 3), "yyyy-MM-dd");
+        closeDate = format(addDays(parseLocalDate(editedEvent.date), 3), "yyyy-MM-dd");
       }
 
       const validated = validationResult.data;
@@ -704,7 +704,7 @@ const EventDashboard = () => {
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {format(new Date(event.date), "dd / MMM / yyyy")}
+                      {format(parseLocalDate(event.date), "dd / MMM / yyyy")}
                     </p>
                   )}
                 </div>
@@ -713,8 +713,8 @@ const EventDashboard = () => {
                   <Label>Close Date</Label>
                   <p className="text-sm text-muted-foreground mt-1">
                     {isEditing && editedEvent.date !== event.date
-                      ? format(addDays(new Date(editedEvent.date), 3), "MMMM d, yyyy")
-                      : format(new Date(event.close_date), "MMMM d, yyyy")}
+                      ? format(addDays(parseLocalDate(editedEvent.date), 3), "MMMM d, yyyy")
+                      : format(parseLocalDate(event.close_date), "MMMM d, yyyy")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Automatically set to 3 days after event date
@@ -737,7 +737,7 @@ const EventDashboard = () => {
                       <Label className="text-xs text-muted-foreground">Close Date</Label>
                       <p className="text-sm mt-1">
                         {event.matchmaking_close_date
-                          ? format(new Date(event.matchmaking_close_date), "dd / MMM / yyyy")
+                          ? format(parseLocalDate(event.matchmaking_close_date), "dd / MMM / yyyy")
                           : 'Not set (closes with event)'}
                       </p>
                     </div>
@@ -832,7 +832,7 @@ const EventDashboard = () => {
               <Card className="p-6 bg-muted">
                 <h3 className="font-semibold mb-2">Event Closed</h3>
                 <p className="text-sm text-muted-foreground">
-                  This event was closed on {format(new Date(event.close_date), 'MMMM dd, yyyy')}
+                  This event was closed on {format(parseLocalDate(event.close_date), 'MMMM dd, yyyy')}
                 </p>
               </Card>
             ) : (

@@ -36,6 +36,7 @@ export const ContactForm = () => {
     resolver: zodResolver(eventRequestSchema),
     defaultValues: {
       submitter_type: undefined,
+      contact_name: "",
       partner1_name: "",
       partner2_name: "",
       expected_guests: undefined,
@@ -53,6 +54,7 @@ export const ContactForm = () => {
       // Save to database
       const { error } = await supabase.from("event_requests").insert({
         submitter_type: data.submitter_type,
+        contact_name: data.contact_name,
         partner1_name: data.partner1_name,
         partner2_name: data.partner2_name,
         wedding_date: formattedDate,
@@ -69,6 +71,7 @@ export const ContactForm = () => {
         await supabase.functions.invoke("event-request-notification", {
           body: {
             submitter_type: data.submitter_type,
+            contact_name: data.contact_name,
             partner1_name: data.partner1_name,
             partner2_name: data.partner2_name,
             wedding_date: formattedDate,
@@ -162,6 +165,21 @@ export const ContactForm = () => {
                           </label>
                         </div>
                       </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Contact Name */}
+              <FormField
+                control={form.control}
+                name="contact_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("landing.contactForm.contactName")}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t("landing.contactForm.contactNamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

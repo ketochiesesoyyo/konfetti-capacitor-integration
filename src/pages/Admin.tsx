@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { isAdminDomainAllowed } from "@/lib/domain";
+import { parseLocalDate } from "@/lib/utils";
 import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationDialog";
 import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
 
@@ -30,6 +31,8 @@ interface EventRequest {
   created_at: string;
   updated_at: string;
   event_id: string | null;
+  contact_name: string | null;
+  events: { name: string } | null;
 }
 
 interface HostedEvent {
@@ -106,7 +109,7 @@ const Admin = () => {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('event_requests')
-      .select('*')
+      .select('*, events(name)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -141,7 +144,7 @@ const Admin = () => {
     today.setHours(0, 0, 0, 0);
     
     if (event.close_date) {
-      const closeDate = new Date(event.close_date);
+      const closeDate = parseLocalDate(event.close_date);
       closeDate.setHours(0, 0, 0, 0);
       if (closeDate < today) return 'closed';
     }
@@ -331,7 +334,7 @@ const Admin = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Pareja</TableHead>
+                          <TableHead>Evento / Pareja</TableHead>
                           <TableHead>Fecha Boda</TableHead>
                           <TableHead>Invitados</TableHead>
                           <TableHead>Tipo</TableHead>
@@ -344,18 +347,17 @@ const Admin = () => {
                         {requests.map((request) => (
                           <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(request)}>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                {request.partner1_name} & {request.partner2_name}
-                                {request.event_id && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <LinkIcon className="w-3 h-3 mr-1" />
-                                    Evento
-                                  </Badge>
-                                )}
-                              </div>
+                              {request.event_id && request.events?.name ? (
+                                <div className="flex items-center gap-2">
+                                  <LinkIcon className="w-3 h-3 text-muted-foreground" />
+                                  {request.events.name}
+                                </div>
+                              ) : (
+                                <span>{request.partner1_name} & {request.partner2_name}</span>
+                              )}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(request.wedding_date), "dd MMM yyyy", { locale: es })}
+                              {format(parseLocalDate(request.wedding_date), "dd MMM yyyy", { locale: es })}
                             </TableCell>
                             <TableCell>{request.expected_guests}</TableCell>
                             <TableCell>
@@ -485,8 +487,8 @@ const Admin = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {event.date 
-                                ? format(new Date(event.date), "dd MMM yyyy", { locale: es })
+                              {event.date
+                                ? format(parseLocalDate(event.date), "dd MMM yyyy", { locale: es })
                                 : <span className="text-muted-foreground">Sin fecha</span>
                               }
                             </TableCell>
@@ -600,7 +602,7 @@ const Admin = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>{format(new Date(selectedRequest.wedding_date), "dd MMMM yyyy", { locale: es })}</span>
+                  <span>{format(parseLocalDate(selectedRequest.wedding_date), "dd MMMM yyyy", { locale: es })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />

@@ -68,6 +68,119 @@ export type Database = {
           },
         ]
       }
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          event_id: string | null
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          company_id: string | null
+          contact_name: string
+          contact_type: string
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          source_request_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_name: string
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source_request_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_name?: string
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source_request_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_source_request_id_fkey"
+            columns: ["source_request_id"]
+            isOneToOne: false
+            referencedRelation: "event_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_tokens: {
         Row: {
           created_at: string | null
@@ -157,6 +270,7 @@ export type Database = {
       }
       event_requests: {
         Row: {
+          contact_name: string | null
           created_at: string
           email: string
           event_id: string | null
@@ -172,6 +286,7 @@ export type Database = {
           wedding_date: string
         }
         Insert: {
+          contact_name?: string | null
           created_at?: string
           email: string
           event_id?: string | null
@@ -187,6 +302,7 @@ export type Database = {
           wedding_date: string
         }
         Update: {
+          contact_name?: string | null
           created_at?: string
           email?: string
           event_id?: string | null
@@ -214,6 +330,7 @@ export type Database = {
       events: {
         Row: {
           close_date: string
+          contact_id: string | null
           created_at: string
           created_by: string
           date: string | null
@@ -230,6 +347,7 @@ export type Database = {
         }
         Insert: {
           close_date?: string
+          contact_id?: string | null
           created_at?: string
           created_by: string
           date?: string | null
@@ -246,6 +364,7 @@ export type Database = {
         }
         Update: {
           close_date?: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string
           date?: string | null
@@ -260,7 +379,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hidden_events: {
         Row: {
@@ -655,6 +782,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      block_user_transaction: {
+        Args: {
+          _blocked_id: string
+          _blocker_id: string
+          _event_id: string
+          _match_id: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       can_join_event: { Args: { _event_id: string }; Returns: boolean }
       delete_user_account: { Args: never; Returns: undefined }
       get_event_guest_count: { Args: { _event_id: string }; Returns: number }
