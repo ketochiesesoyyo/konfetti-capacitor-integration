@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   MessageCircle,
   UserX,
   Share2,
@@ -54,8 +53,6 @@ import {
   MoreVertical,
   Settings,
   Link as LinkIcon,
-  QrCode,
-  ChevronRight,
   DollarSign,
   Loader2,
   ExternalLink,
@@ -65,21 +62,22 @@ import {
   Phone,
   Percent,
   User,
+  ChevronRight,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn, parseLocalDate } from "@/lib/utils";
+import { parseLocalDate } from "@/lib/utils";
 import { eventSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
-import { isAdminDomainAllowed } from "@/lib/domain";
+import { useAdminContext } from "@/components/admin/AdminLayout";
 
-const EventDashboard = () => {
+const AdminEventDashboard = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
-  const [searchParams] = useSearchParams();
-  const isAdminContext = searchParams.get('from') === 'admin' && isAdminDomainAllowed();
+  const { refreshCounts } = useAdminContext();
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [closeEventDialogOpen, setCloseEventDialogOpen] = useState(false);
@@ -100,7 +98,6 @@ const EventDashboard = () => {
   });
 
   // Edit mode for settings
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedEvent, setEditedEvent] = useState({
     name: "",
@@ -131,7 +128,14 @@ const EventDashboard = () => {
   // Edit financial dialog
   const [editFinancialDialogOpen, setEditFinancialDialogOpen] = useState(false);
   const [isSavingFinancial, setIsSavingFinancial] = useState(false);
+  const [clients, setClients] = useState<{
+    id: string;
+    contact_name: string;
+    contact_type: string;
+    companies: { name: string } | null;
+  }[]>([]);
   const [financialFormData, setFinancialFormData] = useState({
+    contactId: "",
     price: "",
     currency: "MXN",
     commissionType: "" as "" | "percentage" | "fixed",
@@ -303,17 +307,9 @@ const EventDashboard = () => {
         eventName: event.name,
         eventId: eventId,
         isDirectChat: true,
-        fromAdmin: isAdminContext,
+        fromAdmin: true,
       }
     });
-  };
-
-  const handleBack = () => {
-    if (isAdminContext) {
-      navigate('/admin');
-    } else {
-      navigate('/');
-    }
   };
 
   const handleSaveEvent = async () => {
@@ -376,10 +372,10 @@ const EventDashboard = () => {
       if (error) throw error;
 
       toast.success("Evento actualizado");
-      setIsEditing(false);
       setEventImage(null);
       setSettingsDialogOpen(false);
       fetchEventData();
+      refreshCounts();
     } catch (error: any) {
       console.error("Error updating event:", error);
       toast.error("Error al actualizar evento");
@@ -453,6 +449,7 @@ const EventDashboard = () => {
       toast.success("Evento cerrado exitosamente");
       setCloseEventDialogOpen(false);
       await fetchEventData();
+      refreshCounts();
     } catch (error: any) {
       console.error("Error closing event:", error);
       toast.error(error.message || "Error al cerrar evento");
@@ -474,8 +471,21 @@ const EventDashboard = () => {
     { value: "paid", label: "Pagado" },
   ];
 
-  const openEditFinancialDialog = () => {
+  const loadClients = async () => {
+    const { data } = await supabase
+      .from('contacts')
+      .select('id, contact_name, contact_type, companies(name)')
+      .eq('status', 'active')
+      .order('contact_name');
+    if (data) {
+      setClients(data as typeof clients);
+    }
+  };
+
+  const openEditFinancialDialog = async () => {
+    await loadClients();
     setFinancialFormData({
+      contactId: event?.contact_id || "",
       price: event?.price?.toString() || "",
       currency: event?.currency || "MXN",
       commissionType: event?.commission_type || "",
@@ -495,6 +505,7 @@ const EventDashboard = () => {
       const { error } = await supabase
         .from("events")
         .update({
+          contact_id: financialFormData.contactId || null,
           price: priceValue,
           currency: financialFormData.currency,
           commission_type: financialFormData.commissionType || null,
@@ -505,12 +516,13 @@ const EventDashboard = () => {
 
       if (error) throw error;
 
-      toast.success("Información financiera actualizada");
+      toast.success("Evento actualizado");
       setEditFinancialDialogOpen(false);
       fetchEventData();
+      refreshCounts();
     } catch (error: any) {
-      console.error("Error updating financial info:", error);
-      toast.error("Error al actualizar información financiera");
+      console.error("Error updating event:", error);
+      toast.error("Error al actualizar evento");
     } finally {
       setIsSavingFinancial(false);
     }
@@ -551,7 +563,7 @@ const EventDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -559,404 +571,391 @@ const EventDashboard = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Evento no encontrado</p>
-          <Button onClick={handleBack}>Volver</Button>
+          <Button onClick={() => navigate('/admin/events')}>Volver a Eventos</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={handleBack}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                {event.image_url && (
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
-                    <img src={event.image_url} alt={event.name} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <div>
-                  <h1 className="text-xl font-bold">{event.name}</h1>
-                  <p className="text-sm text-muted-foreground">
-                    {format(parseLocalDate(event.date), "d 'de' MMMM, yyyy", { locale: es })}
-                  </p>
-                </div>
-              </div>
+    <div className="p-4 md:p-6 lg:p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          {event.image_url && (
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+              <img src={event.image_url} alt={event.name} className="w-full h-full object-cover" />
             </div>
-            <div className="flex items-center gap-2">
-              {getStatusBadge(event.status)}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configuración
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(`/join/${eventCode}`)}>
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Ver Landing
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {event.status !== 'closed' && (
-                    <DropdownMenuItem
-                      onClick={() => setCloseEventDialogOpen(true)}
-                      className="text-destructive"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cerrar Evento
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          )}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">{event.name}</h1>
+            <p className="text-muted-foreground">
+              {format(parseLocalDate(event.date), "d 'de' MMMM, yyyy", { locale: es })}
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {getStatusBadge(event.status)}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}>
+                <Settings className="w-4 h-4 mr-2" />
+                Configuración
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/join/${eventCode}`)}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Ver Landing
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {event.status !== 'closed' && (
+                <DropdownMenuItem
+                  onClick={() => setCloseEventDialogOpen(true)}
+                  className="text-destructive"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cerrar Evento
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.totalGuests}</p>
-                <p className="text-xs text-muted-foreground">Invitados</p>
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-pink-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.matchesCreated}</p>
-                <p className="text-xs text-muted-foreground">Matches</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.totalGuests}</p>
+              <p className="text-xs text-muted-foreground">Invitados</p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-red-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.totalLikes}</p>
-                <p className="text-xs text-muted-foreground">Likes</p>
-              </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-pink-500" />
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{format(parseLocalDate(event.date), "d")}</p>
-                <p className="text-xs text-muted-foreground">{format(parseLocalDate(event.date), "MMM", { locale: es })}</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.matchesCreated}</p>
+              <p className="text-xs text-muted-foreground">Matches</p>
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <Heart className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.totalLikes}</p>
+              <p className="text-xs text-muted-foreground">Likes</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{format(parseLocalDate(event.date), "d")}</p>
+              <p className="text-xs text-muted-foreground">{format(parseLocalDate(event.date), "MMM", { locale: es })}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-        {/* Main Content Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Invite Code Card */}
+      {/* Main Content Grid */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Invite Code Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <LinkIcon className="w-4 h-4" />
+                Código de Invitación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-muted rounded-lg px-4 py-3">
+                  <p className="font-mono font-bold text-lg tracking-wide">{eventCode}</p>
+                </div>
+                <Button variant="outline" size="icon" onClick={handleCopyCode}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" className="w-full" onClick={handleCopyLink}>
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Copiar Enlace
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => navigate(`/join/${eventCode}`)}>
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Ver Landing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Client Info Card */}
+          {contact && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4" />
-                  Código de Invitación
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-muted rounded-lg px-4 py-3">
-                    <p className="font-mono font-bold text-lg tracking-wide">{eventCode}</p>
-                  </div>
-                  <Button variant="outline" size="icon" onClick={handleCopyCode}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="w-full" onClick={handleCopyLink}>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Copiar Enlace
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate(`/join/${eventCode}`)}>
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Ver Landing
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Client Info Card */}
-            {isAdminContext && contact && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Cliente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-lg">{contact.contact_name}</p>
-                      <Badge variant="secondary" className="mt-1">
-                        {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/admin/client/${contact.id}`)}
-                    >
-                      Ver Perfil
-                    </Button>
-                  </div>
-                  {contact.companies?.name && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Building2 className="w-4 h-4 text-muted-foreground" />
-                      <span>{contact.companies.name}</span>
-                    </div>
-                  )}
-                  {contact.email && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
-                        {contact.email}
-                      </a>
-                    </div>
-                  )}
-                  {contact.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
-                        {contact.phone}
-                      </a>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Financial Card */}
-            {isAdminContext && (
-              <Card>
-                <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Información Financiera
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" onClick={openEditFinancialDialog}>
-                    <Pencil className="w-4 h-4 mr-1" />
-                    Editar
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {event.price ? (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-2xl font-bold">
-                            {formatCurrency(event.price, event.currency || 'MXN')}
-                          </p>
-                          <p className="text-sm text-muted-foreground">Precio del evento</p>
-                        </div>
-                        {getPaymentStatusBadge(event.payment_status || 'pending')}
-                      </div>
-                      {event.commission_type && event.commission_value && (
-                        <div className="mt-4 pt-4 border-t space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Comisión</span>
-                            <span className="font-medium">
-                              {event.commission_type === 'percentage'
-                                ? `${event.commission_value}%`
-                                : formatCurrency(event.commission_value, event.currency || 'MXN')}
-                            </span>
-                          </div>
-                          {event.commission_type === 'percentage' && event.price && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Monto comisión</span>
-                              <span className="font-medium text-emerald-600">
-                                {formatCurrency(event.price * event.commission_value / 100, event.currency || 'MXN')}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <p className="text-sm">Sin información financiera</p>
-                      <Button variant="link" size="sm" onClick={openEditFinancialDialog}>
-                        Agregar ahora
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Matchmaking Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Matchmaking
+                  <User className="w-4 h-4" />
+                  Cliente
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Inicio</span>
-                  <span className="font-medium">
-                    {event.matchmaking_start_date
-                      ? format(parseLocalDate(event.matchmaking_start_date), "d MMM yyyy", { locale: es })
-                      : 'Inmediato'}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-lg">{contact.contact_name}</p>
+                    <Badge variant="secondary" className="mt-1">
+                      {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/admin/client/${contact.id}`)}
+                  >
+                    Ver Perfil
+                  </Button>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Cierre</span>
-                  <span className="font-medium">
-                    {format(parseLocalDate(event.close_date), "d MMM yyyy", { locale: es })}
-                  </span>
-                </div>
+                {contact.companies?.name && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <span>{contact.companies.name}</span>
+                  </div>
+                )}
+                {contact.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                      {contact.email}
+                    </a>
+                  </div>
+                )}
+                {contact.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
+                      {contact.phone}
+                    </a>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </div>
+          )}
 
-          {/* Right Column - Guests */}
+          {/* Financial Card */}
           <Card>
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Invitados Recientes
+                <DollarSign className="w-4 h-4" />
+                Información Financiera
               </CardTitle>
-              {guests.length > 5 && (
-                <Button variant="ghost" size="sm" onClick={() => setGuestsDialogOpen(true)}>
-                  Ver todos
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" onClick={openEditFinancialDialog}>
+                <Pencil className="w-4 h-4 mr-1" />
+                Editar
+              </Button>
             </CardHeader>
             <CardContent>
-              {guests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Aún no hay invitados</p>
-                  <p className="text-sm">Comparte el código para que se unan</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {guests.slice(0, 5).map((guest) => (
-                    <div key={guest.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-pink-500 flex-shrink-0">
-                        {guest.profiles?.photos?.[0] ? (
-                          <img
-                            src={guest.profiles.photos[0]}
-                            alt={guest.profiles?.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-                            {guest.profiles?.name?.[0]?.toUpperCase() || "?"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium truncate">{guest.profiles?.name || "Invitado"}</p>
-                          {guest.user_id === event?.created_by && (
-                            <Badge variant="secondary" className="text-xs">Host</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(guest.joined_at), "d MMM", { locale: es })}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleChatWithGuest(guest)}>
-                          <MessageCircle className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            setSelectedGuest(guest);
-                            setRemoveDialogOpen(true);
-                          }}
-                        >
-                          <UserX className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+              {event.price ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {formatCurrency(event.price, event.currency || 'MXN')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Precio del evento</p>
                     </div>
-                  ))}
-                  {guests.length > 5 && (
-                    <Button variant="outline" className="w-full" onClick={() => setGuestsDialogOpen(true)}>
-                      Ver todos los invitados ({guests.length})
-                    </Button>
+                    {getPaymentStatusBadge(event.payment_status || 'pending')}
+                  </div>
+                  {event.commission_type && event.commission_value && (
+                    <div className="mt-4 pt-4 border-t space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Comisión</span>
+                        <span className="font-medium">
+                          {event.commission_type === 'percentage'
+                            ? `${event.commission_value}%`
+                            : formatCurrency(event.commission_value, event.currency || 'MXN')}
+                        </span>
+                      </div>
+                      {event.commission_type === 'percentage' && event.price && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Monto comisión</span>
+                          <span className="font-medium text-emerald-600">
+                            {formatCurrency(event.price * event.commission_value / 100, event.currency || 'MXN')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )}
+                </>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p className="text-sm">Sin información financiera</p>
+                  <Button variant="link" size="sm" onClick={openEditFinancialDialog}>
+                    Agregar ahora
+                  </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Matchmaking Info */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Matchmaking
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Inicio</span>
+                <span className="font-medium">
+                  {event.matchmaking_start_date
+                    ? format(parseLocalDate(event.matchmaking_start_date), "d MMM yyyy", { locale: es })
+                    : 'Inmediato'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Cierre</span>
+                <span className="font-medium">
+                  {format(parseLocalDate(event.close_date), "d MMM yyyy", { locale: es })}
+                </span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Join as Host Card */}
-        {!isHostAttendee && (
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="flex items-center justify-between py-4">
-              <div>
-                <p className="font-semibold">Unirte al Matchmaking</p>
-                <p className="text-sm text-muted-foreground">Participa como invitado en tu propio evento</p>
-              </div>
-              <Button onClick={() => navigate(`/join/${event.invite_code}`)}>
-                Unirme
+        {/* Right Column - Guests */}
+        <Card>
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Invitados Recientes
+            </CardTitle>
+            {guests.length > 5 && (
+              <Button variant="ghost" size="sm" onClick={() => setGuestsDialogOpen(true)}>
+                Ver todos
+                <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Most Active Section */}
-        {stats.topActive.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Más Activos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                {stats.topActive.map((user, idx) => (
-                  <div key={idx} className="text-center p-3 bg-muted/50 rounded-lg">
-                    <p className="font-medium truncate">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">{user.swipes} swipes</p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {guests.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Aún no hay invitados</p>
+                <p className="text-sm">Comparte el código para que se unan</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {guests.slice(0, 5).map((guest) => (
+                  <div key={guest.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary to-pink-500 flex-shrink-0">
+                      {guest.profiles?.photos?.[0] ? (
+                        <img
+                          src={guest.profiles.photos[0]}
+                          alt={guest.profiles?.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+                          {guest.profiles?.name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium truncate">{guest.profiles?.name || "Invitado"}</p>
+                        {guest.user_id === event?.created_by && (
+                          <Badge variant="secondary" className="text-xs">Host</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(guest.joined_at), "d MMM", { locale: es })}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleChatWithGuest(guest)}>
+                        <MessageCircle className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setSelectedGuest(guest);
+                          setRemoveDialogOpen(true);
+                        }}
+                      >
+                        <UserX className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
+                {guests.length > 5 && (
+                  <Button variant="outline" className="w-full" onClick={() => setGuestsDialogOpen(true)}>
+                    Ver todos los invitados ({guests.length})
+                  </Button>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Join as Host Card */}
+      {!isHostAttendee && (
+        <Card className="bg-primary/5 border-primary/20 mt-6">
+          <CardContent className="flex items-center justify-between py-4">
+            <div>
+              <p className="font-semibold">Unirte al Matchmaking</p>
+              <p className="text-sm text-muted-foreground">Participa como invitado en tu propio evento</p>
+            </div>
+            <Button onClick={() => navigate(`/join/${event.invite_code}`)}>
+              Unirme
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Most Active Section */}
+      {stats.topActive.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Más Activos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              {stats.topActive.map((user, idx) => (
+                <div key={idx} className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="font-medium truncate">{user.name}</p>
+                  <p className="text-sm text-muted-foreground">{user.swipes} swipes</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* All Guests Dialog */}
       <Dialog open={guestsDialogOpen} onOpenChange={setGuestsDialogOpen}>
@@ -1151,24 +1150,51 @@ const EventDashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Financial Dialog */}
+      {/* Edit Event Dialog */}
       <Dialog open={editFinancialDialogOpen} onOpenChange={setEditFinancialDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader className="pb-4 border-b">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-primary" />
+                <Pencil className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl">Editar Información Financiera</DialogTitle>
+                <DialogTitle className="text-xl">Editar Evento</DialogTitle>
                 <DialogDescription className="mt-1">
-                  Actualiza el precio, comisión y estado de pago
+                  Cliente asignado e información financiera
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
           <div className="space-y-5 py-5">
+            {/* Client Selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <UserCheck className="w-4 h-4" />
+                Cliente Asignado
+              </Label>
+              <Select
+                value={financialFormData.contactId}
+                onValueChange={(value) => setFinancialFormData(prev => ({ ...prev, contactId: value }))}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Seleccionar cliente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin cliente asignado</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.contact_name}
+                      {client.companies?.name && (
+                        <span className="text-muted-foreground ml-2">({client.companies.name})</span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Price and Currency */}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 space-y-2">
@@ -1312,4 +1338,4 @@ const EventDashboard = () => {
   );
 };
 
-export default EventDashboard;
+export default AdminEventDashboard;

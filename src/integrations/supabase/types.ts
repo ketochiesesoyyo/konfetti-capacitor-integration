@@ -129,6 +129,7 @@ export type Database = {
       }
       contacts: {
         Row: {
+          archived_at: string | null
           company_id: string | null
           contact_name: string
           contact_type: string
@@ -138,9 +139,11 @@ export type Database = {
           notes: string | null
           phone: string | null
           source_request_id: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           company_id?: string | null
           contact_name: string
           contact_type?: string
@@ -150,9 +153,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           source_request_id?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           company_id?: string | null
           contact_name?: string
           contact_type?: string
@@ -162,6 +167,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           source_request_id?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -270,6 +276,7 @@ export type Database = {
       }
       event_requests: {
         Row: {
+          company_name: string | null
           contact_name: string | null
           created_at: string
           email: string
@@ -286,6 +293,7 @@ export type Database = {
           wedding_date: string
         }
         Insert: {
+          company_name?: string | null
           contact_name?: string | null
           created_at?: string
           email: string
@@ -302,6 +310,7 @@ export type Database = {
           wedding_date: string
         }
         Update: {
+          company_name?: string | null
           contact_name?: string | null
           created_at?: string
           email?: string
@@ -330,9 +339,12 @@ export type Database = {
       events: {
         Row: {
           close_date: string
+          commission_type: string | null
+          commission_value: number | null
           contact_id: string | null
           created_at: string
           created_by: string
+          currency: string
           date: string | null
           description: string | null
           id: string
@@ -342,14 +354,20 @@ export type Database = {
           matchmaking_start_date: string | null
           matchmaking_start_time: string | null
           name: string
+          payment_date: string | null
+          payment_status: string
+          price: number | null
           status: string
           updated_at: string
         }
         Insert: {
           close_date?: string
+          commission_type?: string | null
+          commission_value?: number | null
           contact_id?: string | null
           created_at?: string
           created_by: string
+          currency?: string
           date?: string | null
           description?: string | null
           id?: string
@@ -359,14 +377,20 @@ export type Database = {
           matchmaking_start_date?: string | null
           matchmaking_start_time?: string | null
           name: string
+          payment_date?: string | null
+          payment_status?: string
+          price?: number | null
           status?: string
           updated_at?: string
         }
         Update: {
           close_date?: string
+          commission_type?: string | null
+          commission_value?: number | null
           contact_id?: string | null
           created_at?: string
           created_by?: string
+          currency?: string
           date?: string | null
           description?: string | null
           id?: string
@@ -376,6 +400,9 @@ export type Database = {
           matchmaking_start_date?: string | null
           matchmaking_start_time?: string | null
           name?: string
+          payment_date?: string | null
+          payment_status?: string
+          price?: number | null
           status?: string
           updated_at?: string
         }

@@ -32,10 +32,15 @@ const JoinEvent = lazy(() => import("./pages/JoinEvent"));
 const JoinEventByLink = lazy(() => import("./pages/JoinEventByLink"));
 const EventDashboard = lazy(() => import("./pages/EventDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Admin = lazy(() => import("./pages/Admin"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const CommunityGuidelines = lazy(() => import("./pages/CommunityGuidelines"));
 const TermsConditions = lazy(() => import("./pages/TermsConditions"));
+
+// Admin components (lazy loaded)
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const AdminContent = lazy(() => import("./components/admin/AdminContent").then(m => ({ default: m.AdminContent })));
+const AdminEventDashboard = lazy(() => import("./pages/AdminEventDashboard"));
+const AdminClientDetail = lazy(() => import("./pages/AdminClientDetail"));
 
 const showAdminRoute = isAdminDomainAllowed();
 
@@ -112,7 +117,16 @@ const App = () => (
               <Route path="/join-event" element={<JoinEvent />} />
               <Route path="/join/:code" element={<JoinEventByLink />} />
               <Route path="/event-dashboard/:eventId" element={<EventDashboard />} />
-              {showAdminRoute && <Route path="/admin" element={<Admin />} />}
+              {showAdminRoute && (
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminContent activeTab="dashboard" />} />
+                  <Route path="leads" element={<AdminContent activeTab="leads" />} />
+                  <Route path="clients" element={<AdminContent activeTab="clients" />} />
+                  <Route path="events" element={<AdminContent activeTab="events" />} />
+                  <Route path="event/:eventId" element={<AdminEventDashboard />} />
+                  <Route path="client/:id" element={<AdminClientDetail />} />
+                </Route>
+              )}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />

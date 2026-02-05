@@ -829,6 +829,8 @@
       "submitterPlanner": "Soy wedding planner",
       "contactName": "Tu Nombre",
       "contactNamePlaceholder": "ej., María García",
+      "companyName": "Nombre de tu Empresa",
+      "companyNamePlaceholder": "ej., Bodas Elegantes",
       "partner1": "Nombre del Novio/a 1",
       "partner2": "Nombre del Novio/a 2",
       "weddingDate": "Fecha de la Boda",

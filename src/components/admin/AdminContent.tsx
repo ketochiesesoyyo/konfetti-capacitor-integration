@@ -1,24 +1,22 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, Mail, Phone, MessageSquare, Clock, Loader2, Plus, LinkIcon, Building2, User, Heart } from "lucide-react";
+import { Loader2, Plus, Heart, Calendar, Users, Mail, Phone, MessageSquare, Clock, LinkIcon, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { isAdminDomainAllowed } from "@/lib/domain";
 import { parseLocalDate } from "@/lib/utils";
-import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationDialog";
-import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
-import { DashboardTab } from "@/components/admin/tabs/DashboardTab";
-import { LeadsTab } from "@/components/admin/tabs/LeadsTab";
-import { ClientsTab } from "@/components/admin/tabs/ClientsTab";
-import { EventsTab } from "@/components/admin/tabs/EventsTab";
+import { AdminEventCreationDialog } from "./AdminEventCreationDialog";
+import { AdminEventSuccessDialog } from "./AdminEventSuccessDialog";
+import { DashboardTab } from "./tabs/DashboardTab";
+import { LeadsTab } from "./tabs/LeadsTab";
+import { ClientsTab } from "./tabs/ClientsTab";
+import { EventsTab } from "./tabs/EventsTab";
+import { useAdminContext } from "./AdminLayout";
 
 interface EventRequest {
   id: string;
@@ -49,7 +47,6 @@ interface HostedEvent {
   close_date: string;
   created_at: string;
   contact_id: string | null;
-  // Financial fields
   price: number | null;
   currency: string;
   commission_type: string | null;
@@ -80,18 +77,22 @@ const STATUS_OPTIONS = [
   { value: "lost", label: "Perdido", color: "bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400" },
 ];
 
-const Admin = () => {
+interface AdminContentProps {
+  activeTab: 'dashboard' | 'leads' | 'clients' | 'events';
+}
+
+export const AdminContent = ({ activeTab }: AdminContentProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { userId, refreshCounts } = useAdminContext();
+
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const [requests, setRequests] = useState<EventRequest[]>([]);
   const [hostedEvents, setHostedEvents] = useState<HostedEvent[]>([]);
   const [clients, setClients] = useState<Contact[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<EventRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Event creation dialogs
   const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
@@ -101,55 +102,43 @@ const Admin = () => {
   const [createdInviteCode, setCreatedInviteCode] = useState<string>("");
 
   useEffect(() => {
-    checkAdminAndLoadData();
-  }, []);
-
-  const checkAdminAndLoadData = async () => {
-    // Check domain first
-    if (!isAdminDomainAllowed()) {
-      navigate("/dashboard");
-      return;
+    if (userId) {
+      loadAllData();
     }
+  }, [userId]);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
+  // Check for create-event action in URL
+  useEffect(() => {
+    if (searchParams.get('action') === 'create-event') {
+      setRequestForEventCreation(null);
+      setCreateEventDialogOpen(true);
+      // Clear the action from URL
+      navigate('/admin', { replace: true });
     }
+  }, [searchParams]);
 
-    setUserId(session.user.id);
-
-    const { data: hasAdminRole } = await supabase
-      .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
-
-    if (!hasAdminRole) {
-      toast.error("Acceso denegado. Solo administradores.");
-      navigate("/dashboard");
-      return;
-    }
-
-    setIsAdmin(true);
+  const loadAllData = async () => {
+    if (!userId) return;
+    setIsLoading(true);
     await Promise.all([
       loadRequests(),
-      loadHostedEvents(session.user.id),
+      loadHostedEvents(userId),
       loadClients(),
     ]);
+    setIsLoading(false);
   };
 
   const loadRequests = async () => {
-    setIsLoading(true);
     const { data, error } = await supabase
       .from('event_requests')
       .select('*, events(name)')
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar solicitudes");
       console.error(error);
     } else {
       setRequests(data || []);
     }
-    setIsLoading(false);
   };
 
   const loadHostedEvents = async (adminUserId: string) => {
@@ -160,7 +149,6 @@ const Admin = () => {
       .order('date', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar eventos");
       console.error(error);
     } else {
       setHostedEvents((data || []) as HostedEvent[]);
@@ -174,7 +162,6 @@ const Admin = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar clientes");
       console.error(error);
     } else {
       setClients((data || []) as Contact[]);
@@ -182,7 +169,6 @@ const Admin = () => {
   };
 
   const updateStatus = async (requestId: string, newStatus: string) => {
-    // If changing to "paid", open the event creation dialog
     if (newStatus === "paid") {
       const request = requests.find(r => r.id === requestId);
       if (request && !request.event_id) {
@@ -200,7 +186,6 @@ const Admin = () => {
 
     if (error) {
       toast.error("Error al actualizar estado");
-      console.error(error);
     } else {
       toast.success("Estado actualizado");
       setRequests(prev => prev.map(r =>
@@ -209,17 +194,17 @@ const Admin = () => {
       if (selectedRequest?.id === requestId) {
         setSelectedRequest(prev => prev ? { ...prev, status: newStatus } : null);
       }
+      refreshCounts();
     }
     setUpdatingStatus(null);
   };
 
-  const handleEventCreated = async (eventId: string, inviteCode: string, contactId?: string) => {
+  const handleEventCreated = async (eventId: string, inviteCode: string) => {
     setCreateEventDialogOpen(false);
     setCreatedEventId(eventId);
     setCreatedInviteCode(inviteCode);
     setSuccessDialogOpen(true);
 
-    // Update the request in local state
     if (requestForEventCreation) {
       setRequests(prev => prev.map(r =>
         r.id === requestForEventCreation.id
@@ -234,12 +219,12 @@ const Admin = () => {
     setRequestForEventCreation(null);
     toast.success("Evento creado exitosamente");
 
-    // Reload data
     if (userId) {
       await Promise.all([
         loadHostedEvents(userId),
         loadClients(),
       ]);
+      refreshCounts();
     }
   };
 
@@ -257,7 +242,7 @@ const Admin = () => {
     setIsDialogOpen(true);
   };
 
-  // Count calculations
+  // Calculations
   const leadsCount = requests.filter(r => r.status === 'pending' || r.status === 'contacted').length;
   const clientsCount = clients.filter(c => c.status === 'active').length;
   const eventsCount = hostedEvents.length;
@@ -265,18 +250,15 @@ const Admin = () => {
   const totalLeadsAndClients = requests.length;
   const conversionRate = totalLeadsAndClients > 0 ? (paidRequests / totalLeadsAndClients) * 100 : 0;
 
-  // Revenue calculations - default to MXN for display
   const defaultCurrency = "MXN";
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  // Calculate total revenue from paid events (null-safe for pre-migration data)
   const totalRevenue = hostedEvents
     .filter(e => e.payment_status === 'paid' && e.price)
     .reduce((sum, e) => sum + (e.price || 0), 0);
 
-  // Calculate revenue this month
   const revenueThisMonth = hostedEvents
     .filter(e => {
       if (!e.date || e.payment_status !== 'paid' || !e.price) return false;
@@ -285,12 +267,10 @@ const Admin = () => {
     })
     .reduce((sum, e) => sum + (e.price || 0), 0);
 
-  // Calculate pending payments (events with price but not fully paid)
   const pendingPayments = hostedEvents
     .filter(e => e.price && (!e.payment_status || e.payment_status === 'pending' || e.payment_status === 'partial'))
     .reduce((sum, e) => sum + (e.price || 0), 0);
 
-  // Calculate total commissions
   const commissionsTotal = hostedEvents
     .filter(e => e.commission_type && e.commission_value)
     .reduce((sum, e) => {
@@ -301,14 +281,8 @@ const Admin = () => {
       return sum + e.commission_value;
     }, 0);
 
-  const revenueMetrics = {
-    totalRevenue,
-    revenueThisMonth,
-    pendingPayments,
-    commissionsTotal,
-  };
+  const revenueMetrics = { totalRevenue, revenueThisMonth, pendingPayments, commissionsTotal };
 
-  // Upcoming events this month (all events, not just those with financial data)
   const upcomingEvents = hostedEvents
     .filter(e => {
       if (!e.date) return false;
@@ -324,20 +298,6 @@ const Admin = () => {
     }))
     .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime());
 
-  if (!isAdmin && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const handleCreateEvent = () => {
-    setRequestForEventCreation(null);
-    setCreateEventDialogOpen(true);
-  };
-
-  // Section titles for the header
   const sectionTitles: Record<string, { title: string; subtitle: string }> = {
     dashboard: { title: "Panel de Control", subtitle: "Resumen general de tu negocio" },
     leads: { title: "Leads", subtitle: "Gestiona las solicitudes de eventos" },
@@ -348,30 +308,20 @@ const Admin = () => {
   const currentSection = sectionTitles[activeTab] || sectionTitles.dashboard;
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <AdminSidebar
-        activeSection={activeTab}
-        onSectionChange={setActiveTab}
-        onCreateEvent={handleCreateEvent}
-        leadsCount={leadsCount}
-        clientsCount={clientsCount}
-        eventsCount={eventsCount}
-      />
+    <>
+      <div className="p-4 md:p-6 lg:p-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">{currentSection.title}</h1>
+          <p className="text-muted-foreground">{currentSection.subtitle}</p>
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 md:ml-0">
-        {/* Mobile spacer for fixed header */}
-        <div className="h-14 md:hidden" />
-
-        <div className="p-4 md:p-6 lg:p-8">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold">{currentSection.title}</h1>
-            <p className="text-muted-foreground">{currentSection.subtitle}</p>
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-
-          {/* Content */}
+        ) : (
           <div className="space-y-6">
             {activeTab === "dashboard" && (
               <DashboardTab
@@ -407,15 +357,14 @@ const Admin = () => {
               />
             )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Details Dialog */}
+      {/* Lead Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           {selectedRequest && (
             <div className="space-y-6">
-              {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
@@ -435,7 +384,6 @@ const Admin = () => {
                 {getStatusBadge(selectedRequest.status)}
               </div>
 
-              {/* Event Created Banner */}
               {selectedRequest.event_id && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
                   <div className="flex items-center justify-between">
@@ -450,7 +398,7 @@ const Admin = () => {
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() => navigate(`/event-dashboard/${selectedRequest.event_id}?from=admin`)}
+                      onClick={() => navigate(`/admin/event/${selectedRequest.event_id}`)}
                       className="border-emerald-500/30 hover:bg-emerald-500/10"
                     >
                       Ver Dashboard
@@ -459,9 +407,7 @@ const Admin = () => {
                 </div>
               )}
 
-              {/* Main Info Grid */}
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Event Details Card */}
                 <div className="space-y-4 p-4 bg-muted/50 rounded-xl">
                   <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
                     Detalles del Evento
@@ -488,7 +434,6 @@ const Admin = () => {
                   </div>
                 </div>
 
-                {/* Contact Details Card */}
                 <div className="space-y-4 p-4 bg-muted/50 rounded-xl">
                   <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
                     Información de Contacto
@@ -542,7 +487,6 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* Message Section */}
               {selectedRequest.message && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -559,7 +503,6 @@ const Admin = () => {
                 </div>
               )}
 
-              {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="w-4 h-4" />
@@ -567,7 +510,6 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-3 pt-2">
                 {!selectedRequest.event_id && (
                   <Button
@@ -625,8 +567,6 @@ const Admin = () => {
         eventId={createdEventId}
         inviteCode={createdInviteCode}
       />
-    </div>
+    </>
   );
 };
-
-export default Admin;

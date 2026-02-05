@@ -830,6 +830,8 @@
       "submitterPlanner": "I'm a wedding planner",
       "contactName": "Your Name",
       "contactNamePlaceholder": "e.g., Maria Garcia",
+      "companyName": "Your Company Name",
+      "companyNamePlaceholder": "e.g., Elegant Weddings",
       "partner1": "Partner 1 Name",
       "partner2": "Partner 2 Name",
       "weddingDate": "Wedding Date",

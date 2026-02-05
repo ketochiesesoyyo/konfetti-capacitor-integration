@@ -37,6 +37,7 @@ export const ContactForm = () => {
     defaultValues: {
       submitter_type: undefined,
       contact_name: "",
+      company_name: "",
       partner1_name: "",
       partner2_name: "",
       expected_guests: undefined,
@@ -45,6 +46,8 @@ export const ContactForm = () => {
       message: "",
     },
   });
+
+  const submitterType = form.watch("submitter_type");
 
   const onSubmit = async (data: EventRequestFormData) => {
     setIsSubmitting(true);
@@ -55,6 +58,7 @@ export const ContactForm = () => {
       const { error } = await supabase.from("event_requests").insert({
         submitter_type: data.submitter_type,
         contact_name: data.contact_name,
+        company_name: data.company_name || null,
         partner1_name: data.partner1_name,
         partner2_name: data.partner2_name,
         wedding_date: formattedDate,
@@ -72,6 +76,7 @@ export const ContactForm = () => {
           body: {
             submitter_type: data.submitter_type,
             contact_name: data.contact_name,
+            company_name: data.company_name,
             partner1_name: data.partner1_name,
             partner2_name: data.partner2_name,
             wedding_date: formattedDate,
@@ -185,6 +190,23 @@ export const ContactForm = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Company Name - Only for Wedding Planners */}
+              {submitterType === "wedding_planner" && (
+                <FormField
+                  control={form.control}
+                  name="company_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("landing.contactForm.companyName")}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t("landing.contactForm.companyNamePlaceholder")} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Partner Names - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
