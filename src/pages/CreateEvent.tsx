@@ -22,6 +22,7 @@ import { eventSchema } from "@/lib/validation";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { handleError, getErrorMessage } from "@/lib/errorHandling";
+import { formatLocalDate, parseLocalDate } from "@/lib/utils";
 
 const CreateEvent = () => {
   const { t } = useTranslation();
@@ -331,9 +332,17 @@ const CreateEvent = () => {
         ? `${eventData.coupleName1} & ${eventData.coupleName2}`
         : 'Draft Event';
       
-      const closeDate = eventData.eventDate 
-        ? new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        : new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      let closeDate: string;
+      if (eventData.eventDate) {
+        const eventDateObj = parseLocalDate(eventData.eventDate);
+        const closeDateObj = new Date(eventDateObj);
+        closeDateObj.setDate(closeDateObj.getDate() + 3);
+        closeDate = formatLocalDate(closeDateObj);
+      } else {
+        const defaultClose = new Date();
+        defaultClose.setDate(defaultClose.getDate() + 6);
+        closeDate = formatLocalDate(defaultClose);
+      }
 
       if (draftEventId) {
         // Update existing draft
@@ -602,10 +611,11 @@ const CreateEvent = () => {
         throw new Error("No image available for event");
       }
       
-      // Calculate close date (3 days after event date)
-      const eventDate = new Date(eventData.eventDate);
-      const closeDate = new Date(eventDate);
-      closeDate.setDate(closeDate.getDate() + 3);
+      // Calculate close date (3 days after event date) using local timezone
+      const eventDateObj = parseLocalDate(eventData.eventDate);
+      const closeDateObj = new Date(eventDateObj);
+      closeDateObj.setDate(closeDateObj.getDate() + 3);
+      const closeDate = formatLocalDate(closeDateObj);
       
       const eventIdToUpdate = editEventId || draftEventId;
       
@@ -619,7 +629,7 @@ const CreateEvent = () => {
             .update({
               name: eventName,
               date: eventData.eventDate,
-              close_date: closeDate.toISOString().split('T')[0],
+              close_date: closeDate,
               description: `Wedding celebration for ${eventName}`,
               invite_code: inviteCode,
               image_url: imageUrl,
@@ -675,7 +685,7 @@ const CreateEvent = () => {
             .insert({
               name: validated.name,
               date: validated.date,
-              close_date: closeDate.toISOString().split('T')[0],
+              close_date: closeDate,
               description: validated.description,
               invite_code: inviteCode,
               created_by: userId,
@@ -851,15 +861,15 @@ const CreateEvent = () => {
                       calculatedDate = "";
                       calculatedTime = "00:00";
                     } else if (eventData.eventDate) {
-                      const eventDate = new Date(eventData.eventDate);
+                      const eventDateObj = parseLocalDate(eventData.eventDate);
                       if (value === "1_week_before") {
-                        const startDate = new Date(eventDate);
+                        const startDate = new Date(eventDateObj);
                         startDate.setDate(startDate.getDate() - 7);
-                        calculatedDate = startDate.toISOString().split('T')[0];
+                        calculatedDate = formatLocalDate(startDate);
                       } else if (value === "2_weeks_before") {
-                        const startDate = new Date(eventDate);
+                        const startDate = new Date(eventDateObj);
                         startDate.setDate(startDate.getDate() - 14);
-                        calculatedDate = startDate.toISOString().split('T')[0];
+                        calculatedDate = formatLocalDate(startDate);
                       } else if (value === "day_of_event") {
                         calculatedDate = eventData.eventDate;
                       }
