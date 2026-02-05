@@ -1,233 +1,87 @@
 
-## Apple App Store Compliance: User Blocking Feature ✅ IMPLEMENTED
+Objetivo
+- Restaurar visibilidad para usuarios normales (invitados) en /matchmaking y /dashboard (Home) para que vuelvan a aparecer eventos y, al entrar a un evento, perfiles.
+- Mantener el bloqueo de usuarios (compliance 1.2) sin romper el acceso normal.
 
-### Overview
-Implemented the **Block User** feature to comply with Apple's App Review Guideline 1.2 (User-Generated Content):
-1. Allows users to block abusive users
-2. Notifies the developer/admin of the block
-3. Removes the blocked user's content from the blocker's feed instantly
+Diagnóstico (lo que ya se ve en el código y por qué puede fallar)
+- En Matchmaking.tsx, la lista de eventos del usuario se carga con una consulta “relacional”:
+  - event_attendees.select("event_id, events(...)").eq("user_id", ...)
+- En Home.tsx se hace algo muy similar:
+  - event_attendees.select("event_id, events(*)").eq("user_id", ...)
+- Este patrón depende de que la API de la base de datos resuelva correctamente la relación event_attendees -> events. Si por cualquier motivo esa relación no se resuelve bien (o se vuelve “frágil” tras cambios de esquema), el resultado puede terminar siendo vacío para todos, aunque existan filas en event_attendees.
+- Además, perfiles (profiles) se ven mediante RLS basado en “comparten evento”, que a su vez depende de event_attendees. Si event_attendees no se está pudiendo leer correctamente desde el cliente, se “cae en cascada” y parece que no hay gente.
 
----
+Enfoque de solución (robusto, siguiendo el patrón ya usado en Admin “hardening”)
+1) Hardening de queries en el frontend (principal fix)
+   A. Matchmaking.tsx: cargar eventos en 2 pasos (sin join relacional)
+   - Paso 1: obtener event_ids del usuario desde event_attendees (solo columnas simples).
+   - Paso 2: con esos ids, consultar events con .in("id", eventIds) y ordenar por date en el cliente (o con order directo en events).
+   - Paso 3: calcular el profileCount por evento como ya se hace.
+   - Beneficio: se elimina la dependencia del join event_attendees -> events, que es el punto más probable del “no veo eventos”.
 
-### What Apple Requires
+   B. Home.tsx: mismo hardening (2 pasos)
+   - Paso 1: event_attendees (event_id) del usuario.
+   - Paso 2: events donde id IN (eventIds).
+   - Luego aplicar el filtro existente (ocultar eventos cerrados por close_date, ocultar eventos donde el usuario es host, etc.).
+   - Beneficio: /dashboard volverá a listar eventos de asistencia de forma confiable.
 
-From the review feedback:
-> "A mechanism for users to block abusive users. Blocking should also notify the developer of the inappropriate content and should remove it from the user's feed instantly."
+2) Bloqueo de usuarios: evitar que el “filtro bidireccional” rompa visibilidad por RLS
+   - En Matchmaking.tsx actualmente se intenta leer:
+     - blocked_users donde blocker_id = userId (esto sí funciona con la política “Users can view their own blocks”).
+     - blocked_users donde blocked_id = userId (esto NO debería ser visible por RLS actual, y suele devolver vacío).
+   - Eso no debería dejar la app sin eventos, pero sí conviene “blindar”:
+     - Manejar explícitamente errores/denegaciones del segundo query (blocked_id = userId) y tratarlo como “vacío” sin bloquear el resto del flujo.
+   - Si realmente quieres ocultamiento bidireccional perfecto (que también desaparezca quien te bloqueó), la forma correcta y segura es:
+     - Crear una función backend (SECURITY DEFINER) que devuelva “ids a ocultar” para el usuario (unión de bloqueados por mí + usuarios que me bloquearon), y consultarla vía rpc.
+     - Esto respeta RLS sin abrir SELECT directo de blocked_users por blocked_id.
 
----
+3) Verificación/ajuste de RLS (solo si sigue fallando tras el hardening)
+   - Si después de eliminar los joins sigue sin aparecer nada, el siguiente paso es revisar políticas RLS clave:
+     - event_attendees: SELECT para authenticated que permita al usuario ver filas de sus eventos.
+     - events: SELECT para authenticated que permita ver eventos donde el usuario es attendee o host.
+     - profiles: SELECT para authenticated usando users_share_event o matches.
+   - Aplicar la práctica probada:
+     - Asegurar que las policies indiquen explícitamente TO authenticated (y TO anon con USING(false) si quieres negar anónimos).
+   - Importante: no se tocará el modelo de roles (user_roles) ni se meterán roles en profiles/users.
 
-### Implementation Plan
+4) UX/Debug (para que no vuelva a pasar “en silencio”)
+   - Cuando attendeeData venga vacío:
+     - Mostrar un estado con CTA claro (Join Event) y, opcionalmente, un bloque “Diagnostics” (solo visible para admin o en modo debug) con:
+       - userId
+       - cantidad de event_attendees encontrados
+       - último error (si existió)
+   - Esto reduce tiempo de diagnóstico si vuelve a ocurrir.
 
-#### 1. Database: Create `blocked_users` Table
+Secuencia de implementación (orden recomendado)
+1. Cambiar Matchmaking.tsx: loadEvents() a fetch en 2 pasos (event_attendees -> events).
+2. Cambiar Home.tsx: fetch en 2 pasos (event_attendees -> events).
+3. Blindar el manejo del query bidireccional de bloqueos para que nunca rompa el flujo de perfiles.
+4. Probar end-to-end con 3 cuentas:
+   - invitado (no admin)
+   - host (creador)
+   - admin
+5. Si todavía no aparecen eventos:
+   - Ajustar RLS con TO authenticated en tables involucradas.
+6. (Opcional) Implementar RPC “get_blocked_user_ids_for_user()” para ocultamiento bidireccional correcto sin relajar RLS.
 
-```sql
-CREATE TABLE public.blocked_users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  blocker_id UUID NOT NULL,
-  blocked_id UUID NOT NULL,
-  event_id UUID,  -- Optional: context of where block happened
-  reason TEXT,    -- Optional reason for blocking
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (blocker_id, blocked_id)
-);
+Plan de pruebas (muy importante para Apple y para evitar regresiones)
+- En web (Published) y en iOS (build):
+  1) Login con invitado -> /dashboard debe listar al menos 1 evento (si está unido).
+  2) Ir a /matchmaking -> debe listar eventos disponibles.
+  3) Seleccionar evento activo -> debe cargar perfiles (si hay otros invitados).
+  4) Bloquear a alguien desde chat -> ese usuario desaparece de:
+     - chats
+     - liked
+     - matchmaking
+  5) Confirmar que el reporte/audit se creó (para “notify developer/admin”).
 
-ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;
-```
+Entrega esperada
+- Los usuarios vuelven a ver eventos y, dentro de eventos activos, vuelven a ver perfiles.
+- El feature de “Block User” sigue funcionando y no bloquea carga de eventos/perfiles.
+- Menos fragilidad en producción porque dejamos de depender de joins relacionales sensibles.
 
-**RLS Policies:**
-- Users can view their own blocks
-- Users can create blocks
-- Users can delete (unblock) their own blocks
-
-#### 2. Database: Create `block_user_transaction` Function
-
-A security definer function that atomically:
-1. Inserts into `blocked_users`
-2. Creates a report entry (notifies admin/developer)
-3. Deletes the match between users
-4. Deletes messages between users
-5. Deletes swipes to prevent re-matching
-6. Logs to `audit_logs`
-
-#### 3. Update Matchmaking Profile Filtering
-
-Modify `src/pages/Matchmaking.tsx` to exclude blocked users from the profile stack:
-- Add query to fetch `blocked_users` where `blocker_id = currentUser`
-- Also exclude users who have blocked the current user
-- Filter these users out of the matchmaking profiles
-
-#### 4. Update Chat/Likes Pages
-
-Modify pages to filter out blocked users:
-- `src/pages/LikedYou.tsx` - Hide blocked users from likes
-- `src/pages/Chats.tsx` - Hide blocked user conversations
-
-#### 5. Create `BlockUserDialog` Component
-
-A new dialog component similar to `ReportDialog` that:
-- Shows reason selection (optional)
-- Explains what blocking does
-- Calls the `block_user_transaction` function
-- Redirects user back to chats after blocking
-
-**Reasons to offer:**
-- "Inappropriate behavior"
-- "Harassment"
-- "Made me uncomfortable"
-- "Spam or fake profile"
-- "Other"
-
-#### 6. Update `ChatActionsMenu` and `ChatThread`
-
-Add "Block User" option to the dropdown menu in:
-- `src/components/ChatActionsMenu.tsx`
-- `src/pages/ChatThread.tsx` header menu
-
-**Menu structure after changes:**
-```text
-┌─────────────────────┐
-│ 👤 View Profile     │
-├─────────────────────┤
-│ ❌ Unmatch          │
-├─────────────────────┤
-│ 🚫 Block User       │ ← NEW (red/destructive)
-├─────────────────────┤
-│ 🚨 Report & Unmatch │
-└─────────────────────┘
-```
-
-#### 7. Add Translations
-
-Add translation keys for both English and Spanish:
-- `blockDialog.title`
-- `blockDialog.description`
-- `blockDialog.reasons.*`
-- `blockDialog.confirm`
-- `blockDialog.success`
-
----
-
-### Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| Database migration | Create | `blocked_users` table + RLS + transaction function |
-| `src/components/BlockUserDialog.tsx` | Create | New dialog for blocking |
-| `src/components/ChatActionsMenu.tsx` | Modify | Add "Block User" menu item |
-| `src/pages/ChatThread.tsx` | Modify | Add block dialog state + trigger |
-| `src/pages/Chats.tsx` | Modify | Add block dialog + filter blocked users |
-| `src/pages/Matchmaking.tsx` | Modify | Filter blocked users from stack |
-| `src/pages/LikedYou.tsx` | Modify | Filter blocked users from likes |
-| `src/lib/validation.ts` | Modify | Add block validation schema |
-| `src/i18n/locales/en.json` | Modify | Add English translations |
-| `src/i18n/locales/es.json` | Modify | Add Spanish translations |
-
----
-
-### Technical Details
-
-**Block Transaction Function (PostgreSQL):**
-```sql
-CREATE OR REPLACE FUNCTION public.block_user_transaction(
-  _blocker_id UUID,
-  _blocked_id UUID,
-  _event_id UUID,
-  _match_id UUID,
-  _reason TEXT
-) RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  -- Insert block record
-  INSERT INTO blocked_users (blocker_id, blocked_id, event_id, reason)
-  VALUES (_blocker_id, _blocked_id, _event_id, _reason)
-  ON CONFLICT (blocker_id, blocked_id) DO NOTHING;
-  
-  -- Create report for admin visibility
-  INSERT INTO reports (reporter_id, reported_user_id, event_id, match_id, reason)
-  VALUES (_blocker_id, _blocked_id, _event_id, _match_id, 'User blocked: ' || COALESCE(_reason, 'No reason provided'))
-  ON CONFLICT DO NOTHING;
-  
-  -- Log to audit
-  INSERT INTO audit_logs (action_type, actor_id, target_id, event_id, match_id, reason)
-  VALUES ('block', _blocker_id, _blocked_id, _event_id, _match_id, _reason);
-  
-  -- Delete messages if match exists
-  IF _match_id IS NOT NULL THEN
-    DELETE FROM messages WHERE match_id = _match_id;
-  END IF;
-  
-  -- Delete swipes between users
-  DELETE FROM swipes 
-  WHERE (user_id = _blocker_id AND swiped_user_id = _blocked_id)
-     OR (user_id = _blocked_id AND swiped_user_id = _blocker_id);
-  
-  -- Delete match if exists
-  IF _match_id IS NOT NULL THEN
-    DELETE FROM matches WHERE id = _match_id;
-  END IF;
-END;
-$$;
-```
-
-**Filtering in Matchmaking:**
-```typescript
-// Fetch blocked users
-const { data: blockedData } = await supabase
-  .from("blocked_users")
-  .select("blocked_id")
-  .eq("blocker_id", userId);
-
-// Also get users who blocked current user (bidirectional hiding)
-const { data: blockedByData } = await supabase
-  .from("blocked_users")
-  .select("blocker_id")
-  .eq("blocked_id", userId);
-
-const blockedUserIds = new Set([
-  ...(blockedData?.map(b => b.blocked_id) || []),
-  ...(blockedByData?.map(b => b.blocker_id) || [])
-]);
-
-// Filter profiles
-const nonBlockedProfiles = profiles.filter(p => !blockedUserIds.has(p.user_id));
-```
-
----
-
-### User Experience Flow
-
-```text
-User opens chat with someone behaving inappropriately
-        │
-        ▼
-Taps ⋮ menu → selects "Block User"
-        │
-        ▼
-Block dialog appears with reason selection (optional)
-        │
-        ▼
-User confirms block
-        │
-        ▼
-┌──────────────────────────────────────────┐
-│ Instant effects:                         │
-│ • Match deleted                          │
-│ • Messages deleted                       │
-│ • User hidden from matchmaking           │
-│ • Report created for admin review        │
-│ • User redirected to Chats page          │
-└──────────────────────────────────────────┘
-```
-
----
-
-### Age Rating Note
-
-For the **Guideline 2.3.6** issue, you need to update the Age Rating in App Store Connect:
-- Go to App Information → Age Rating
-- Set "Age Assurance" to **"None"** (since the app doesn't have parental controls or age verification beyond the 18+ signup requirement)
-
-This is a metadata change in App Store Connect, not a code change.
+Archivos que se tocarán
+- src/pages/Matchmaking.tsx (carga de eventos + robustez del filtro de blocked)
+- src/pages/Home.tsx (carga de eventos)
+- (Opcional si hace falta bidireccional perfecto) migración + rpc backend para “blocked ids”
+- (Opcional si hace falta) migración para ajustar policies RLS con TO authenticated
