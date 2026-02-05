@@ -903,7 +903,7 @@ const CreateEvent = () => {
                 </Select>
                 {matchmakingOption !== "immediately" && eventData.matchmakingStartDate && (
                   <p className="text-xs text-primary font-medium">
-                    Will open on {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')}
+                    Will open on {format(parseLocalDate(eventData.matchmakingStartDate), 'dd / MMM / yyyy')}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Filter, ArrowUpDown, ImageIcon, Eye, EyeOff, MoreVertical, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
@@ -117,7 +117,7 @@ const Home = () => {
             if (event.created_by === session.user.id) return false;
             
             if (!event.close_date) return true;
-            const closeDate = new Date(event.close_date);
+            const closeDate = parseLocalDate(event.close_date);
             closeDate.setHours(0, 0, 0, 0);
             return closeDate >= today;
           })
@@ -146,7 +146,7 @@ const Home = () => {
     today.setHours(0, 0, 0, 0);
     
     if (event.close_date) {
-      const closeDate = new Date(event.close_date);
+      const closeDate = parseLocalDate(event.close_date);
       closeDate.setHours(0, 0, 0, 0);
       if (closeDate < today) return 'closed';
     }
@@ -206,7 +206,7 @@ const Home = () => {
         case "name":
           return a.name.localeCompare(b.name);
         case "date":
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+          return parseLocalDate(a.date).getTime() - parseLocalDate(b.date).getTime();
         case "status":
           return getEventStatus(a).localeCompare(getEventStatus(b));
         default:
@@ -475,7 +475,7 @@ const Home = () => {
                             <h3 className="font-semibold text-lg hover:text-primary transition-all active-press cursor-pointer">{event.name}</h3>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                               <Calendar className="w-4 h-4" />
-                              <span>{format(new Date(event.date), 'dd / MMM / yyyy')}</span>
+                              <span>{format(parseLocalDate(event.date), 'dd / MMM / yyyy')}</span>
                             </div>
                           </div>
                           <div className="flex flex-col items-center gap-1">

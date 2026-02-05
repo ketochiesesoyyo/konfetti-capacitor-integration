@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FullScreenMatchDialog } from "@/components/FullScreenMatchDialog";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { swipeSchema, matchSchema } from "@/lib/validation";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { format, isBefore, isAfter } from "date-fns";
 import {
@@ -135,15 +135,15 @@ const Matchmaking = () => {
       today.setHours(0, 0, 0, 0);
       
       const sortedEvents = (eventsData || []).sort((a, b) => {
-        const aIsOpen = a.status === 'active' && (!a.close_date || new Date(a.close_date) >= today);
-        const bIsOpen = b.status === 'active' && (!b.close_date || new Date(b.close_date) >= today);
-        
+        const aIsOpen = a.status === 'active' && (!a.close_date || parseLocalDate(a.close_date) >= today);
+        const bIsOpen = b.status === 'active' && (!b.close_date || parseLocalDate(b.close_date) >= today);
+
         // Open events first
         if (aIsOpen && !bIsOpen) return -1;
         if (!aIsOpen && bIsOpen) return 1;
-        
+
         // Within same category, sort by date descending (newest first)
-        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+        return parseLocalDate(b.date || '1970-01-01').getTime() - parseLocalDate(a.date || '1970-01-01').getTime();
       });
       
       // Fetch profile counts for each event
@@ -167,8 +167,8 @@ const Matchmaking = () => {
         // Only use saved if it's an open event
         const savedEvent = savedEventId && sortedEvents.find((e: Event) => e.id === savedEventId);
         if (savedEvent) {
-          const savedIsOpen = savedEvent.status === 'active' && 
-            (!savedEvent.close_date || new Date(savedEvent.close_date) >= today);
+          const savedIsOpen = savedEvent.status === 'active' &&
+            (!savedEvent.close_date || parseLocalDate(savedEvent.close_date) >= today);
           if (savedIsOpen) {
             defaultEventId = savedEventId;
           }
@@ -177,8 +177,8 @@ const Matchmaking = () => {
 
       if (!defaultEventId && sortedEvents.length > 0) {
         // Pick the first open event (already sorted: open first)
-        const firstOpenEvent = sortedEvents.find((e: Event) => 
-          e.status === 'active' && (!e.close_date || new Date(e.close_date) >= today)
+        const firstOpenEvent = sortedEvents.find((e: Event) =>
+          e.status === 'active' && (!e.close_date || parseLocalDate(e.close_date) >= today)
         );
         defaultEventId = firstOpenEvent?.id || sortedEvents[0].id;
       }
@@ -281,7 +281,7 @@ const Matchmaking = () => {
 
         // Check if matchmaking has closed
         if (eventData?.matchmaking_close_date) {
-          const closeDateObj = new Date(eventData.matchmaking_close_date);
+          const closeDateObj = parseLocalDate(eventData.matchmaking_close_date);
           if (new Date() > closeDateObj) {
             setProfiles([]);
             setLoading(false);
@@ -291,7 +291,7 @@ const Matchmaking = () => {
 
         // Check if event close_date has passed (prevents swiping on old events)
         if (closeDate) {
-          const eventCloseDateObj = new Date(closeDate);
+          const eventCloseDateObj = parseLocalDate(closeDate);
           if (new Date() > eventCloseDateObj) {
             console.log('Event close_date has passed - marking as closed');
             setProfiles([]);
@@ -526,8 +526,8 @@ const Matchmaking = () => {
       // Past: matchmaking closed or event closed
       if (
         event.status === "closed" ||
-        (event.matchmaking_close_date && isAfter(now, new Date(event.matchmaking_close_date))) ||
-        (event.close_date && isAfter(now, new Date(event.close_date)))
+        (event.matchmaking_close_date && isAfter(now, parseLocalDate(event.matchmaking_close_date))) ||
+        (event.close_date && isAfter(now, parseLocalDate(event.close_date)))
       ) {
         past.push(event);
       }
@@ -552,8 +552,8 @@ const Matchmaking = () => {
 
   const formatDateRange = (startDate?: string, endDate?: string) => {
     if (!startDate) return "Date TBD";
-    const start = format(new Date(startDate), "dd / MMM");
-    const end = endDate ? format(new Date(endDate), "dd / MMM / yyyy") : "";
+    const start = format(parseLocalDate(startDate), "dd / MMM");
+    const end = endDate ? format(parseLocalDate(endDate), "dd / MMM / yyyy") : "";
     return end ? `${start} - ${end}` : start;
   };
 
@@ -982,11 +982,11 @@ const Matchmaking = () => {
                 </p>
                 <Button onClick={() => navigate("/")}>{t('matchmaking.goHome')}</Button>
               </>
-            ) : matchmakingCloseDate && new Date() > new Date(matchmakingCloseDate) ? (
+            ) : matchmakingCloseDate && new Date() > parseLocalDate(matchmakingCloseDate) ? (
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.matchmakingClosed')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  {t('matchmaking.matchmakingClosedDesc', { date: format(new Date(matchmakingCloseDate), 'dd / MMM / yyyy') })}
+                  {t('matchmaking.matchmakingClosedDesc', { date: format(parseLocalDate(matchmakingCloseDate), 'dd / MMM / yyyy') })}
                 </p>
                 <Button onClick={() => navigate("/chats")}>{t('matchmaking.viewChats')}</Button>
               </>
@@ -994,9 +994,9 @@ const Matchmaking = () => {
               <>
                 <h2 className="text-2xl font-bold mb-2">{t('matchmaking.eventClosedTitle')}</h2>
                 <p className="text-muted-foreground mb-4">
-                  {t('matchmaking.eventClosedMessage', { 
+                  {t('matchmaking.eventClosedMessage', {
                     date: selectedEventCloseDate
-                      ? format(new Date(selectedEventCloseDate), 'dd / MMM / yyyy')
+                      ? format(parseLocalDate(selectedEventCloseDate), 'dd / MMM / yyyy')
                       : "3 days after the event was closed"
                   })}
                 </p>

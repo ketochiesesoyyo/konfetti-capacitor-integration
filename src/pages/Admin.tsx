@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { isAdminDomainAllowed } from "@/lib/domain";
+import { parseLocalDate } from "@/lib/utils";
 import { AdminEventCreationDialog } from "@/components/admin/AdminEventCreationDialog";
 import { AdminEventSuccessDialog } from "@/components/admin/AdminEventSuccessDialog";
 
@@ -143,7 +144,7 @@ const Admin = () => {
     today.setHours(0, 0, 0, 0);
     
     if (event.close_date) {
-      const closeDate = new Date(event.close_date);
+      const closeDate = parseLocalDate(event.close_date);
       closeDate.setHours(0, 0, 0, 0);
       if (closeDate < today) return 'closed';
     }
@@ -356,7 +357,7 @@ const Admin = () => {
                               )}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(request.wedding_date), "dd MMM yyyy", { locale: es })}
+                              {format(parseLocalDate(request.wedding_date), "dd MMM yyyy", { locale: es })}
                             </TableCell>
                             <TableCell>{request.expected_guests}</TableCell>
                             <TableCell>
@@ -486,8 +487,8 @@ const Admin = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {event.date 
-                                ? format(new Date(event.date), "dd MMM yyyy", { locale: es })
+                              {event.date
+                                ? format(parseLocalDate(event.date), "dd MMM yyyy", { locale: es })
                                 : <span className="text-muted-foreground">Sin fecha</span>
                               }
                             </TableCell>
@@ -601,7 +602,7 @@ const Admin = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>{format(new Date(selectedRequest.wedding_date), "dd MMMM yyyy", { locale: es })}</span>
+                  <span>{format(parseLocalDate(selectedRequest.wedding_date), "dd MMMM yyyy", { locale: es })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />
