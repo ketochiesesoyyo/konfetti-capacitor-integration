@@ -49,11 +49,15 @@ const CreateEvent = () => {
   // Helper function to determine matchmaking option from dates
   const determineMatchmakingOption = (eventDate: string, startDate: string | null): string => {
     if (!startDate || startDate === "") return "immediately";
-    
-    const event = new Date(eventDate);
-    const start = new Date(startDate);
-    const daysDiff = Math.round((event.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    
+
+    // IMPORTANT: eventDate/startDate are stored as YYYY-MM-DD strings.
+    // Use local parsing to avoid timezone-shifted day diffs.
+    const event = parseLocalDate(eventDate);
+    const start = parseLocalDate(startDate);
+    const daysDiff = Math.round(
+      (event.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysDiff === 0) return "day_of_event";
     if (daysDiff === 7) return "1_week_before";
     if (daysDiff === 14) return "2_weeks_before";
@@ -250,12 +254,15 @@ const CreateEvent = () => {
 
     try {
       // Create initial empty draft
+      const defaultClose = new Date();
+      defaultClose.setDate(defaultClose.getDate() + 6);
+
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
           name: 'Draft Event',
           date: null,
-          close_date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          close_date: formatLocalDate(defaultClose),
           description: 'Wedding celebration',
           invite_code: `DRAFT-${Date.now()}`,
           created_by: userId,
@@ -391,15 +398,17 @@ const CreateEvent = () => {
   const generateInviteCode = () => {
     const name1 = eventData.coupleName1.toUpperCase().replace(/\s+/g, '');
     const name2 = eventData.coupleName2.toUpperCase().replace(/\s+/g, '');
-    const year = new Date(eventData.eventDate).getFullYear();
-    
+
+    // eventDate is a YYYY-MM-DD string; parse locally to avoid timezone shifts.
+    const year = eventData.eventDate ? parseLocalDate(eventData.eventDate).getFullYear() : new Date().getFullYear();
+
     // Generate 4 random alphanumeric characters (A-Z, 0-9)
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let randomChars = '';
     for (let i = 0; i < 4; i++) {
       randomChars += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+
     return `${name1.substring(0, 3)}${name2.substring(0, 3)}${year}${randomChars}`;
   };
 
@@ -831,7 +840,7 @@ const CreateEvent = () => {
                 <Input
                   id="eventDate"
                   type="date"
-                  min={new Date().toISOString().split('T')[0]}
+                  min={formatLocalDate(new Date())}
                   value={eventData.eventDate}
                   onChange={(e) =>
                     setEventData({ ...eventData, eventDate: e.target.value })
@@ -907,7 +916,7 @@ const CreateEvent = () => {
                   <div className="rounded-lg bg-primary/10 p-4 border border-primary/30 mb-3">
                     <p className="text-sm font-medium mb-1 text-primary">Matchmaking Opens</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at {eventData.matchmakingStartTime || '00:00'}
+                      {format(parseLocalDate(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at {eventData.matchmakingStartTime || '00:00'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       All guests and the host will be notified about the matchmaking page opening.
@@ -917,7 +926,13 @@ const CreateEvent = () => {
                 <div className="rounded-lg bg-muted/50 p-4 border border-border/50">
                   <p className="text-sm font-medium mb-1">Close Date</p>
                   <p className="text-sm text-muted-foreground">
-                    Matchmaking automatically closes 3 days after the wedding date{eventData.eventDate && ` (${format(new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000), 'dd / MMM / yyyy')})`}.
+                    Matchmaking automatically closes 3 days after the wedding date
+                    {eventData.eventDate && (() => {
+                      const eventDateObj = parseLocalDate(eventData.eventDate);
+                      const close = new Date(eventDateObj);
+                      close.setDate(close.getDate() + 3);
+                      return ` (${format(close, 'dd / MMM / yyyy')})`;
+                    })()}.
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
                     Chats remain active after matchmaking closes.
@@ -1034,13 +1049,18 @@ const CreateEvent = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Event Date</p>
                 <p className="font-medium">
-                  {format(new Date(eventData.eventDate), 'dd / MMM / yyyy')}
+                  {format(parseLocalDate(eventData.eventDate), 'dd / MMM / yyyy')}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Matchmaking Active Until</p>
                 <p className="font-medium">
-                  {format(new Date(new Date(eventData.eventDate).getTime() + 3 * 24 * 60 * 60 * 1000), 'dd / MMM / yyyy')}
+                  {(() => {
+                    const eventDateObj = parseLocalDate(eventData.eventDate);
+                    const close = new Date(eventDateObj);
+                    close.setDate(close.getDate() + 3);
+                    return format(close, 'dd / MMM / yyyy');
+                  })()}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   (3 days after event)
@@ -1050,7 +1070,7 @@ const CreateEvent = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Matchmaking Starts</p>
                   <p className="font-medium">
-                    {format(new Date(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at 00:00 UK Time
+                    {format(parseLocalDate(eventData.matchmakingStartDate), 'dd / MMM / yyyy')} at 00:00 UK Time
                   </p>
                 </div>
               )}
