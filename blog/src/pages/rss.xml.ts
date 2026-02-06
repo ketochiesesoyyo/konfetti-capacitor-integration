@@ -9,7 +9,7 @@ export async function GET(context: APIContext) {
 
 	return rss({
 		title: 'Blog Konfetti',
-		description: 'Consejos para socializar en bodas, tendencias en celebraciones y todo sobre conocer gente nueva en el evento mas especial del ano.',
+		description: 'Consejos para socializar en bodas, tendencias en celebraciones y todo sobre conocer gente nueva en el evento más especial del año.',
 		site: context.site!,
 		items: posts.map((post) => ({
 			title: post.data.title,

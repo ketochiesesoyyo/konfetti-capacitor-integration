@@ -51,6 +51,6 @@ No es casualidad que estas cosas pasen en bodas y no en otro lado. Hay ingredien
 
 El problema es que muchas de estas conexiones casi no pasan. Mariana y Diego tuvieron suerte con la mesa asignada. Paula y Ximena se encontraron por un pasador. Roberto casi no fue a la boda.
 
-¿Qué pasaría si pudieras quitar ese "casi" de la ecuación? Si antes de la boda pudieras ver quién va a estar, encontrar puntos en común y llegar con conversaciones ya iniciadas? Eso es lo que permite [Konfetti](https://konfetti.app) -- no le quita magia al momento, le quita barreras.
+¿Qué pasaría si pudieras quitar ese "casi" de la ecuación? ¿Si antes de la boda pudieras ver quién va a estar, encontrar puntos en común y llegar con conversaciones ya iniciadas? Eso es lo que permite [Konfetti](https://konfetti.app) -- no le quita magia al momento, le quita barreras.
 
 Las historias que nacen cuando las barreras desaparecen son como las que acabas de leer, pero multiplicadas. Porque "nos conocimos en una boda" es una de las mejores formas de empezar cualquier historia. Y con [Konfetti](https://konfetti.app), es una frase que cada vez más personas van a poder decir.

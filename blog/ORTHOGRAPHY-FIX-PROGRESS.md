@@ -8,7 +8,7 @@ Fix Spanish orthography across all 30 blog posts:
 - Context-aware: tu/tú, como/cómo, que/qué, si/sí, donde/dónde
 - Do NOT change tone, wording, content, URLs, or markdown
 
-## Status: 20/30 files DONE
+## Status: 30/30 files DONE
 
 ### Batch 1 — DONE
 - [x] 200-desconocidos-mejor-dia.md
@@ -38,21 +38,20 @@ Fix Spanish orthography across all 30 blog posts:
 - [x] generacion-conocer-gente-en-persona.md
 - [x] guest-experience-como-diferenciador.md
 
-### Batch 5 — PENDING
-- [ ] guia-del-plus-one.md
-- [ ] ir-solo-a-una-boda.md
-- [ ] lo-que-invitados-solteros-piensan.md
-- [ ] matchmaking-en-eventos-tendencia.md
-- [ ] nos-conocimos-en-una-boda.md
+### Batch 5 — DONE
+- [x] guia-del-plus-one.md
+- [x] ir-solo-a-una-boda.md
+- [x] lo-que-invitados-solteros-piensan.md
+- [x] matchmaking-en-eventos-tendencia.md
+- [x] nos-conocimos-en-una-boda.md
 
-### Batch 6 — PENDING
-- [ ] nuevas-fuentes-ingreso-experiencia-social.md
-- [ ] playlist-perfecta-para-tu-boda.md
-- [ ] tecnologia-experiencia-invitados.md
-- [ ] tu-boda-mejor-evento-social.md
-- [ ] vender-boda-divertida-no-solo-bonita.md
+### Batch 6 — DONE
+- [x] nuevas-fuentes-ingreso-experiencia-social.md
+- [x] playlist-perfecta-para-tu-boda.md
+- [x] tecnologia-experiencia-invitados.md
+- [x] tu-boda-mejor-evento-social.md
+- [x] vender-boda-divertida-no-solo-bonita.md
 
 ## Notes
-- After all 30 files are fixed, run `npm run build` to verify
-- Preview with `npm run preview` → http://localhost:4321
-- Blog is untracked in git (consider committing when done)
+- All 30 files fixed and committed on Feb 6, 2026
+- Also fixed accents in index.astro and rss.xml.ts descriptions

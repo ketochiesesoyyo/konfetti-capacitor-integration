@@ -46,7 +46,7 @@ La idea de "voy solo y no conozco a nadie" ya tampoco tiene por qué ser un prob
 Respóndete con honestidad:
 
 1. **¿Mi plus-one va a disfrutar la boda tanto como yo?** Si la respuesta es "probablemente se va a aburrir", ya sabes.
-2. **¿Voy a poder ser 100% yo con mi acompañante ahí?** Si vas a estar cuidando a alguien en lugar de disfrutando, reconsiéralo.
+2. **¿Voy a poder ser 100% yo con mi acompañante ahí?** Si vas a estar cuidando a alguien en lugar de disfrutando, reconsidéralo.
 3. **¿Estoy llevando a alguien por mí o por presión social?** Si es por el qué dirán, suelta eso.
 
 ## La boda no se trata de ti (ni de tu plus-one)
