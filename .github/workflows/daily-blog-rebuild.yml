@@ -1,0 +1,14 @@
+name: Daily Blog Rebuild
+
+on:
+  schedule:
+    # Runs every day at 6:00 AM UTC (midnight CST / Mexico City)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  trigger-rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
