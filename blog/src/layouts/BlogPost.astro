@@ -1,0 +1,157 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import CallToAction from '../components/CallToAction.astro';
+
+interface Props {
+	title: string;
+	description: string;
+	pubDate: Date;
+	updatedDate?: Date;
+	heroImage?: { src: string; width: number; height: number };
+	category: string;
+	tags: string[];
+	author: string;
+}
+
+const { title, description, pubDate, updatedDate, heroImage, category, tags, author } = Astro.props;
+
+const categoryLabels: Record<string, string> = {
+	'invitados': 'Para Invitados',
+	'parejas': 'Para Parejas',
+	'wedding-planners': 'Wedding Planners',
+	'tendencias': 'Tendencias',
+	'historias': 'Historias',
+};
+
+const categoryColors: Record<string, string> = {
+	'invitados': 'bg-pink-100 text-pink-700',
+	'parejas': 'bg-blue-100 text-blue-700',
+	'wedding-planners': 'bg-emerald-100 text-emerald-700',
+	'tendencias': 'bg-konfetti-100 text-konfetti-700',
+	'historias': 'bg-amber-100 text-amber-700',
+};
+
+const dateFormatter = new Intl.DateTimeFormat('es-MX', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+});
+
+// Estimate reading time (~200 words per minute in Spanish)
+const content = await Astro.slots.render('default');
+const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+// JSON-LD structured data
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'BlogPosting',
+	headline: title,
+	description: description,
+	author: {
+		'@type': 'Person',
+		name: author,
+	},
+	datePublished: pubDate.toISOString(),
+	...(updatedDate && { dateModified: updatedDate.toISOString() }),
+	...(heroImage && { image: new URL(heroImage.src, Astro.site).toString() }),
+	publisher: {
+		'@type': 'Organization',
+		name: 'Konfetti',
+		url: 'https://konfetti.app',
+	},
+	mainEntityOfPage: {
+		'@type': 'WebPage',
+		'@id': new URL(Astro.url.pathname, Astro.site).toString(),
+	},
+};
+---
+
+<BaseLayout
+	title={title}
+	description={description}
+	image={heroImage?.src}
+	article={true}
+	pubDate={pubDate}
+	updatedDate={updatedDate}
+	author={author}
+>
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+	<article class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-fade-in">
+		<!-- Header -->
+		<header class="mb-8">
+			<div class="flex items-center gap-3 mb-4">
+				<span class={`text-xs font-semibold px-3 py-1 rounded-full ${categoryColors[category] || 'bg-gray-100 text-gray-700'}`}>
+					{categoryLabels[category] || category}
+				</span>
+				<span class="text-sm text-muted-foreground">
+					{readingTime} min de lectura
+				</span>
+			</div>
+
+			<h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight mb-4" style="color: hsl(345, 25%, 20%)">
+				{title}
+			</h1>
+
+			<p class="text-lg text-muted-foreground mb-4">{description}</p>
+
+			<div class="flex items-center gap-4 text-sm text-muted-foreground">
+				<span>Por <strong class="font-semibold" style="color: hsl(345, 25%, 20%)">{author}</strong></span>
+				<time datetime={pubDate.toISOString()}>
+					{dateFormatter.format(pubDate)}
+				</time>
+				{updatedDate && (
+					<span class="italic">
+						(Actualizado: {dateFormatter.format(updatedDate)})
+					</span>
+				)}
+			</div>
+		</header>
+
+		<!-- Hero Image -->
+		{heroImage && (
+			<img
+				src={heroImage.src}
+				alt={title}
+				width={heroImage.width}
+				height={heroImage.height}
+				class="w-full rounded-bloom mb-8 object-cover max-h-[400px] shadow-card"
+			/>
+		)}
+
+		<!-- Layout: ToC + Content -->
+		<div class="lg:flex lg:gap-10">
+			<!-- Sidebar ToC (desktop) -->
+			<aside class="hidden lg:block lg:w-64 flex-shrink-0">
+				<div class="sticky top-24">
+					<TableOfContents />
+				</div>
+			</aside>
+
+			<!-- Article content -->
+			<div class="flex-1 min-w-0 prose-lg">
+				<slot />
+
+				<!-- Tags -->
+				{tags.length > 0 && (
+					<div class="mt-10 pt-6 border-t border-border/50">
+						<div class="flex flex-wrap gap-2">
+							{tags.map(tag => (
+								<span class="text-xs bg-konfetti-50 text-konfetti-700 px-3 py-1 rounded-full border border-konfetti-100">
+									#{tag}
+								</span>
+							))}
+						</div>
+					</div>
+				)}
+
+				<!-- CTA -->
+				<div class="mt-10">
+					<CallToAction />
+				</div>
+			</div>
+		</div>
+	</article>
+</BaseLayout>

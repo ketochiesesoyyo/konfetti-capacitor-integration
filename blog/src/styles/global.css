@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		@apply text-foreground antialiased;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	h1, h2, h3, h4 {
+		@apply font-serif;
+		color: hsl(345, 25%, 20%);
+	}
+
+	article h2 {
+		@apply text-2xl font-bold mt-10 mb-4;
+	}
+
+	article h3 {
+		@apply text-xl font-semibold mt-8 mb-3;
+	}
+
+	article p {
+		@apply mb-4 leading-relaxed;
+	}
+
+	article ul, article ol {
+		@apply mb-4 pl-6;
+	}
+
+	article ul {
+		@apply list-disc;
+	}
+
+	article ol {
+		@apply list-decimal;
+	}
+
+	article li {
+		@apply mb-2 leading-relaxed;
+	}
+
+	article a {
+		@apply text-konfetti-600 underline hover:text-konfetti-700 transition-colors;
+	}
+
+	article blockquote {
+		@apply border-l-4 border-konfetti-300 pl-4 italic my-6;
+		color: hsl(345, 15%, 55%);
+	}
+
+	article strong {
+		@apply font-semibold;
+		color: hsl(345, 25%, 20%);
+	}
+}
+
+@layer utilities {
+	.gradient-primary {
+		background: linear-gradient(135deg, hsl(282, 82%, 49%) 0%, hsl(286, 78%, 69%) 100%);
+	}
+
+	.gradient-hero {
+		background: linear-gradient(180deg, hsl(282, 82%, 97%) 0%, #ffffff 100%);
+	}
+
+	.glass-light {
+		background: rgba(255, 255, 255, 0.7);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+
+	.hover-lift {
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.hover-lift:hover {
+		transform: translateY(-2px);
+	}
+}

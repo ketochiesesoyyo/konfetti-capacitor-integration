@@ -1,0 +1,67 @@
+---
+interface Props {
+	title: string;
+	description: string;
+	pubDate: Date;
+	heroImage?: { src: string; width: number; height: number };
+	category: string;
+	slug: string;
+}
+
+const { title, description, pubDate, heroImage, category, slug } = Astro.props;
+
+const categoryLabels: Record<string, string> = {
+	'invitados': 'Para Invitados',
+	'parejas': 'Para Parejas',
+	'wedding-planners': 'Wedding Planners',
+	'tendencias': 'Tendencias',
+	'historias': 'Historias',
+};
+
+const categoryColors: Record<string, string> = {
+	'invitados': 'bg-pink-100 text-pink-700',
+	'parejas': 'bg-blue-100 text-blue-700',
+	'wedding-planners': 'bg-emerald-100 text-emerald-700',
+	'tendencias': 'bg-konfetti-100 text-konfetti-700',
+	'historias': 'bg-amber-100 text-amber-700',
+};
+
+const dateFormatter = new Intl.DateTimeFormat('es-MX', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+});
+---
+
+<a href={`/${slug}/`} class="group block">
+	<article class="bg-white rounded-bloom border border-border/50 overflow-hidden shadow-soft hover:shadow-card-hover hover-lift">
+		{heroImage && (
+			<div class="aspect-video overflow-hidden">
+				<img
+					src={heroImage.src}
+					alt={title}
+					width={heroImage.width}
+					height={heroImage.height}
+					class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+					loading="lazy"
+				/>
+			</div>
+		)}
+		<div class="p-6">
+			<div class="flex items-center gap-3 mb-3">
+				<span class={`text-xs font-semibold px-3 py-1 rounded-full ${categoryColors[category] || 'bg-gray-100 text-gray-700'}`}>
+					{categoryLabels[category] || category}
+				</span>
+				<time datetime={pubDate.toISOString()} class="text-xs text-muted-foreground">
+					{dateFormatter.format(pubDate)}
+				</time>
+			</div>
+			<h2 class="text-lg font-serif font-bold group-hover:text-konfetti-600 transition-colors duration-300 mb-2 line-clamp-2" style="color: hsl(345, 25%, 20%)">
+				{title}
+			</h2>
+			<p class="text-sm text-muted-foreground line-clamp-3">
+				{description}
+			</p>
+		</div>
+	</article>
+</a>
