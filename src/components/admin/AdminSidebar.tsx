@@ -6,6 +6,8 @@ import {
   UserCheck,
   CalendarDays,
   Plus,
+  DollarSign,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -70,6 +72,13 @@ export const AdminSidebar = ({
       items: [
         { id: "events", label: "Todos", icon: CalendarDays, badge: eventsCount },
         { id: "new-event", label: "Crear Nuevo", icon: Plus, action: onCreateEvent },
+      ],
+    },
+    {
+      title: "Financiero",
+      items: [
+        { id: "finance", label: "Dashboard", icon: BarChart3 },
+        { id: "revenue", label: "Ingresos", icon: DollarSign },
       ],
     },
   ];
