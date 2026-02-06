@@ -846,6 +846,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      try_link_portal_account: { Args: never; Returns: boolean }
       unmatch_user_transaction: {
         Args: {
           _description: string
@@ -871,10 +872,6 @@ export type Database = {
       }
       users_share_event: {
         Args: { user_a: string; user_b: string }
-        Returns: boolean
-      }
-      try_link_portal_account: {
-        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       validate_invite_code: {

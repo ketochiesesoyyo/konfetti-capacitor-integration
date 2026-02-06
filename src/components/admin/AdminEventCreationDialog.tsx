@@ -237,8 +237,8 @@ export const AdminEventCreationDialog = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5242880) {
-      toast.error("La foto debe ser menor a 5MB");
+    if (file.size > 10485760) {
+      toast.error("La foto debe ser menor a 10MB");
       return;
     }
 
