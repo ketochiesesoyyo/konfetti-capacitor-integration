@@ -25,6 +25,8 @@ interface Contact {
   notes: string | null;
   company_id: string | null;
   created_at: string;
+  user_id: string | null;
+  invited_at: string | null;
   companies: { name: string } | null;
   events: { id: string }[];
 }
@@ -254,6 +256,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
                     <SortableTableHeader column="email" label="Email" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <TableHead>Teléfono</TableHead>
                     <SortableTableHeader column="events" label="Eventos" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <TableHead>Portal</TableHead>
                     <SortableTableHeader column="status" label="Estado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                   </TableRow>
                 </TableHeader>
@@ -283,6 +286,13 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{client.events?.length || 0}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {client.user_id ? (
+                          <Badge variant="outline" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30 text-xs">Portal activo</Badge>
+                        ) : client.invited_at ? (
+                          <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500/30 text-xs">Invitado</Badge>
+                        ) : null}
                       </TableCell>
                       <TableCell>{getStatusBadge(client.status)}</TableCell>
                     </TableRow>

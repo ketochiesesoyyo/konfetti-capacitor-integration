@@ -42,6 +42,13 @@ const AdminContent = lazy(() => import("./components/admin/AdminContent").then(m
 const AdminEventDashboard = lazy(() => import("./pages/AdminEventDashboard"));
 const AdminClientDetail = lazy(() => import("./pages/AdminClientDetail"));
 
+// Portal components (lazy loaded)
+const PortalLayout = lazy(() => import("./components/portal/PortalLayout").then(m => ({ default: m.PortalLayout })));
+const PortalAuth = lazy(() => import("./pages/PortalAuth"));
+const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
+const PortalEventDetail = lazy(() => import("./pages/portal/PortalEventDetail"));
+const PortalNewRequest = lazy(() => import("./pages/portal/PortalNewRequest"));
+
 const showAdminRoute = isAdminDomainAllowed();
 
 const queryClient = new QueryClient();
@@ -127,6 +134,14 @@ const App = () => (
                   <Route path="client/:id" element={<AdminClientDetail />} />
                 </Route>
               )}
+              {/* Client Portal */}
+              <Route path="/portal/login" element={<PortalAuth />} />
+              <Route path="/portal/register" element={<PortalAuth />} />
+              <Route path="/portal" element={<PortalLayout />}>
+                <Route index element={<PortalDashboard />} />
+                <Route path="event/:eventId" element={<PortalEventDetail />} />
+                <Route path="request" element={<PortalNewRequest />} />
+              </Route>
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />

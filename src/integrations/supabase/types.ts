@@ -136,11 +136,13 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          invited_at: string | null
           notes: string | null
           phone: string | null
           source_request_id: string | null
           status: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -150,11 +152,13 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          invited_at?: string | null
           notes?: string | null
           phone?: string | null
           source_request_id?: string | null
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -164,11 +168,13 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          invited_at?: string | null
           notes?: string | null
           phone?: string | null
           source_request_id?: string | null
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -867,6 +873,10 @@ export type Database = {
         Args: { user_a: string; user_b: string }
         Returns: boolean
       }
+      try_link_portal_account: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       validate_invite_code: {
         Args: { code: string }
         Returns: {
@@ -882,7 +892,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "free" | "premium" | "admin"
+      app_role: "free" | "premium" | "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1010,7 +1020,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["free", "premium", "admin"],
+      app_role: ["free", "premium", "admin", "client"],
     },
   },
 } as const

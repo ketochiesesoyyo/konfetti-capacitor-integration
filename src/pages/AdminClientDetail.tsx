@@ -13,6 +13,9 @@ import {
   Archive,
   ImageIcon,
   Pencil,
+  Send,
+  ExternalLink,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +53,8 @@ interface Contact {
   notes: string | null;
   company_id: string | null;
   created_at: string;
+  user_id: string | null;
+  invited_at: string | null;
   companies: { name: string } | null;
 }
 
@@ -79,6 +84,8 @@ const AdminClientDetail = () => {
   const [notes, setNotes] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+
+  const [isInviting, setIsInviting] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -305,6 +312,42 @@ const AdminClientDetail = () => {
     }
   };
 
+  const handleInviteToPortal = async () => {
+    if (!id || !contact?.email) return;
+
+    setIsInviting(true);
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .update({
+          invited_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Copy invite link to clipboard
+      const inviteUrl = `${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email)}`;
+      await navigator.clipboard.writeText(inviteUrl);
+
+      toast.success("Invitación registrada. El enlace se ha copiado al portapapeles.");
+      await loadContact();
+    } catch (error: any) {
+      console.error("Error inviting client:", error);
+      toast.error("Error al invitar al cliente");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const getPortalStatus = (): 'none' | 'invited' | 'active' => {
+    if (!contact) return 'none';
+    if (contact.user_id) return 'active';
+    if (contact.invited_at) return 'invited';
+    return 'none';
+  };
+
   const getEventStatus = (event: ClientEvent): 'draft' | 'closed' | 'active' => {
     if (event.status === 'draft') return 'draft';
     if (event.status === 'closed') return 'closed';
@@ -402,6 +445,52 @@ const AdminClientDetail = () => {
                 {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
               </Badge>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Portal Status */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="text-sm font-medium">Portal de Clientes</div>
+                {getPortalStatus() === 'active' ? (
+                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">
+                    <UserCheck className="w-3 h-3 mr-1" />
+                    Portal activo
+                  </Badge>
+                ) : getPortalStatus() === 'invited' ? (
+                  <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500/30">
+                    <Send className="w-3 h-3 mr-1" />
+                    Invitado
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-muted text-muted-foreground">
+                    Sin invitar
+                  </Badge>
+                )}
+              </div>
+              {contact.status === 'active' && !contact.user_id && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleInviteToPortal}
+                  disabled={!contact.email || isInviting}
+                >
+                  {isInviting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  {contact.invited_at ? "Reenviar Invitación" : "Invitar al Portal"}
+                </Button>
+              )}
+            </div>
+            {!contact.email && !contact.user_id && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Se necesita un email para invitar al portal
+              </p>
+            )}
           </CardContent>
         </Card>
 
