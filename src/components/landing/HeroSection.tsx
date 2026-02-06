@@ -92,10 +92,10 @@ export const HeroSection = () => {
             </button>
           </p>
 
-          {/* App Store Badge - Hidden until we have the official App Store link */}
-          {/* <div className="pt-6">
+          {/* App Store Badge */}
+          <div className="pt-6">
             <a
-              href="#"
+              href="https://apps.apple.com/app/konfetti-wedding-matchmaking/id6744136498"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block transition-transform hover:scale-105"
@@ -106,7 +106,7 @@ export const HeroSection = () => {
                 className="h-12"
               />
             </a>
-          </div> */}
+          </div>
         </div>
       </div>
 
