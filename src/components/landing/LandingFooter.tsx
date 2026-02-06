@@ -49,6 +49,14 @@ export const LandingFooter = () => {
                   <Instagram className="h-5 w-5" />
                 </a>
               </div>
+              <a
+                href="https://blog.konfetti.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t("landing.footer.social.blog")}
+              </a>
             </div>
 
             {/* Legal */}
