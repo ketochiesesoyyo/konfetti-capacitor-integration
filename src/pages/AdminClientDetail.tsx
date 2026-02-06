@@ -491,6 +491,24 @@ const AdminClientDetail = () => {
                 Se necesita un email para invitar al portal
               </p>
             )}
+            {contact.email && contact.invited_at && (
+              <div className="mt-3 flex items-center gap-2">
+                <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
+                  {`${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email)}`}
+                </code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={async () => {
+                    const url = `${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email!)}`;
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Enlace copiado al portapapeles");
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
