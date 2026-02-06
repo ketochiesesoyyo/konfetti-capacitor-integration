@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Users, Loader2, Plus, ImageIcon, Copy, ExternalLink, Pencil, DollarSign, Percent, UserCheck } from "lucide-react";
+import { Calendar, Users, Loader2, Plus, ImageIcon, Copy, ExternalLink, Pencil, DollarSign, Percent, UserCheck, Filter, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -64,10 +64,19 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: "paid", label: "Pagado" },
 ];
 
+type StatusFilter = 'all' | 'active' | 'draft' | 'closed';
+type PaymentFilter = 'all' | 'pending' | 'partial' | 'paid';
+type DateFilter = 'all' | 'upcoming' | 'this_month' | 'next_month' | 'past';
+
 export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps) => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortColumn>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -192,7 +201,57 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
     return 'active';
   };
 
-  const sortedEvents = [...events].sort((a, b) => {
+  // Filter events
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
+      // Status filter
+      if (statusFilter !== 'all' && getEventStatus(event) !== statusFilter) {
+        return false;
+      }
+
+      // Payment filter
+      if (paymentFilter !== 'all') {
+        const eventPayment = event.payment_status || 'pending';
+        if (eventPayment !== paymentFilter) {
+          return false;
+        }
+      }
+
+      // Date filter
+      if (dateFilter !== 'all' && event.date) {
+        const eventDate = parseLocalDate(event.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+        switch (dateFilter) {
+          case 'upcoming':
+            if (eventDate < today) return false;
+            break;
+          case 'this_month':
+            if (eventDate < startOfMonth || eventDate > endOfMonth) return false;
+            break;
+          case 'next_month':
+            if (eventDate < startOfNextMonth || eventDate > endOfNextMonth) return false;
+            break;
+          case 'past':
+            if (eventDate >= today) return false;
+            break;
+        }
+      } else if (dateFilter !== 'all' && !event.date) {
+        // Events without date only show in 'all'
+        return false;
+      }
+
+      return true;
+    });
+  }, [events, statusFilter, paymentFilter, dateFilter]);
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortBy) {
       case 'name':
@@ -229,6 +288,22 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
     closed: events.filter(e => getEventStatus(e) === 'closed').length,
   };
 
+  const hasActiveFilters = statusFilter !== 'all' || paymentFilter !== 'all' || dateFilter !== 'all';
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setPaymentFilter('all');
+    setDateFilter('all');
+  };
+
+  const handleStatsCardClick = (status: StatusFilter) => {
+    if (statusFilter === status) {
+      setStatusFilter('all');
+    } else {
+      setStatusFilter(status);
+    }
+  };
+
   const copyToClipboard = (text: string, message: string) => {
     navigator.clipboard.writeText(text);
     toast.success(message);
@@ -236,12 +311,90 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      {/* Stats Cards - Clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard value={stats.total} label="Total Eventos" />
-        <StatsCard value={stats.active} label="Activos" valueColor="text-emerald-500" />
-        <StatsCard value={stats.draft} label="Borradores" valueColor="text-amber-500" />
-        <StatsCard value={stats.closed} label="Cerrados" valueColor="text-muted-foreground" />
+        <div
+          onClick={() => handleStatsCardClick('all')}
+          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'all' ? 'ring-2 ring-primary ring-offset-2' : 'hover:scale-[1.02]'}`}
+        >
+          <StatsCard value={stats.total} label="Total Eventos" />
+        </div>
+        <div
+          onClick={() => handleStatsCardClick('active')}
+          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'active' ? 'ring-2 ring-emerald-500 ring-offset-2' : 'hover:scale-[1.02]'}`}
+        >
+          <StatsCard value={stats.active} label="Activos" valueColor="text-emerald-500" />
+        </div>
+        <div
+          onClick={() => handleStatsCardClick('draft')}
+          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'draft' ? 'ring-2 ring-amber-500 ring-offset-2' : 'hover:scale-[1.02]'}`}
+        >
+          <StatsCard value={stats.draft} label="Borradores" valueColor="text-amber-500" />
+        </div>
+        <div
+          onClick={() => handleStatsCardClick('closed')}
+          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'closed' ? 'ring-2 ring-muted-foreground ring-offset-2' : 'hover:scale-[1.02]'}`}
+        >
+          <StatsCard value={stats.closed} label="Cerrados" valueColor="text-muted-foreground" />
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Filter className="w-4 h-4" />
+          <span>Filtros:</span>
+        </div>
+
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="active">Activos</SelectItem>
+            <SelectItem value="draft">Borradores</SelectItem>
+            <SelectItem value="closed">Cerrados</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Pago" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="pending">Pendiente</SelectItem>
+            <SelectItem value="partial">Parcial</SelectItem>
+            <SelectItem value="paid">Pagado</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
+          <SelectTrigger className="w-[150px] h-9">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las fechas</SelectItem>
+            <SelectItem value="upcoming">Próximos</SelectItem>
+            <SelectItem value="this_month">Este mes</SelectItem>
+            <SelectItem value="next_month">Próximo mes</SelectItem>
+            <SelectItem value="past">Pasados</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+            <X className="w-4 h-4 mr-1" />
+            Limpiar
+          </Button>
+        )}
+
+        {hasActiveFilters && (
+          <span className="text-sm text-muted-foreground ml-auto">
+            {filteredEvents.length} de {events.length} eventos
+          </span>
+        )}
       </div>
 
       {/* Events Table */}
