@@ -69,6 +69,8 @@ interface Contact {
   notes: string | null;
   company_id: string | null;
   created_at: string;
+  user_id: string | null;
+  invited_at: string | null;
   companies: { name: string } | null;
   events: { id: string }[];
 }

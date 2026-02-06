@@ -424,9 +424,9 @@ const CreateEvent = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (5MB)
-    if (file.size > 5242880) {
-      toast.error("Photo must be less than 5MB");
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
+      toast.error("Photo must be less than 10MB");
       return;
     }
 
@@ -454,9 +454,9 @@ const CreateEvent = () => {
         throw new Error("Invalid cropped image");
       }
 
-      // Validate size (5MB)
-      if (croppedBlob.size > 5242880) {
-        throw new Error("Cropped image is too large (max 5MB)");
+      // Validate size (10MB)
+      if (croppedBlob.size > 10485760) {
+        throw new Error("Cropped image is too large (max 10MB)");
       }
 
       setCropDialogOpen(false);
@@ -567,8 +567,8 @@ const CreateEvent = () => {
             throw new Error("Image file is empty");
           }
           
-          if (eventImage.size > 5242880) {
-            throw new Error("Image must be less than 5MB");
+          if (eventImage.size > 10485760) {
+            throw new Error("Image must be less than 10MB");
           }
           
           const fileExt = eventImage.name.split('.').pop() || 'jpg';

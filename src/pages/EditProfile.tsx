@@ -402,9 +402,9 @@ const EditProfile = () => {
 
     const file = e.target.files[0];
     
-    // Validate file size (5MB)
-    if (file.size > 5242880) {
-      toast.error("Photo must be less than 5MB");
+    // Validate file size (10MB)
+    if (file.size > 10485760) {
+      toast.error("Photo must be less than 10MB");
       return;
     }
 
