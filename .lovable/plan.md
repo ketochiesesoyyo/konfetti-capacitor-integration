@@ -1,76 +1,74 @@
 
-# Plan: Increase Photo Upload Limits from 5MB to 10MB
+# Plan: Stop Auto-Joining Host as Attendee on Event Creation
 
-## Overview
-This plan increases the client-side file size validation limit from 5MB to 10MB across all photo upload locations in the application. 
+## Summary
 
-**To your question**: Yes, this change applies to the **webapp only**. Since this is a Capacitor-based hybrid app, the same React code runs both in the web browser and inside the iOS/Android native shells. The upload limit is enforced by JavaScript validation, so the change will apply wherever the app runs (web, iOS app, Android app) - they all share the same codebase.
-
----
-
-## What Will Be Changed
-
-### Files to Modify
-
-| File | Current Limit | Change |
-|------|---------------|--------|
-| `src/pages/EditProfile.tsx` | 5MB (5242880 bytes) | → 10MB (10485760 bytes) |
-| `src/pages/CreateEvent.tsx` | 5MB (3 locations) | → 10MB (10485760 bytes) |
-| `src/components/admin/AdminEventCreationDialog.tsx` | 5MB | → 10MB (10485760 bytes) |
-
-### Files Already at 10MB (No Changes Needed)
-- `src/pages/EventDashboard.tsx` - Already 10MB ✓
-- `src/pages/AdminEventDashboard.tsx` - Already 10MB ✓
+When you create an event as admin, the system currently auto-adds you to `event_attendees`. This causes you to appear as a guest in your own events - both in the Admin Dashboard's guest list and in the native app's "Attending Events" list. This plan removes that auto-join behavior.
 
 ---
 
-## Build Error Fix (Required)
-There's a TypeScript error that needs to be fixed first:
+## What Will Change
 
-**Issue**: The `Contact` interface in `Admin.tsx` is missing `user_id` and `invited_at` fields that exist in `ClientsTab.tsx`.
-
-**Fix**: Add the missing fields to `Admin.tsx`:
-```typescript
-interface Contact {
-  // ... existing fields ...
-  user_id: string | null;      // Add this
-  invited_at: string | null;   // Add this
-}
-```
+| File | Change |
+|------|--------|
+| `src/components/admin/AdminEventCreationDialog.tsx` | Remove the "auto-join creator to event" code block (lines 492-498) |
 
 ---
 
 ## Technical Details
 
-### Changes in EditProfile.tsx (Line 406)
+### Current Behavior (Lines 492-498 in AdminEventCreationDialog.tsx)
 ```typescript
-// Before
-if (file.size > 5242880) {
-  toast.error("Photo must be less than 5MB");
-
-// After  
-if (file.size > 10485760) {
-  toast.error("Photo must be less than 10MB");
+// Auto-join creator to event
+await supabase
+  .from("event_attendees")
+  .insert({
+    event_id: event.id,
+    user_id: userId,
+  });
 ```
 
-### Changes in CreateEvent.tsx (Lines 428, 458, 570)
-Three validation points will be updated from 5MB to 10MB.
+### New Behavior
+This code block will be removed entirely. The host (you) will only be recorded as `created_by` in the `events` table, NOT as an attendee in `event_attendees`.
 
-### Changes in AdminEventCreationDialog.tsx (Line 240)
-```typescript
-// Before
-if (file.size > 5242880) {
-  toast.error("La foto debe ser menor a 5MB");
+---
 
-// After
-if (file.size > 10485760) {
-  toast.error("La foto debe ser menor a 10MB");
+## Why This Is Safe
+
+1. **Admin Dashboard Access**: The Admin Dashboard (`AdminEventDashboard.tsx`) already checks `created_by` to verify you own the event (line 161-162), not `event_attendees`.
+
+2. **Home Page Already Filters**: The `Home.tsx` page already filters out events where `created_by === user.id` (lines 114-117), so even if there were residual attendee records, they'd be hidden on web. Removing the auto-join makes this consistent across web and native.
+
+3. **Matchmaking Already Excludes Host**: The matchmaking logic already excludes `hostId` from the swipe pool (line 326-328 in `Matchmaking.tsx`), so you're already protected there. This change adds an extra layer of protection.
+
+4. **RLS Policies**: Your admin role grants access via `has_role(auth.uid(), 'admin')` in RLS policies, not via `event_attendees`.
+
+---
+
+## Additional Considerations
+
+### Existing Attendee Records
+You may have existing `event_attendees` records from events you've already created. These won't be automatically removed by this change. If you want to clean those up, I can provide a SQL query to run manually:
+
+```sql
+-- Optional cleanup: Remove host from their own events
+DELETE FROM event_attendees
+WHERE user_id IN (
+  SELECT created_by FROM events WHERE created_by = event_attendees.user_id AND event_id = event_attendees.event_id
+);
 ```
 
 ---
 
-## Summary
-- **4 files** will be modified
-- **6 validation points** will be updated from 5MB to 10MB
-- **1 build error** will be fixed (Contact interface mismatch)
-- Changes apply to web, iOS app, and Android app (shared codebase)
+## Files Modified
+- 1 file modified: `src/components/admin/AdminEventCreationDialog.tsx`
+
+---
+
+## What Won't Break
+
+- Admin Dashboard access to events (uses `created_by`)
+- Admin Dashboard guest list (will now show only real guests)
+- Matchmaking exclusion (already protected by `hostId` filter)
+- Native iOS/Android app (events you create won't appear in "Attending")
+- Chat functionality between host and guests (uses RLS policies based on event ownership)
