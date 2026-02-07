@@ -489,14 +489,6 @@ export const AdminEventCreationDialog = ({
         }
       }
 
-      // Auto-join creator to event
-      await supabase
-        .from("event_attendees")
-        .insert({
-          event_id: event.id,
-          user_id: userId,
-        });
-
       // Update the request with event_id and status
       if (request) {
         await supabase
