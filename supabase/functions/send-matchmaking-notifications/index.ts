@@ -7,6 +7,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const APP_URL = "https://konfetti.app";
+const UNSUBSCRIBE_URL = `${APP_URL}/auth`;
+
+// Notification types that are ALWAYS sent (regardless of preferences)
+const MANDATORY_NOTIFICATIONS = [
+  "guest_matchmaking_open",
+  "host_matchmaking_open",
+];
+
+// Notification types that respect user preferences
+const OPTIONAL_NOTIFICATIONS = [
+  "guest_24h_before_open",
+  "guest_24h_before_close", 
+  "guest_matchmaking_closed",
+  "guest_profile_reminder",
+  "host_24h_before_open",
+  "host_24h_before_close",
+  "host_matchmaking_closed",
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -45,7 +65,7 @@ serve(async (req) => {
 
     let totalSent = 0;
 
-    // 1. Check for events where matchmaking opens tomorrow (24h before)
+    // 1. Check for events where matchmaking opens tomorrow (24h before) - OPTIONAL
     const { data: events24hBeforeOpen } = await supabase
       .from("events")
       .select("*, profiles!events_created_by_fkey(name, user_id)")
@@ -56,13 +76,20 @@ serve(async (req) => {
       console.log(`Found ${events24hBeforeOpen.length} events opening in 24h`);
       
       for (const event of events24hBeforeOpen) {
-        // Send to guests
+        // Send to guests (check preferences)
         const { data: attendees } = await supabase
           .from("event_attendees")
-          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id)")
+          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id, email_match_notifications)")
           .eq("event_id", event.id);
 
         for (const attendee of attendees || []) {
+          // Check user preferences for optional notifications
+          const profile = attendee.profiles?.[0];
+          if (!profile?.email_match_notifications) {
+            console.log(`[SKIP] User ${attendee.user_id} has email notifications disabled`);
+            continue;
+          }
+
           const alreadySent = await checkIfSent(supabase, event.id, attendee.user_id, "guest_24h_before_open");
           if (alreadySent) continue;
 
@@ -70,7 +97,7 @@ serve(async (req) => {
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
           const html = createGuest24hBeforeOpenEmail(
-            attendee.profiles[0]?.name || 'Guest',
+            profile?.name || 'Guest',
             event.name,
             event.profiles[0]?.name || 'Host',
             userLang,
@@ -82,27 +109,35 @@ serve(async (req) => {
           totalSent++;
         }
 
-        // Send to host
-        const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_24h_before_open");
-        if (!alreadySentHost) {
-          const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
-          const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
+        // Send to host (check preferences)
+        const { data: hostProfile } = await supabase
+          .from("profiles")
+          .select("email_match_notifications")
+          .eq("user_id", event.created_by)
+          .single();
 
-          const html = createHost24hBeforeOpenEmail(
-            event.profiles[0]?.name || 'Host',
-            event.name,
-            hostLang,
-            event.id
-          );
+        if (hostProfile?.email_match_notifications) {
+          const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_24h_before_open");
+          if (!alreadySentHost) {
+            const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
+            const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_open");
-          await logNotification(supabase, event.id, event.created_by, "host_24h_before_open");
-          totalSent++;
+            const html = createHost24hBeforeOpenEmail(
+              event.profiles[0]?.name || 'Host',
+              event.name,
+              hostLang,
+              event.id
+            );
+
+            await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_open");
+            await logNotification(supabase, event.id, event.created_by, "host_24h_before_open");
+            totalSent++;
+          }
         }
       }
     }
 
-    // 2. Check for events where matchmaking opens today
+    // 2. Check for events where matchmaking opens today - MANDATORY (always sent)
     const { data: eventsOpeningToday } = await supabase
       .from("events")
       .select("*, profiles!events_created_by_fkey(name, user_id)")
@@ -110,10 +145,10 @@ serve(async (req) => {
       .eq("status", "active");
 
     if (eventsOpeningToday && eventsOpeningToday.length > 0) {
-      console.log(`Found ${eventsOpeningToday.length} events opening today`);
+      console.log(`Found ${eventsOpeningToday.length} events opening today (MANDATORY notifications)`);
       
       for (const event of eventsOpeningToday) {
-        // Send to guests
+        // Send to guests - ALWAYS (regardless of preferences)
         const { data: attendees } = await supabase
           .from("event_attendees")
           .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id)")
@@ -139,7 +174,7 @@ serve(async (req) => {
           totalSent++;
         }
 
-        // Send to host
+        // Send to host - ALWAYS
         const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_matchmaking_open");
         if (!alreadySentHost) {
           const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
@@ -159,7 +194,7 @@ serve(async (req) => {
       }
     }
 
-    // 3. Check for events closing tomorrow (24h before)
+    // 3. Check for events closing tomorrow (24h before) - OPTIONAL
     const { data: eventsClosingTomorrow } = await supabase
       .from("events")
       .select("*, profiles!events_created_by_fkey(name, user_id)")
@@ -170,13 +205,19 @@ serve(async (req) => {
       console.log(`Found ${eventsClosingTomorrow.length} events closing in 24h`);
       
       for (const event of eventsClosingTomorrow) {
-        // Send to guests
+        // Send to guests (check preferences)
         const { data: attendees } = await supabase
           .from("event_attendees")
-          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id)")
+          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id, email_match_notifications)")
           .eq("event_id", event.id);
 
         for (const attendee of attendees || []) {
+          const profile = attendee.profiles?.[0];
+          if (!profile?.email_match_notifications) {
+            console.log(`[SKIP] User ${attendee.user_id} has email notifications disabled`);
+            continue;
+          }
+
           const alreadySent = await checkIfSent(supabase, event.id, attendee.user_id, "guest_24h_before_close");
           if (alreadySent) continue;
 
@@ -184,7 +225,7 @@ serve(async (req) => {
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
           const html = createGuest24hBeforeCloseEmail(
-            attendee.profiles[0]?.name || 'Guest',
+            profile?.name || 'Guest',
             event.name,
             event.profiles[0]?.name || 'Host',
             userLang,
@@ -196,27 +237,35 @@ serve(async (req) => {
           totalSent++;
         }
 
-        // Send to host
-        const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_24h_before_close");
-        if (!alreadySentHost) {
-          const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
-          const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
+        // Send to host (check preferences)
+        const { data: hostProfile } = await supabase
+          .from("profiles")
+          .select("email_match_notifications")
+          .eq("user_id", event.created_by)
+          .single();
 
-          const html = createHost24hBeforeCloseEmail(
-            event.profiles[0]?.name || 'Host',
-            event.name,
-            hostLang,
-            event.id
-          );
+        if (hostProfile?.email_match_notifications) {
+          const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_24h_before_close");
+          if (!alreadySentHost) {
+            const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
+            const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_close");
-          await logNotification(supabase, event.id, event.created_by, "host_24h_before_close");
-          totalSent++;
+            const html = createHost24hBeforeCloseEmail(
+              event.profiles[0]?.name || 'Host',
+              event.name,
+              hostLang,
+              event.id
+            );
+
+            await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_24h_before_close");
+            await logNotification(supabase, event.id, event.created_by, "host_24h_before_close");
+            totalSent++;
+          }
         }
       }
     }
 
-    // 4. Check for events closing today
+    // 4. Check for events closing today - OPTIONAL
     const { data: eventsClosingToday } = await supabase
       .from("events")
       .select("*, profiles!events_created_by_fkey(name, user_id)")
@@ -227,13 +276,19 @@ serve(async (req) => {
       console.log(`Found ${eventsClosingToday.length} events closing today`);
       
       for (const event of eventsClosingToday) {
-        // Send to guests
+        // Send to guests (check preferences)
         const { data: attendees } = await supabase
           .from("event_attendees")
-          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id)")
+          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id, email_match_notifications)")
           .eq("event_id", event.id);
 
         for (const attendee of attendees || []) {
+          const profile = attendee.profiles?.[0];
+          if (!profile?.email_match_notifications) {
+            console.log(`[SKIP] User ${attendee.user_id} has email notifications disabled`);
+            continue;
+          }
+
           const alreadySent = await checkIfSent(supabase, event.id, attendee.user_id, "guest_matchmaking_closed");
           if (alreadySent) continue;
 
@@ -241,7 +296,7 @@ serve(async (req) => {
           const userLang = authUser?.user?.user_metadata?.language || "en";
 
           const html = createGuestMatchmakingClosedEmail(
-            attendee.profiles[0]?.name || 'Guest',
+            profile?.name || 'Guest',
             event.name,
             event.profiles[0]?.name || 'Host',
             userLang
@@ -252,21 +307,29 @@ serve(async (req) => {
           totalSent++;
         }
 
-        // Send to host
-        const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_matchmaking_closed");
-        if (!alreadySentHost) {
-          const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
-          const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
+        // Send to host (check preferences)
+        const { data: hostProfile } = await supabase
+          .from("profiles")
+          .select("email_match_notifications")
+          .eq("user_id", event.created_by)
+          .single();
 
-          const html = createHostMatchmakingClosedEmail(
-            event.profiles[0]?.name || 'Host',
-            event.name,
-            hostLang
-          );
+        if (hostProfile?.email_match_notifications) {
+          const alreadySentHost = await checkIfSent(supabase, event.id, event.created_by, "host_matchmaking_closed");
+          if (!alreadySentHost) {
+            const { data: hostAuthUser } = await supabase.auth.admin.getUserById(event.created_by);
+            const hostLang = hostAuthUser?.user?.user_metadata?.language || "en";
 
-          await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_matchmaking_closed");
-          await logNotification(supabase, event.id, event.created_by, "host_matchmaking_closed");
-          totalSent++;
+            const html = createHostMatchmakingClosedEmail(
+              event.profiles[0]?.name || 'Host',
+              event.name,
+              hostLang
+            );
+
+            await sendEmail(resend, hostAuthUser?.user?.email!, html, event.name, hostLang, "host_matchmaking_closed");
+            await logNotification(supabase, event.id, event.created_by, "host_matchmaking_closed");
+            totalSent++;
+          }
         }
 
         // Update event status to closed
@@ -274,6 +337,60 @@ serve(async (req) => {
           .from("events")
           .update({ status: "closed" })
           .eq("id", event.id);
+      }
+    }
+
+    // 5. Profile completion reminders - OPTIONAL
+    // Check for users who joined events but haven't completed their profile
+    // Send reminder 3 days before matchmaking opens
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    const { data: eventsOpeningIn3Days } = await supabase
+      .from("events")
+      .select("*, profiles!events_created_by_fkey(name, user_id)")
+      .eq("matchmaking_start_date", threeDaysFromNow)
+      .eq("status", "active");
+
+    if (eventsOpeningIn3Days && eventsOpeningIn3Days.length > 0) {
+      console.log(`Found ${eventsOpeningIn3Days.length} events opening in 3 days - checking for incomplete profiles`);
+      
+      for (const event of eventsOpeningIn3Days) {
+        const { data: attendees } = await supabase
+          .from("event_attendees")
+          .select("user_id, profiles!event_attendees_user_id_fkey(name, user_id, photos, gender, interested_in, email_match_notifications)")
+          .eq("event_id", event.id);
+
+        for (const attendee of attendees || []) {
+          const profile = attendee.profiles?.[0];
+          
+          // Check if profile is incomplete (no photos, gender, or interested_in)
+          const isIncomplete = !profile?.photos?.length || !profile?.gender || !profile?.interested_in;
+          
+          if (!isIncomplete) continue;
+          
+          // Check preferences
+          if (!profile?.email_match_notifications) {
+            console.log(`[SKIP] User ${attendee.user_id} has email notifications disabled`);
+            continue;
+          }
+
+          const alreadySent = await checkIfSent(supabase, event.id, attendee.user_id, "guest_profile_reminder");
+          if (alreadySent) continue;
+
+          const { data: authUser } = await supabase.auth.admin.getUserById(attendee.user_id);
+          const userLang = authUser?.user?.user_metadata?.language || "en";
+
+          const html = createProfileReminderEmail(
+            profile?.name || 'Guest',
+            event.name,
+            event.profiles[0]?.name || 'Host',
+            userLang
+          );
+
+          await sendEmail(resend, authUser?.user?.email!, html, event.name, userLang, "profile_reminder");
+          await logNotification(supabase, event.id, attendee.user_id, "guest_profile_reminder");
+          totalSent++;
+        }
       }
     }
 
@@ -363,14 +480,102 @@ async function sendEmail(
       en: `💫 Matchmaking for ${eventName} is now closed — thank you for hosting with konfetti.app`,
       es: `💫 El matchmaking de ${eventName} ha cerrado — gracias por organizar con konfetti.app`,
     },
+    "profile_reminder": {
+      en: `📸 Complete your profile before ${eventName} matchmaking opens!`,
+      es: `📸 ¡Completa tu perfil antes de que abra el matchmaking de ${eventName}!`,
+    },
   };
 
+  const subjectLine = subjects[type]?.[language] || subjects[type]?.["en"] || `Update for ${eventName}`;
+  
   await resend.emails.send({
     from: "konfetti.app <hello@konfetti.app>",
     to: [to],
-    subject: subjects[type]?.[language] || subjects[type]?.["en"] || `Update for ${eventName}`,
+    subject: subjectLine,
     html,
   });
+}
+
+// Profile completion reminder email template
+function createProfileReminderEmail(guestName: string, eventName: string, hostName: string, lang: string): string {
+  const content = lang === "es" ? {
+    heading: `¡Completa tu perfil antes de que abra el matchmaking de ${eventName}!`,
+    p1: `El matchmaking para ${eventName} abrirá en solo 3 días, pero hemos notado que tu perfil aún no está completo.`,
+    p2: `Para que otros invitados puedan encontrarte y conectar contigo, asegúrate de:`,
+    item1: `Subir al menos una foto`,
+    item2: `Seleccionar tu género`,
+    item3: `Indicar en quién estás interesado/a`,
+    p3: `¡Un perfil completo aumenta significativamente tus posibilidades de hacer matches increíbles!`,
+    cta: `Completar Mi Perfil`,
+    closing: `Nos vemos pronto,`,
+    signature: `${hostName} y konfetti.app`,
+    unsubscribe: `¿No quieres recibir estos correos?`,
+    unsubscribeLink: `Administrar preferencias`,
+  } : {
+    heading: `Complete your profile before ${eventName} matchmaking opens!`,
+    p1: `Matchmaking for ${eventName} opens in just 3 days, but we noticed your profile isn't complete yet.`,
+    p2: `To help other guests find and connect with you, make sure to:`,
+    item1: `Upload at least one photo`,
+    item2: `Select your gender`,
+    item3: `Choose who you're interested in`,
+    p3: `A complete profile significantly increases your chances of making amazing matches!`,
+    cta: `Complete My Profile`,
+    closing: `See you soon,`,
+    signature: `${hostName} & konfetti.app`,
+    unsubscribe: `Don't want these emails?`,
+    unsubscribeLink: `Manage preferences`,
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">📸 ${content.heading}</h1>
+      <p style="margin-bottom: 16px;">Hi ${guestName},</p>
+      <p style="margin-bottom: 16px;">${content.p1}</p>
+      <p style="margin-bottom: 8px;">${content.p2}</p>
+      <ul style="margin-bottom: 16px; padding-left: 20px;">
+        <li style="margin-bottom: 4px;">${content.item1}</li>
+        <li style="margin-bottom: 4px;">${content.item2}</li>
+        <li style="margin-bottom: 4px;">${content.item3}</li>
+      </ul>
+      <p style="margin-bottom: 24px;">${content.p3}</p>
+      <a href="https://konfetti.app/edit-profile" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <p style="margin-bottom: 8px;">${content.closing}</p>
+      <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+      <p style="color: #999; font-size: 12px; text-align: center;">
+        ${content.unsubscribe} <a href="https://konfetti.app/auth" style="color: #9b87f5;">${content.unsubscribeLink}</a>
+      </p>
+    </body>
+    </html>
+  `;
+}
+
+// Helper function to create unsubscribe footer
+function createUnsubscribeFooter(lang: string, isMandatory: boolean = false): string {
+  const content = lang === "es" ? {
+    unsubscribe: isMandatory 
+      ? "Este es un correo importante sobre tu evento. Para administrar otras notificaciones:"
+      : "¿No quieres recibir estos correos?",
+    link: "Administrar preferencias",
+  } : {
+    unsubscribe: isMandatory 
+      ? "This is an important email about your event. To manage other notifications:"
+      : "Don't want these emails?",
+    link: "Manage preferences",
+  };
+
+  return `
+    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+    <p style="color: #999; font-size: 12px; text-align: center;">
+      ${content.unsubscribe} <a href="https://konfetti.app/auth" style="color: #9b87f5;">${content.link}</a>
+    </p>
+  `;
 }
 
 // HTML Email Templates
@@ -406,9 +611,10 @@ function createGuest24hBeforeOpenEmail(guestName: string, eventName: string, hos
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 24px;">${content.p3}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;
@@ -433,6 +639,7 @@ function createGuestMatchmakingOpenEmail(guestName: string, eventName: string, h
     signature: `${hostName} & konfetti.app`,
   };
 
+  // This is a MANDATORY email, so we use different footer text
   return `
     <!DOCTYPE html>
     <html>
@@ -446,9 +653,10 @@ function createGuestMatchmakingOpenEmail(guestName: string, eventName: string, h
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 24px;">${content.p3}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      ${createUnsubscribeFooter(lang, true)}
     </body>
     </html>
   `;
@@ -486,9 +694,10 @@ function createGuest24hBeforeCloseEmail(guestName: string, eventName: string, ho
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 24px;">${content.p3}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/matchmaking?event=${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;
@@ -526,6 +735,7 @@ function createGuestMatchmakingClosedEmail(guestName: string, eventName: string,
       <p style="margin-bottom: 16px;">${content.p3}</p>
       <p style="margin-bottom: 16px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;
@@ -560,9 +770,10 @@ function createHost24hBeforeOpenEmail(hostName: string, eventName: string, lang:
       <p style="margin-bottom: 16px;">Hi ${hostName},</p>
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 24px;">${content.p2}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.team}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;
@@ -587,6 +798,7 @@ function createHostMatchmakingOpenEmail(hostName: string, eventName: string, lan
     team: `The konfetti.app team`,
   };
 
+  // This is a MANDATORY email for hosts
   return `
     <!DOCTYPE html>
     <html>
@@ -600,9 +812,10 @@ function createHostMatchmakingOpenEmail(hostName: string, eventName: string, lan
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 24px;">${content.p3}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.team}</p>
+      ${createUnsubscribeFooter(lang, true)}
     </body>
     </html>
   `;
@@ -640,9 +853,10 @@ function createHost24hBeforeCloseEmail(hostName: string, eventName: string, lang
       <p style="margin-bottom: 16px;">${content.p1}</p>
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 24px;">${content.p3}</p>
-      <a href="https://konfetti-capacitor-integration.lovable.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
+      <a href="https://konfetti.app/event-dashboard/${eventId}" style="display: inline-block; background-color: #9b87f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 24px;">${content.cta}</a>
       <p style="margin-bottom: 8px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.team}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;
@@ -677,6 +891,7 @@ function createHostMatchmakingClosedEmail(hostName: string, eventName: string, l
       <p style="margin-bottom: 16px;">${content.p2}</p>
       <p style="margin-bottom: 16px;">${content.closing}</p>
       <p style="color: #666; font-size: 14px;">${content.signature}</p>
+      ${createUnsubscribeFooter(lang)}
     </body>
     </html>
   `;

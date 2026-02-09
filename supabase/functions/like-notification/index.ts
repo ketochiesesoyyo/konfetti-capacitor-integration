@@ -148,6 +148,10 @@ async function canSendLikeEmail(
 }
 
 function createLikeEmail(userName: string, eventName: string, eventDate: string, language: string): string {
+  const unsubscribeFooter = language === 'es' 
+    ? `<hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"><p style="color: #999; font-size: 12px; text-align: center;">¿No quieres recibir estos correos? <a href="https://konfetti.app/auth" style="color: #9b87f5;">Administrar preferencias</a></p>`
+    : `<hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"><p style="color: #999; font-size: 12px; text-align: center;">Don't want these emails? <a href="https://konfetti.app/auth" style="color: #9b87f5;">Manage preferences</a></p>`;
+
   if (language === 'es') {
     return `
       <!DOCTYPE html>
@@ -177,6 +181,7 @@ function createLikeEmail(userName: string, eventName: string, eventDate: string,
             </div>
             <div class="footer">
               <p>© 2025 Konfetti. All rights reserved.</p>
+              ${unsubscribeFooter}
             </div>
           </div>
         </body>
@@ -212,6 +217,7 @@ function createLikeEmail(userName: string, eventName: string, eventDate: string,
           </div>
           <div class="footer">
             <p>© 2025 Konfetti. All rights reserved.</p>
+            ${unsubscribeFooter}
           </div>
         </div>
       </body>
