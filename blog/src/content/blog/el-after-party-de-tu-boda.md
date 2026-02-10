@@ -1,7 +1,7 @@
 ---
 title: "El After Party: Donde Realmente Nacen las Mejores Conexiones"
 description: "Las mejores historias de tu boda no salen de la ceremonia. Salen del after a las 2am. Así se diseña uno que genere conexiones reales."
-pubDate: 2026-02-24
+pubDate: 2026-02-18
 category: "parejas"
 tags: ["after party", "fiesta", "conexiones", "informal"]
 author: "Equipo Konfetti"

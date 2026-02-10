@@ -1,7 +1,7 @@
 ---
 title: "Cómo Monetizar la Experiencia Social en Bodas: Guía para Planners"
 description: "Convierte la conexión entre invitados en un servicio premium con precio y valor claro. Nueva fuente de ingreso para wedding planners."
-pubDate: 2026-03-23
+pubDate: 2026-03-06
 category: "wedding-planners"
 tags: ["ingresos", "negocio", "experiencia social", "servicios premium"]
 author: "Equipo Konfetti"

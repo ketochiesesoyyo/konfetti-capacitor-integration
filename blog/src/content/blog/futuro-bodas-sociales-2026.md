@@ -1,7 +1,7 @@
 ---
 title: "El Futuro de las Bodas Es Social: De Bodas Bonitas a Bodas Memorables"
 description: "Las parejas ya no quieren bodas perfectas en fotos. Quieren bodas que sus invitados recuerden. Así cambia todo en 2026."
-pubDate: 2026-04-16
+pubDate: 2026-03-20
 category: "tendencias"
 tags: ["futuro", "tendencias", "bodas sociales", "predicciones"]
 author: "Equipo Konfetti"

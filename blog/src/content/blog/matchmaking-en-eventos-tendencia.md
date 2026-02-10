@@ -1,7 +1,7 @@
 ---
 title: "Las Conferencias ya Hacen Matchmaking entre Asistentes. Las Bodas Están Siguiendo el Ejemplo."
 description: "El matchmaking ya es estándar en conferencias. Ahora las bodas adoptan la misma lógica para conectar invitados. Así funciona."
-pubDate: 2026-04-13
+pubDate: 2026-03-18
 category: "tendencias"
 tags: ["matchmaking", "networking", "eventos", "tendencia", "innovación"]
 author: "Equipo Konfetti"

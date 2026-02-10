@@ -1,7 +1,7 @@
 ---
 title: "Cómo Vender una Boda Divertida (No Solo Bonita)"
 description: "Las parejas quieren diversión, los planners venden estética. Quien cierre esa brecha va a dominar su mercado. Así se hace."
-pubDate: 2026-03-06
+pubDate: 2026-02-24
 category: "wedding-planners"
 tags: ["wedding planners", "ventas", "diversión", "propuesta de valor"]
 author: "Equipo Konfetti"

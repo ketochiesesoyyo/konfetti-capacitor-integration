@@ -1,7 +1,7 @@
 ---
 title: "200 Desconocidos, un Salón y el Mejor Día de Alguien: la Alquimia Social de las Bodas"
 description: "200 personas que no se conocen pasan 8 horas juntas celebrando. Qué hace que funcione y cómo aprovechar ese potencial al máximo."
-pubDate: 2026-04-09
+pubDate: 2026-03-16
 category: "historias"
 tags: ["reflexión", "bodas", "desconocidos", "conexión humana"]
 author: "Equipo Konfetti"

@@ -1,7 +1,7 @@
 ---
 title: "Gen Z y Millennials Quieren Verse en Persona (Pero Necesitan un Empujón Digital)"
 description: "La generación que creció online prefiere conocer gente en persona. La clave: tecnología que facilite lo presencial, no que lo reemplace."
-pubDate: 2026-04-02
+pubDate: 2026-03-12
 category: "tendencias"
 tags: ["generación Z", "millennials", "en persona", "digital", "tendencias"]
 author: "Equipo Konfetti"

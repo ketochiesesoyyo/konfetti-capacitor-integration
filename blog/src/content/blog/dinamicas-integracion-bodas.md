@@ -1,7 +1,7 @@
 ---
 title: "6 Dinámicas de Integración para Bodas que No Dan Pena Ajena"
 description: "Olvida los juegos cringe. Estas dinámicas para bodas rompen el hielo sin forzar a nadie y generan conexiones reales entre invitados."
-pubDate: 2026-03-09
+pubDate: 2026-02-26
 category: "wedding-planners"
 tags: ["dinámicas", "integración", "icebreakers", "wedding planners"]
 author: "Equipo Konfetti"

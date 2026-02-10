@@ -62,8 +62,14 @@ const fullTitle = title === 'Blog Konfetti' ? title : `${title} | Blog Konfetti`
 		<!-- RSS -->
 		<link rel="alternate" type="application/rss+xml" title="Blog Konfetti" href="/rss.xml" />
 
-		<!-- Google Analytics placeholder -->
-		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
+		<!-- Google Analytics (GA4) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-FK6LHTG4M1"></script>
+		<script is:inline>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'G-FK6LHTG4M1');
+		</script>
 	</head>
 	<body class="min-h-screen flex flex-col bg-white">
 		<Header />

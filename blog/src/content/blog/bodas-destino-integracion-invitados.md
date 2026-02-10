@@ -1,7 +1,7 @@
 ---
 title: "Bodas Destino: Cómo Lograr que tus Invitados Se Integren de Verdad"
 description: "Tu boda destino puede ser una comunidad o vacaciones paralelas con una ceremonia en medio. La diferencia es la integración."
-pubDate: 2026-02-27
+pubDate: 2026-02-20
 category: "parejas"
 tags: ["bodas destino", "integración", "actividades", "viaje"]
 author: "Equipo Konfetti"

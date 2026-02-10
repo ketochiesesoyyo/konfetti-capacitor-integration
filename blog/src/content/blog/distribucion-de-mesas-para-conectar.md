@@ -1,7 +1,7 @@
 ---
 title: "Distribución de Mesas: El Arte de Mezclar Invitados para Crear Conexiones"
 description: "La distribución de mesas puede hacer o deshacer tu boda. Un framework para mezclar grupos y generar conexiones reales."
-pubDate: 2026-02-13
+pubDate: 2026-02-12
 category: "parejas"
 tags: ["mesas", "distribución", "invitados", "conexiones"]
 author: "Equipo Konfetti"

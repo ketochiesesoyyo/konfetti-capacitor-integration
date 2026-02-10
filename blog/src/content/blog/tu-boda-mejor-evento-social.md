@@ -1,7 +1,7 @@
 ---
 title: "Tu Boda Como el Mejor Evento Social del Año"
 description: "Deja de planear para la cámara y empieza a diseñar para la gente. Así se convierte tu boda en EL evento del año."
-pubDate: 2026-02-17
+pubDate: 2026-02-14
 category: "parejas"
 tags: ["evento social", "novios", "invitados", "experiencia"]
 author: "Equipo Konfetti"

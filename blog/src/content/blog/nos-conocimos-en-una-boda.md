@@ -1,7 +1,7 @@
 ---
 title: "'Nos Conocimos en una Boda': Tres Historias de Conexiones que Empiezan Celebrando"
 description: "Amor, amistad y reconexión: tres historias reales que demuestran por qué las bodas son el mejor lugar para conocer gente."
-pubDate: 2026-04-06
+pubDate: 2026-03-14
 category: "historias"
 tags: ["historias", "amor", "amistad", "bodas", "conexiones"]
 author: "Equipo Konfetti"

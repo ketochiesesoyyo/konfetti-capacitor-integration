@@ -1,7 +1,7 @@
 ---
 title: "Del Swipe al Encuentro Real: Por Qué el Dating Vuelve a los Eventos"
 description: "La fatiga del swipe es real. Conocer gente en eventos con contexto compartido está reemplazando a las dating apps. Esto es lo que cambió."
-pubDate: 2026-03-27
+pubDate: 2026-03-08
 category: "tendencias"
 tags: ["dating", "swipe", "eventos", "tendencias", "en persona"]
 author: "Equipo Konfetti"

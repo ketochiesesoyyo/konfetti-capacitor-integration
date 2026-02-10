@@ -1,7 +1,7 @@
 ---
 title: "La Mesa de Solteros: El Error Más Común en Bodas (y 5 Alternativas)"
 description: "Agrupar solteros por estado civil no genera química. Te explicamos por qué falla y qué hacer en su lugar para mejorar la dinámica social."
-pubDate: 2026-03-16
+pubDate: 2026-03-02
 category: "wedding-planners"
 tags: ["mesas", "solteros", "seating", "alternativas"]
 author: "Equipo Konfetti"

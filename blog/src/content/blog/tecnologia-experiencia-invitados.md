@@ -1,7 +1,7 @@
 ---
 title: "El Tech Stack que Todo Wedding Planner Necesita en 2026"
 description: "Desde RSVPs inteligentes hasta conexión social entre invitados: las herramientas que separan a un planner promedio de uno excepcional."
-pubDate: 2026-03-13
+pubDate: 2026-02-28
 category: "wedding-planners"
 tags: ["tecnología", "herramientas", "invitados", "wedding planners"]
 author: "Equipo Konfetti"

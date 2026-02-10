@@ -1,7 +1,7 @@
 ---
 title: "Cómo Diseñar el Flow de una Boda: Guía de Energía de Ceremonia a After"
 description: "Una boda no es una lista de actividades, es una curva de energía. Aprende a diseñar cada fase para que la fiesta no pierda momentum."
-pubDate: 2026-03-20
+pubDate: 2026-03-04
 category: "wedding-planners"
 tags: ["flow", "timeline", "energía", "diseño de eventos"]
 author: "Equipo Konfetti"

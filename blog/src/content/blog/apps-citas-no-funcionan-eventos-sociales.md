@@ -1,7 +1,7 @@
 ---
 title: "Tinder en una Boda No Funciona: Por Qué las Apps de Citas Fallan en Eventos Sociales"
 description: "Las apps de citas no sirven en bodas. Sin contexto, sin timing y con opciones infinitas, fallan donde más importa conectar."
-pubDate: 2026-03-30
+pubDate: 2026-03-10
 category: "tendencias"
 tags: ["apps de citas", "bumble", "tinder", "contexto social", "eventos"]
 author: "Equipo Konfetti"

@@ -1,7 +1,7 @@
 ---
 title: "Lo que tus Invitados Solteros Piensan (Pero Jamás te Van a Decir)"
 description: "Tus invitados solteros no te lo dirán, pero ir solos a tu boda puede ser incómodo. Esto es lo que piensan y cómo cambiarlo."
-pubDate: 2026-02-20
+pubDate: 2026-02-16
 category: "parejas"
 tags: ["solteros", "invitados", "empatía", "experiencia"]
 author: "Equipo Konfetti"

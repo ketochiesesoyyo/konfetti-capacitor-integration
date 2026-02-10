@@ -1,7 +1,7 @@
 ---
 title: "Guest Experience: El Diferenciador que tus Competidores Están Ignorando"
 description: "Todos los wedding planners venden estética. El que venda guest experience va a capturar al cliente que paga más. Así se hace."
-pubDate: 2026-03-02
+pubDate: 2026-02-22
 category: "wedding-planners"
 tags: ["wedding planners", "diferenciador", "guest experience", "negocio"]
 author: "Equipo Konfetti"
