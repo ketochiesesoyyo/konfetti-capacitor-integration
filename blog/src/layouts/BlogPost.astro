@@ -121,15 +121,8 @@ const jsonLd = {
 			/>
 		)}
 
-		<!-- Layout: ToC + Content -->
+		<!-- Layout: Content + ToC -->
 		<div class="lg:flex lg:gap-10">
-			<!-- Sidebar ToC (desktop) -->
-			<aside class="hidden lg:block lg:w-64 flex-shrink-0">
-				<div class="sticky top-24">
-					<TableOfContents />
-				</div>
-			</aside>
-
 			<!-- Article content -->
 			<div class="flex-1 min-w-0 prose-lg">
 				<slot />
@@ -152,6 +145,13 @@ const jsonLd = {
 					<CallToAction />
 				</div>
 			</div>
+
+			<!-- Sidebar ToC (desktop) -->
+			<aside class="hidden lg:block lg:w-64 flex-shrink-0">
+				<div class="sticky top-24">
+					<TableOfContents />
+				</div>
+			</aside>
 		</div>
 	</article>
 </BaseLayout>
