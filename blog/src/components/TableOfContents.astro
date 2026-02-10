@@ -9,11 +9,11 @@
 
 <script>
 	function buildToc() {
-		const article = document.querySelector('article');
+		const content = document.querySelector('article .prose-lg');
 		const tocList = document.getElementById('toc-list');
-		if (!article || !tocList) return;
+		if (!content || !tocList) return;
 
-		const headings = article.querySelectorAll('h2, h3');
+		const headings = content.querySelectorAll(':scope > h2, :scope > h3');
 		if (headings.length === 0) {
 			const toc = document.getElementById('toc');
 			if (toc) toc.style.display = 'none';
