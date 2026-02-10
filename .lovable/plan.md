@@ -1,74 +1,50 @@
 
-# Plan: Stop Auto-Joining Host as Attendee on Event Creation
 
-## Summary
+# Fix: Password Reset Email Missing Button
 
-When you create an event as admin, the system currently auto-adds you to `event_attendees`. This causes you to appear as a guest in your own events - both in the Admin Dashboard's guest list and in the native app's "Attending Events" list. This plan removes that auto-join behavior.
+## Problem
 
----
+The password reset email shows the text "Click the button below to choose a new one:" but there is no button. This is because no custom email template is configured for password recovery -- the system default is not rendering the link properly.
 
-## What Will Change
+## Solution
 
-| File | Change |
-|------|--------|
-| `src/components/admin/AdminEventCreationDialog.tsx` | Remove the "auto-join creator to event" code block (lines 492-498) |
+Add a custom HTML email template for the recovery flow in `supabase/config.toml`. This template will include:
 
----
+- Konfetti branding (logo, colors)
+- A visible, styled "Reset Password" button linking to `{{ .ConfirmationURL }}`
+- Bilingual support (English primary, with Spanish note if desired)
+- Consistent styling with your other notification emails
 
 ## Technical Details
 
-### Current Behavior (Lines 492-498 in AdminEventCreationDialog.tsx)
-```typescript
-// Auto-join creator to event
-await supabase
-  .from("event_attendees")
-  .insert({
-    event_id: event.id,
-    user_id: userId,
-  });
-```
+### File: `supabase/config.toml`
 
-### New Behavior
-This code block will be removed entirely. The host (you) will only be recorded as `created_by` in the `events` table, NOT as an attendee in `event_attendees`.
+Add an `[auth.email.template.recovery]` section with:
+- `subject`: "Reset your password"
+- `content_path`: pointing to a local HTML template file (e.g., `./supabase/templates/recovery.html`)
 
----
+### File: `supabase/templates/recovery.html` (new)
 
-## Why This Is Safe
+A branded HTML email template containing:
+- Konfetti logo header
+- "Reset your password" heading
+- Explanatory text
+- A prominent styled button with `href="{{ .ConfirmationURL }}"`
+- Fallback plain-text link below the button
+- "If you didn't request this..." disclaimer
+- Footer matching the style of your other email notifications
 
-1. **Admin Dashboard Access**: The Admin Dashboard (`AdminEventDashboard.tsx`) already checks `created_by` to verify you own the event (line 161-162), not `event_attendees`.
+### Key Variable
 
-2. **Home Page Already Filters**: The `Home.tsx` page already filters out events where `created_by === user.id` (lines 114-117), so even if there were residual attendee records, they'd be hidden on web. Removing the auto-join makes this consistent across web and native.
+The critical piece is `{{ .ConfirmationURL }}` -- this is the Supabase-provided magic link that authenticates the user and redirects them to `/reset-password` (as configured in your `Auth.tsx` forgot password handler with `redirectTo: window.location.origin/reset-password`).
 
-3. **Matchmaking Already Excludes Host**: The matchmaking logic already excludes `hostId` from the swipe pool (line 326-328 in `Matchmaking.tsx`), so you're already protected there. This change adds an extra layer of protection.
+## What Won't Change
 
-4. **RLS Policies**: Your admin role grants access via `has_role(auth.uid(), 'admin')` in RLS policies, not via `event_attendees`.
-
----
-
-## Additional Considerations
-
-### Existing Attendee Records
-You may have existing `event_attendees` records from events you've already created. These won't be automatically removed by this change. If you want to clean those up, I can provide a SQL query to run manually:
-
-```sql
--- Optional cleanup: Remove host from their own events
-DELETE FROM event_attendees
-WHERE user_id IN (
-  SELECT created_by FROM events WHERE created_by = event_attendees.user_id AND event_id = event_attendees.event_id
-);
-```
-
----
+- The frontend reset password page (`src/pages/ResetPassword.tsx`) stays the same
+- The forgot password logic in `src/pages/Auth.tsx` stays the same
+- No database changes needed
 
 ## Files Modified
-- 1 file modified: `src/components/admin/AdminEventCreationDialog.tsx`
+- 1 file modified: `supabase/config.toml`
+- 1 file created: `supabase/templates/recovery.html`
 
----
-
-## What Won't Break
-
-- Admin Dashboard access to events (uses `created_by`)
-- Admin Dashboard guest list (will now show only real guests)
-- Matchmaking exclusion (already protected by `hostId` filter)
-- Native iOS/Android app (events you create won't appear in "Attending")
-- Chat functionality between host and guests (uses RLS policies based on event ownership)
