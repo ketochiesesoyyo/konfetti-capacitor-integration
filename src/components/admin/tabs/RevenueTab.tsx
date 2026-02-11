@@ -266,7 +266,7 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
                 <TableHeader>
                   <TableRow>
                     <SortableTableHeader column="name" label="Evento" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
-                    <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="client" label="Contacto" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="date" label="Fecha" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="price" label="Precio" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="commission" label="Comisión" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />

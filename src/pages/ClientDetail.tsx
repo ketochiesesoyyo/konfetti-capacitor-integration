@@ -135,7 +135,7 @@ const ClientDetail = () => {
       .single();
 
     if (contactError || !contactData) {
-      toast.error("Cliente no encontrado");
+      toast.error("Contacto no encontrado");
       navigate("/admin");
       return;
     }
@@ -210,9 +210,9 @@ const ClientDetail = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error("Error al archivar cliente");
+      toast.error("Error al archivar contacto");
     } else {
-      toast.success("Cliente archivado");
+      toast.success("Contacto archivado");
       navigate("/admin");
     }
     setIsArchiving(false);
@@ -290,7 +290,7 @@ const ClientDetail = () => {
           .single();
 
         if (existingContact) {
-          toast.error("Ya existe un cliente con este email");
+          toast.error("Ya existe un contacto con este email");
           setIsUpdating(false);
           return;
         }
@@ -310,10 +310,10 @@ const ClientDetail = () => {
         .eq('id', id);
 
       if (updateError) {
-        throw new Error("Error al actualizar cliente");
+        throw new Error("Error al actualizar contacto");
       }
 
-      toast.success("Cliente actualizado exitosamente");
+      toast.success("Contacto actualizado exitosamente");
       setEditDialogOpen(false);
 
       // Reload contact data
@@ -321,7 +321,7 @@ const ClientDetail = () => {
 
     } catch (error: any) {
       console.error("Error updating client:", error);
-      toast.error(error.message || "Error al actualizar cliente");
+      toast.error(error.message || "Error al actualizar contacto");
     } finally {
       setIsUpdating(false);
     }
@@ -466,7 +466,7 @@ const ClientDetail = () => {
           <CardContent>
             {events.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Este cliente no tiene eventos aún
+                Este contacto no tiene eventos aún
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -559,7 +559,7 @@ const ClientDetail = () => {
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="Agregar notas sobre este cliente..."
+              placeholder="Agregar notas sobre este contacto..."
               value={notes}
               onChange={handleNotesChange}
               rows={4}
@@ -578,14 +578,14 @@ const ClientDetail = () => {
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" className="text-red-600 hover:text-red-700">
                     <Archive className="w-4 h-4 mr-2" />
-                    Archivar Cliente
+                    Archivar Contacto
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Archivar Cliente</AlertDialogTitle>
+                    <AlertDialogTitle>Archivar Contacto</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta acción archivará al cliente. El cliente no aparecerá en la lista de clientes activos pero sus datos se conservarán.
+                      Esta acción archivará al contacto. El contacto no aparecerá en la lista de contactos activos pero sus datos se conservarán.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -617,9 +617,9 @@ const ClientDetail = () => {
                 <Pencil className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl">Editar Cliente</DialogTitle>
+                <DialogTitle className="text-xl">Editar Contacto</DialogTitle>
                 <DialogDescription className="mt-1">
-                  Modifica la información del cliente
+                  Modifica la información del contacto
                 </DialogDescription>
               </div>
             </div>
@@ -628,7 +628,7 @@ const ClientDetail = () => {
           <div className="space-y-5 py-5">
             {/* Client Type */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Tipo de Cliente</Label>
+              <Label className="text-sm font-medium">Tipo de Contacto</Label>
               <RadioGroup
                 value={editFormData.contactType}
                 onValueChange={(value) => setEditFormData(prev => ({
@@ -650,7 +650,7 @@ const ClientDetail = () => {
                   <RadioGroupItem value="couple" id="edit-type-couple" />
                   <div>
                     <p className="font-medium">Pareja</p>
-                    <p className="text-xs text-muted-foreground">Cliente directo</p>
+                    <p className="text-xs text-muted-foreground">Contacto directo</p>
                   </div>
                 </label>
                 <label

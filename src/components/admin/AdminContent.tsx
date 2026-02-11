@@ -19,6 +19,7 @@ import { EventsTab } from "./tabs/EventsTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { RevenueTab } from "./tabs/RevenueTab";
 import { FinanceDashboardTab } from "./tabs/FinanceDashboardTab";
+import { CompaniesTab } from "./tabs/CompaniesTab";
 import { useAdminContext } from "./AdminLayout";
 
 interface EventRequest {
@@ -83,7 +84,7 @@ const STATUS_OPTIONS = [
 ];
 
 interface AdminContentProps {
-  activeTab: 'dashboard' | 'leads' | 'clients' | 'events' | 'users' | 'revenue' | 'finance';
+  activeTab: 'dashboard' | 'leads' | 'clients' | 'companies' | 'events' | 'users' | 'revenue' | 'finance';
 }
 
 export const AdminContent = ({ activeTab }: AdminContentProps) => {
@@ -316,7 +317,8 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
   const sectionTitles: Record<string, { title: string; subtitle: string }> = {
     dashboard: { title: "Panel de Control", subtitle: "Resumen general de tu negocio" },
     leads: { title: "Leads", subtitle: "Gestiona las solicitudes de eventos" },
-    clients: { title: "Clientes", subtitle: "Tu cartera de clientes" },
+    clients: { title: "Contactos", subtitle: "Tu cartera de contactos" },
+    companies: { title: "Empresas", subtitle: "Gestiona las empresas y organizaciones" },
     events: { title: "Eventos", subtitle: "Todos tus eventos creados" },
     users: { title: "Usuarios", subtitle: "Usuarios registrados, reportes y bloqueos" },
     revenue: { title: "Ingresos", subtitle: "Resumen financiero de tus eventos" },
@@ -375,6 +377,10 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
 
             {activeTab === "clients" && (
               <ClientsTab clients={clients} isLoading={isLoading} onClientCreated={loadClients} />
+            )}
+
+            {activeTab === "companies" && (
+              <CompaniesTab />
             )}
 
             {activeTab === "events" && (

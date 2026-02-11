@@ -715,7 +715,7 @@ const EventDashboard = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <User className="w-4 h-4" />
-                    Cliente
+                    Contacto
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

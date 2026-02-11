@@ -128,7 +128,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
           .single();
 
         if (existingContact) {
-          toast.error("Ya existe un cliente con este email");
+          toast.error("Ya existe un contacto con este email");
           setIsCreating(false);
           return;
         }
@@ -147,17 +147,17 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
         });
 
       if (contactError) {
-        throw new Error("Error al crear cliente");
+        throw new Error("Error al crear contacto");
       }
 
-      toast.success("Cliente creado exitosamente");
+      toast.success("Contacto creado exitosamente");
       setCreateDialogOpen(false);
       resetForm();
       onClientCreated?.();
 
     } catch (error: any) {
       console.error("Error creating client:", error);
-      toast.error(error.message || "Error al crear cliente");
+      toast.error(error.message || "Error al crear contacto");
     } finally {
       setIsCreating(false);
     }
@@ -217,7 +217,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-        <StatsCard value={stats.total} label="Total Clientes" valueColor="text-primary" />
+        <StatsCard value={stats.total} label="Total Contactos" valueColor="text-primary" />
         <StatsCard value={stats.withEvents} label="Con Eventos" valueColor="text-emerald-500" />
       </div>
 
@@ -226,11 +226,11 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Clientes
+            Contactos
           </CardTitle>
           <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-1" />
-            Crear Cliente
+            Crear Contacto
           </Button>
         </CardHeader>
         <CardContent>
@@ -240,10 +240,10 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
             </div>
           ) : activeClients.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p className="mb-4">No hay clientes registrados</p>
+              <p className="mb-4">No hay contactos registrados</p>
               <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Crear primer cliente
+                Crear primer contacto
               </Button>
             </div>
           ) : (
@@ -316,9 +316,9 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl">Crear Nuevo Cliente</DialogTitle>
+                <DialogTitle className="text-xl">Crear Nuevo Contacto</DialogTitle>
                 <DialogDescription className="mt-1">
-                  Agrega un nuevo cliente a tu CRM
+                  Agrega un nuevo contacto a tu CRM
                 </DialogDescription>
               </div>
             </div>
@@ -327,7 +327,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
           <div className="space-y-5 py-5">
             {/* Client Type */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Tipo de Cliente</Label>
+              <Label className="text-sm font-medium">Tipo de Contacto</Label>
               <RadioGroup
                 value={formData.clientType}
                 onValueChange={(value) => setFormData(prev => ({
@@ -349,7 +349,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
                   <RadioGroupItem value="couple" id="create-type-couple" />
                   <div>
                     <p className="font-medium">Pareja</p>
-                    <p className="text-xs text-muted-foreground">Cliente directo</p>
+                    <p className="text-xs text-muted-foreground">Contacto directo</p>
                   </div>
                 </label>
                 <label
@@ -479,7 +479,7 @@ export const ClientsTab = ({ clients, isLoading, onClientCreated }: ClientsTabPr
                   Creando...
                 </>
               ) : (
-                "Crear Cliente"
+                "Crear Contacto"
               )}
             </Button>
           </DialogFooter>

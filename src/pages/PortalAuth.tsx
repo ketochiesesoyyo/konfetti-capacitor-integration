@@ -86,7 +86,7 @@ const PortalAuth = () => {
 
         if (!hasClientRole) {
           await supabase.auth.signOut();
-          toast.error("No tienes acceso al portal de clientes. Contacta al administrador.");
+          toast.error("No tienes acceso al portal de contactos. Contacta al administrador.");
           return;
         }
 
@@ -138,7 +138,7 @@ const PortalAuth = () => {
       <Card className="w-full max-w-md p-8 animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <KonfettiLogo className="w-48 h-auto mb-4" />
-          <p className="text-lg font-semibold text-foreground">Portal de Clientes</p>
+          <p className="text-lg font-semibold text-foreground">Portal de Contactos</p>
           <p className="text-sm text-muted-foreground text-center mt-1">
             Accede a tus eventos y estadisticas
           </p>

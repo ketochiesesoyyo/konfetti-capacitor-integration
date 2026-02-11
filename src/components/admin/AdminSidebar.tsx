@@ -5,6 +5,7 @@ import {
   Users,
   UserCheck,
   UsersRound,
+  Building2,
   CalendarDays,
   Plus,
   DollarSign,
@@ -65,7 +66,8 @@ export const AdminSidebar = ({
       title: "CRM",
       items: [
         { id: "leads", label: "Leads", icon: Users, badge: leadsCount },
-        { id: "clients", label: "Clientes", icon: UserCheck, badge: clientsCount },
+        { id: "clients", label: "Contactos", icon: UserCheck, badge: clientsCount },
+        { id: "companies", label: "Empresas", icon: Building2 },
         { id: "users", label: "Usuarios", icon: UsersRound },
       ],
     },

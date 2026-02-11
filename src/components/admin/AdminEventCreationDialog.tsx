@@ -602,14 +602,14 @@ export const AdminEventCreationDialog = ({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-bold">2</span>
-                  Información del Cliente
+                  Información del Contacto
                 </h3>
 
                 <div className="p-4 bg-muted/30 rounded-xl space-y-4">
                   {/* Client Mode Toggle */}
                   {contacts.length > 0 && (
                     <div className="flex items-center justify-between pb-3 border-b">
-                      <span className="text-sm font-medium">Tipo de cliente</span>
+                      <span className="text-sm font-medium">Tipo de contacto</span>
                       <div className="flex bg-muted rounded-lg p-1">
                         <button
                           type="button"
@@ -645,13 +645,13 @@ export const AdminEventCreationDialog = ({
                   {/* Select Existing Client */}
                   {clientMode === "existing" && contacts.length > 0 && (
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Seleccionar Cliente</Label>
+                      <Label className="text-sm font-medium">Seleccionar Contacto</Label>
                       <Select
                         value={formData.selectedClientId}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, selectedClientId: value }))}
                       >
                         <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Seleccionar cliente existente" />
+                          <SelectValue placeholder="Seleccionar contacto existente" />
                         </SelectTrigger>
                         <SelectContent>
                           {contacts.map((contact) => (
@@ -702,7 +702,7 @@ export const AdminEventCreationDialog = ({
                     <div className="space-y-4">
                       {/* Client Type */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Tipo de Cliente</Label>
+                        <Label className="text-sm font-medium">Tipo de Contacto</Label>
                         <RadioGroup
                           value={formData.clientType}
                           onValueChange={(value) => setFormData(prev => ({

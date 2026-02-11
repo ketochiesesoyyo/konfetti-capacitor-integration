@@ -118,7 +118,7 @@ const AdminClientDetail = () => {
       .single();
 
     if (contactError || !contactData) {
-      toast.error("Cliente no encontrado");
+      toast.error("Contacto no encontrado");
       navigate("/admin/clients");
       return;
     }
@@ -193,9 +193,9 @@ const AdminClientDetail = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error("Error al archivar cliente");
+      toast.error("Error al archivar contacto");
     } else {
-      toast.success("Cliente archivado");
+      toast.success("Contacto archivado");
       refreshCounts();
       navigate("/admin/clients");
     }
@@ -274,7 +274,7 @@ const AdminClientDetail = () => {
           .single();
 
         if (existingContact) {
-          toast.error("Ya existe un cliente con este email");
+          toast.error("Ya existe un contacto con este email");
           setIsUpdating(false);
           return;
         }
@@ -294,10 +294,10 @@ const AdminClientDetail = () => {
         .eq('id', id);
 
       if (updateError) {
-        throw new Error("Error al actualizar cliente");
+        throw new Error("Error al actualizar contacto");
       }
 
-      toast.success("Cliente actualizado exitosamente");
+      toast.success("Contacto actualizado exitosamente");
       setEditDialogOpen(false);
 
       // Reload contact data
@@ -306,7 +306,7 @@ const AdminClientDetail = () => {
 
     } catch (error: any) {
       console.error("Error updating client:", error);
-      toast.error(error.message || "Error al actualizar cliente");
+      toast.error(error.message || "Error al actualizar contacto");
     } finally {
       setIsUpdating(false);
     }
@@ -335,7 +335,7 @@ const AdminClientDetail = () => {
       await loadContact();
     } catch (error: any) {
       console.error("Error inviting client:", error);
-      toast.error("Error al invitar al cliente");
+      toast.error("Error al invitar al contacto");
     } finally {
       setIsInviting(false);
     }
@@ -453,7 +453,7 @@ const AdminClientDetail = () => {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="text-sm font-medium">Portal de Clientes</div>
+                <div className="text-sm font-medium">Portal de Contactos</div>
                 {getPortalStatus() === 'active' ? (
                   <Badge variant="outline" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">
                     <UserCheck className="w-3 h-3 mr-1" />
@@ -546,7 +546,7 @@ const AdminClientDetail = () => {
           <CardContent>
             {events.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Este cliente no tiene eventos aún
+                Este contacto no tiene eventos aún
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -638,7 +638,7 @@ const AdminClientDetail = () => {
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="Agregar notas sobre este cliente..."
+              placeholder="Agregar notas sobre este contacto..."
               value={notes}
               onChange={handleNotesChange}
               rows={4}
@@ -657,14 +657,14 @@ const AdminClientDetail = () => {
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" className="text-red-600 hover:text-red-700">
                     <Archive className="w-4 h-4 mr-2" />
-                    Archivar Cliente
+                    Archivar Contacto
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Archivar Cliente</AlertDialogTitle>
+                    <AlertDialogTitle>Archivar Contacto</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta acción archivará al cliente. El cliente no aparecerá en la lista de clientes activos pero sus datos se conservarán.
+                      Esta acción archivará al contacto. El contacto no aparecerá en la lista de contactos activos pero sus datos se conservarán.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -696,9 +696,9 @@ const AdminClientDetail = () => {
                 <Pencil className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl">Editar Cliente</DialogTitle>
+                <DialogTitle className="text-xl">Editar Contacto</DialogTitle>
                 <DialogDescription className="mt-1">
-                  Modifica la información del cliente
+                  Modifica la información del contacto
                 </DialogDescription>
               </div>
             </div>
@@ -707,7 +707,7 @@ const AdminClientDetail = () => {
           <div className="space-y-5 py-5">
             {/* Client Type */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Tipo de Cliente</Label>
+              <Label className="text-sm font-medium">Tipo de Contacto</Label>
               <RadioGroup
                 value={editFormData.contactType}
                 onValueChange={(value) => setEditFormData(prev => ({
@@ -729,7 +729,7 @@ const AdminClientDetail = () => {
                   <RadioGroupItem value="couple" id="edit-type-couple" />
                   <div>
                     <p className="font-medium">Pareja</p>
-                    <p className="text-xs text-muted-foreground">Cliente directo</p>
+                    <p className="text-xs text-muted-foreground">Contacto directo</p>
                   </div>
                 </label>
                 <label

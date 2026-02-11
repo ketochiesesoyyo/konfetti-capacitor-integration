@@ -464,7 +464,7 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                 <TableHeader>
                   <TableRow>
                     <SortableTableHeader column="name" label="Evento" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
-                    <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="client" label="Contacto" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="date" label="Fecha" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="created_at" label="Creado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="status" label="Estado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
@@ -631,17 +631,17 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <UserCheck className="w-4 h-4" />
-                Cliente Asignado
+                Contacto Asignado
               </Label>
               <Select
                 value={formData.contactId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, contactId: value }))}
               >
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Seleccionar cliente..." />
+                  <SelectValue placeholder="Seleccionar contacto..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Sin cliente asignado</SelectItem>
+                  <SelectItem value="__none__">Sin contacto asignado</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.contact_name}

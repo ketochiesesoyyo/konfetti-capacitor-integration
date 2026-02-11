@@ -274,7 +274,7 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
 
     pricedEvents.forEach((e) => {
       const cid = e.contact_id || "__none__";
-      const cname = e.contacts?.contact_name || "Sin cliente";
+      const cname = e.contacts?.contact_name || "Sin contacto";
       const cur = e.currency || 'MXN';
 
       if (!clientMap.has(cid)) {
@@ -444,7 +444,7 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
       {sortedClients.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Top Clientes por Ingresos</CardTitle>
+            <CardTitle>Top Contactos por Ingresos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -452,7 +452,7 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
-                    <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="client" label="Contacto" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="events" label="Eventos" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="revenue" label="Ingresos Totales" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="commissions" label="Comisiones" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />

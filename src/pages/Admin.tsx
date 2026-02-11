@@ -176,7 +176,7 @@ const Admin = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error("Error al cargar clientes");
+      toast.error("Error al cargar contactos");
       console.error(error);
     } else {
       setClients((data || []) as Contact[]);
@@ -343,7 +343,7 @@ const Admin = () => {
   const sectionTitles: Record<string, { title: string; subtitle: string }> = {
     dashboard: { title: "Panel de Control", subtitle: "Resumen general de tu negocio" },
     leads: { title: "Leads", subtitle: "Gestiona las solicitudes de eventos" },
-    clients: { title: "Clientes", subtitle: "Tu cartera de clientes" },
+    clients: { title: "Contactos", subtitle: "Tu cartera de contactos" },
     events: { title: "Eventos", subtitle: "Todos tus eventos creados" },
   };
 

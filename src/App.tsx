@@ -150,6 +150,7 @@ const App = () => (
                   <Route index element={<AdminContent activeTab="dashboard" />} />
                   <Route path="leads" element={<AdminContent activeTab="leads" />} />
                   <Route path="clients" element={<AdminContent activeTab="clients" />} />
+                  <Route path="companies" element={<AdminContent activeTab="companies" />} />
                   <Route path="events" element={<AdminContent activeTab="events" />} />
                   <Route path="users" element={<AdminContent activeTab="users" />} />
                   <Route path="revenue" element={<AdminContent activeTab="revenue" />} />

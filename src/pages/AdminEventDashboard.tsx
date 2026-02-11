@@ -771,7 +771,7 @@ const AdminEventDashboard = () => {
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Cliente
+                Contacto
               </CardTitle>
               {contact && (
                 <Button
@@ -828,10 +828,10 @@ const AdminEventDashboard = () => {
               ) : (
                 <div className="text-center py-4">
                   <User className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground mb-3">Sin cliente asignado</p>
+                  <p className="text-sm text-muted-foreground mb-3">Sin contacto asignado</p>
                   <Button variant="outline" size="sm" onClick={openEditFinancialDialog}>
                     <UserCheck className="w-4 h-4 mr-2" />
-                    Asignar Cliente
+                    Asignar Contacto
                   </Button>
                 </div>
               )}
@@ -1269,7 +1269,7 @@ const AdminEventDashboard = () => {
               <div>
                 <DialogTitle className="text-xl">Editar Evento</DialogTitle>
                 <DialogDescription className="mt-1">
-                  Cliente asignado e información financiera
+                  Contacto asignado e información financiera
                 </DialogDescription>
               </div>
             </div>
@@ -1280,17 +1280,17 @@ const AdminEventDashboard = () => {
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <UserCheck className="w-4 h-4" />
-                Cliente Asignado
+                Contacto Asignado
               </Label>
               <Select
                 value={financialFormData.contactId}
                 onValueChange={(value) => setFinancialFormData(prev => ({ ...prev, contactId: value }))}
               >
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Seleccionar cliente..." />
+                  <SelectValue placeholder="Seleccionar contacto..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Sin cliente asignado</SelectItem>
+                  <SelectItem value="__none__">Sin contacto asignado</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.contact_name}

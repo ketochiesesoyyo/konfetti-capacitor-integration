@@ -166,7 +166,7 @@ export const DashboardTab = ({
         <h3 className="text-sm font-medium text-muted-foreground mb-3">Estadísticas CRM</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatsCard value={leadsCount} label="Leads Activos" valueColor="text-foreground" />
-          <StatsCard value={clientsCount} label="Total Clientes" valueColor="text-foreground" />
+          <StatsCard value={clientsCount} label="Total Contactos" valueColor="text-foreground" />
           <StatsCard value={eventsCount} label="Total Eventos" valueColor="text-foreground" />
           <StatsCard
             value={`${conversionRate.toFixed(0)}%`}
@@ -221,7 +221,7 @@ export const DashboardTab = ({
                 <TableHeader>
                   <TableRow>
                     <SortableTableHeader column="name" label="Evento" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
-                    <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="client" label="Contacto" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="date" label="Fecha" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="created_at" label="Creado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="status" label="Estado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
