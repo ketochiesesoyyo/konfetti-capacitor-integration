@@ -21,17 +21,34 @@ const ResetPassword = () => {
   const [isValidSession, setIsValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid recovery session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setIsValidSession(true);
+      }
+    });
+
+    // Also check if there's already a valid session (e.g. page refresh)
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsValidSession(true);
-      } else {
-        toast.error(t('auth.resetPassword.invalidLink'));
-        navigate("/auth");
       }
+    });
+
+    // Timeout: if no auth event fires within 5s, redirect
+    const timeout = setTimeout(() => {
+      setIsValidSession((current) => {
+        if (!current) {
+          toast.error(t('auth.resetPassword.invalidLink'));
+          navigate("/auth");
+        }
+        return current;
+      });
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
     };
-    checkSession();
   }, [navigate, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
