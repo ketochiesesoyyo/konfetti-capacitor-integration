@@ -151,6 +151,7 @@ const App = () => (
                   <Route path="leads" element={<AdminContent activeTab="leads" />} />
                   <Route path="clients" element={<AdminContent activeTab="clients" />} />
                   <Route path="events" element={<AdminContent activeTab="events" />} />
+                  <Route path="users" element={<AdminContent activeTab="users" />} />
                   <Route path="revenue" element={<AdminContent activeTab="revenue" />} />
                   <Route path="finance" element={<AdminContent activeTab="finance" />} />
                   <Route path="event/:eventId" element={<AdminEventDashboard />} />

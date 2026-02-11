@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Users,
   UserCheck,
+  UsersRound,
   CalendarDays,
   Plus,
   DollarSign,
@@ -65,6 +66,7 @@ export const AdminSidebar = ({
       items: [
         { id: "leads", label: "Leads", icon: Users, badge: leadsCount },
         { id: "clients", label: "Clientes", icon: UserCheck, badge: clientsCount },
+        { id: "users", label: "Usuarios", icon: UsersRound },
       ],
     },
     {

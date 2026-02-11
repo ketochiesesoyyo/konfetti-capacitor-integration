@@ -325,6 +325,8 @@ All colors MUST be HSL.
   }
 
   /* Admin Panel - Notion-style minimal overrides */
+  /* Use :has() so CSS variables also apply to portaled elements (dialogs, selects) */
+  body:has(.admin-panel),
   .admin-panel {
     --shadow-xs: none;
     --shadow-soft: none;
@@ -345,6 +347,10 @@ All colors MUST be HSL.
     --background: 220 5% 95%;
     --card: 220 5% 88%;
     --card-foreground: 220 10% 15%;
+
+    /* Popover/dialog background matches card color */
+    --popover: 220 5% 88%;
+    --popover-foreground: 220 10% 15%;
   }
 
   .admin-panel .rounded-\[28px\] {
@@ -363,5 +369,20 @@ All colors MUST be HSL.
   .admin-panel .p-8.pt-0 {
     padding: 1rem;
     padding-top: 0;
+  }
+
+  /* Admin dialog/popup overrides (portaled elements) */
+  body:has(.admin-panel) [role="dialog"] {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: hsl(220 5% 88%);
+    border-color: hsl(0 0% 83%);
+  }
+
+  body:has(.admin-panel) [data-radix-popper-content-wrapper] [role="listbox"],
+  body:has(.admin-panel) [data-radix-popper-content-wrapper] [data-radix-menu-content],
+  body:has(.admin-panel) [data-radix-popper-content-wrapper] > div {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }

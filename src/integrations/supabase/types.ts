@@ -594,6 +594,8 @@ export type Database = {
           age: number | null
           age_max: number | null
           age_min: number | null
+          ban_reason: string | null
+          banned_at: string | null
           bio: string | null
           created_at: string
           email_like_notifications: boolean | null
@@ -603,6 +605,7 @@ export type Database = {
           instagram_username: string | null
           interested_in: string | null
           interests: string[] | null
+          is_banned: boolean | null
           name: string
           photos: string[] | null
           prompts: Json | null
@@ -614,6 +617,8 @@ export type Database = {
           age?: number | null
           age_max?: number | null
           age_min?: number | null
+          ban_reason?: string | null
+          banned_at?: string | null
           bio?: string | null
           created_at?: string
           email_like_notifications?: boolean | null
@@ -623,6 +628,7 @@ export type Database = {
           instagram_username?: string | null
           interested_in?: string | null
           interests?: string[] | null
+          is_banned?: boolean | null
           name: string
           photos?: string[] | null
           prompts?: Json | null
@@ -634,6 +640,8 @@ export type Database = {
           age?: number | null
           age_max?: number | null
           age_min?: number | null
+          ban_reason?: string | null
+          banned_at?: string | null
           bio?: string | null
           created_at?: string
           email_like_notifications?: boolean | null
@@ -643,6 +651,7 @@ export type Database = {
           instagram_username?: string | null
           interested_in?: string | null
           interests?: string[] | null
+          is_banned?: boolean | null
           name?: string
           photos?: string[] | null
           prompts?: Json | null
