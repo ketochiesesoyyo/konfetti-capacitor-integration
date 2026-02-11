@@ -53,6 +53,20 @@ const showAdminRoute = isAdminDomainAllowed();
 
 const queryClient = new QueryClient();
 
+// Global listener for password recovery events - redirects to /reset-password from any page
+const PasswordRecoveryHandler = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Navigate to reset-password page when recovery token is detected
+        window.location.href = '/reset-password';
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+  return <>{children}</>;
+};
+
 // Redirect component that checks auth state and routes accordingly
 const IndexRedirect = () => {
   const [isChecking, setIsChecking] = useState(true);
@@ -60,6 +74,12 @@ const IndexRedirect = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Don't redirect if URL hash contains recovery tokens
+      const hash = window.location.hash;
+      if (hash && hash.includes('type=recovery')) {
+        // Let the PasswordRecoveryHandler handle this
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
       setIsChecking(false);
@@ -90,6 +110,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PasswordRecoveryHandler>
         <PushNotificationHandler>
         <BrowserRouter
           future={{
@@ -152,6 +173,7 @@ const App = () => (
           </Suspense>
         </BrowserRouter>
         </PushNotificationHandler>
+        </PasswordRecoveryHandler>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
