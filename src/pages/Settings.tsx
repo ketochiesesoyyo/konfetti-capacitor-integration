@@ -91,7 +91,7 @@ const Settings = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 10) {
       toast.error(t('settings.passwordMinLength'));
       return;
     }

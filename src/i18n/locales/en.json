@@ -258,7 +258,7 @@
     "emailUpdateSent": "Email update sent! Check your inbox to confirm.",
     "enterNewPassword": "Please enter a new password",
     "passwordsNoMatch": "Passwords do not match",
-    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordMinLength": "Password must be at least 10 characters",
     "passwordUpdated": "Password updated successfully",
     "loggedOut": "Logged out successfully",
     "communityGuidelines": "Community Guidelines",
@@ -506,7 +506,7 @@
       "success": "Password updated successfully!",
       "error": "Failed to update password. Please try again.",
       "invalidLink": "Invalid or expired reset link. Please request a new one.",
-      "passwordTooShort": "Password must be at least 6 characters",
+      "passwordTooShort": "Password must be at least 10 characters",
       "backToLogin": "Back to Login"
     }
   },

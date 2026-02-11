@@ -209,7 +209,7 @@ Interest Options:,
 """Email update sent! Check your inbox to confirm.""","""¡Actualización por correo electrónico enviada! Revisa tu bandeja de entrada para confirmar""."
 """Please enter a new password""","""Ingrese una nueva contraseña"""
 """Passwords do not match""","""Las contraseñas no coinciden"""
-"""Password must be at least 6 characters""","""La contraseña debe tener al menos 6 caracteres"""
+"""Password must be at least 10 characters""","""La contraseña debe tener al menos 10 caracteres"""
 """Password updated successfully""","""Contraseña actualizada correctamente"""
 """Logged out successfully""","""Se cerró la sesión correctamente"""
 🎉 CREATE EVENT PAGE (src/pages/CreateEvent.tsx),🎉 CREAR PÁGINA DE EVENTOS (src/pages/CreateEvent.tsx)

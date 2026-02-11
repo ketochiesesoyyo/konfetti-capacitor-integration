@@ -59,7 +59,7 @@ const ResetPassword = () => {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 10) {
       toast.error(t('auth.resetPassword.passwordTooShort'));
       return;
     }

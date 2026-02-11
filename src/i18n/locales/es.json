@@ -258,7 +258,7 @@
     "emailUpdateSent": "¡Actualización por correo electrónico enviada! Revisa tu bandeja de entrada para confirmar.",
     "enterNewPassword": "Ingrese una nueva contraseña",
     "passwordsNoMatch": "Las contraseñas no coinciden",
-    "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+    "passwordMinLength": "La contraseña debe tener al menos 10 caracteres",
     "passwordUpdated": "Contraseña actualizada correctamente",
     "loggedOut": "Se cerró la sesión correctamente",
     "communityGuidelines": "Directrices de la Comunidad",
@@ -505,7 +505,7 @@
       "success": "¡Contraseña actualizada con éxito!",
       "error": "No se pudo actualizar la contraseña. Por favor, intenta de nuevo.",
       "invalidLink": "Enlace inválido o expirado. Por favor, solicita uno nuevo.",
-      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+      "passwordTooShort": "La contraseña debe tener al menos 10 caracteres",
       "backToLogin": "Volver al Inicio de Sesión"
     }
   },
