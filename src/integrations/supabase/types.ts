@@ -837,6 +837,13 @@ export type Database = {
       can_join_event: { Args: { _event_id: string }; Returns: boolean }
       delete_user_account: { Args: never; Returns: undefined }
       get_event_guest_count: { Args: { _event_id: string }; Returns: number }
+      get_masked_emails: {
+        Args: never
+        Returns: {
+          masked_email: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

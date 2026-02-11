@@ -24,26 +24,31 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     // Verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       throw new Error("No authorization header");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // Create a client with the caller's JWT to verify identity
-    const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user: callerUser }, error: authError } = await callerClient.auth.getUser();
-    if (authError || !callerUser) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       throw new Error("Unauthorized");
     }
 
-    // Check admin role
-    const { data: isAdmin } = await callerClient.rpc("has_role", {
-      _user_id: callerUser.id,
+    const callerUserId = claimsData.claims.sub;
+
+    // Check admin role using service role client
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: isAdmin } = await adminClient.rpc("has_role", {
+      _user_id: callerUserId,
       _role: "admin",
     });
 
@@ -59,7 +64,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Look up user's email from auth.users using service role
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: { user: targetUser }, error: userError } = await adminClient.auth.admin.getUserById(user_id);
 
     if (userError || !targetUser?.email) {

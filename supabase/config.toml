@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.event-request-notification]
 verify_jwt = false
+
+[functions.send-user-email]
+verify_jwt = false
