@@ -66,7 +66,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { parseLocalDate } from "@/lib/utils";
+import { parseLocalDate, formatLocalDate } from "@/lib/utils";
 import { eventSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
@@ -105,6 +105,7 @@ const AdminEventDashboard = () => {
     date: "",
     close_date: "",
   });
+  const [matchmakingOption, setMatchmakingOption] = useState<string>("immediately");
 
   // Image editing
   const [eventImage, setEventImage] = useState<File | null>(null);
@@ -143,6 +144,48 @@ const AdminEventDashboard = () => {
     paymentStatus: "pending",
   });
 
+  const MATCHMAKING_OPTIONS = [
+    { value: "immediately", label: "Inmediatamente al unirse" },
+    { value: "1_week_before", label: "1 semana antes del evento" },
+    { value: "2_weeks_before", label: "2 semanas antes del evento" },
+    { value: "day_of_event", label: "El día del evento" },
+  ];
+
+  const determineMatchmakingOption = (eventDate: string, startDate: string | null): string => {
+    if (!startDate || startDate === "") return "immediately";
+    const ev = parseLocalDate(eventDate);
+    const start = parseLocalDate(startDate);
+    const daysDiff = Math.round(
+      (ev.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysDiff === 0) return "day_of_event";
+    if (daysDiff === 7) return "1_week_before";
+    if (daysDiff === 14) return "2_weeks_before";
+    return "immediately";
+  };
+
+  const calculateMatchmakingStartDate = (option: string, eventDate: string): string | null => {
+    if (!eventDate) return null;
+    const ev = parseLocalDate(eventDate);
+    switch (option) {
+      case "1_week_before": {
+        const d = new Date(ev);
+        d.setDate(d.getDate() - 7);
+        return formatLocalDate(d);
+      }
+      case "2_weeks_before": {
+        const d = new Date(ev);
+        d.setDate(d.getDate() - 14);
+        return formatLocalDate(d);
+      }
+      case "day_of_event":
+        return eventDate;
+      case "immediately":
+      default:
+        return null;
+    }
+  };
+
   useEffect(() => {
     fetchEventData();
   }, [eventId]);
@@ -169,6 +212,9 @@ const AdminEventDashboard = () => {
         date: eventData.date,
         close_date: eventData.close_date,
       });
+      setMatchmakingOption(
+        determineMatchmakingOption(eventData.date, eventData.matchmaking_start_date)
+      );
 
       if (eventData.image_url) {
         setImagePreview(eventData.image_url);
@@ -358,6 +404,7 @@ const AdminEventDashboard = () => {
       }
 
       const validated = validationResult.data;
+      const matchmakingStartDate = calculateMatchmakingStartDate(matchmakingOption, editedEvent.date);
       const { error } = await supabase
         .from("events")
         .update({
@@ -366,6 +413,8 @@ const AdminEventDashboard = () => {
           date: validated.date,
           close_date: closeDate,
           image_url: imageUrl,
+          matchmaking_start_date: matchmakingStartDate,
+          matchmaking_start_time: matchmakingStartDate ? `${matchmakingStartDate}T00:00:00` : null,
         })
         .eq("id", eventId || "");
 
@@ -851,11 +900,15 @@ const AdminEventDashboard = () => {
 
           {/* Matchmaking Info */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 Matchmaking
               </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setSettingsDialogOpen(true)}>
+                <Pencil className="w-4 h-4 mr-1" />
+                Editar
+              </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
@@ -1067,6 +1120,30 @@ const AdminEventDashboard = () => {
                 onChange={(e) => setEditedEvent({ ...editedEvent, date: e.target.value })}
                 min={format(new Date(), "yyyy-MM-dd")}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Matchmaking</Label>
+              <Select value={matchmakingOption} onValueChange={setMatchmakingOption}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar opción" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MATCHMAKING_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {matchmakingOption !== "immediately" && editedEvent.date && (
+                <p className="text-xs text-muted-foreground">
+                  Inicio: {format(
+                    parseLocalDate(calculateMatchmakingStartDate(matchmakingOption, editedEvent.date)!),
+                    "d 'de' MMMM, yyyy",
+                    { locale: es }
+                  )}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Imagen del Evento</Label>
