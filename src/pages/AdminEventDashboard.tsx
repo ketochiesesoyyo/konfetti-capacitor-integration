@@ -414,7 +414,7 @@ const AdminEventDashboard = () => {
           close_date: closeDate,
           image_url: imageUrl,
           matchmaking_start_date: matchmakingStartDate,
-          matchmaking_start_time: matchmakingStartDate ? `${matchmakingStartDate}T00:00:00` : null,
+          matchmaking_start_time: matchmakingStartDate ? '00:00' : null,
         })
         .eq("id", eventId || "");
 
