@@ -5,7 +5,8 @@
 export const ADMIN_ALLOWED_DOMAINS = [
   'konfetti-capacitor-integration.lovable.app',
   'localhost',
-  'id-preview--7a0a3a9e-8f38-4e9e-a88e-1ba73be4e2cc.lovable.app'
+  'id-preview--7a0a3a9e-8f38-4e9e-a88e-1ba73be4e2cc.lovable.app',
+  'admin.konfetti.app'
 ];
 
 /**
@@ -16,6 +17,13 @@ export const isAdminDomainAllowed = (): boolean => {
   return ADMIN_ALLOWED_DOMAINS.some(domain => 
     hostname === domain || hostname.endsWith(`.${domain}`)
   );
+};
+
+/**
+ * Check if the current domain is the admin subdomain
+ */
+export const isAdminSubdomain = (): boolean => {
+  return window.location.hostname === 'admin.konfetti.app';
 };
 
 /**

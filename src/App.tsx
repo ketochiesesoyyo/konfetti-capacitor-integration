@@ -7,7 +7,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import "./i18n/config";
-import { isAdminDomainAllowed } from "./lib/domain";
+import { isAdminDomainAllowed, isAdminSubdomain } from "./lib/domain";
 import { supabase } from "@/integrations/supabase/client";
 import { usePushNotifications } from "./hooks/use-push-notifications";
 
@@ -71,8 +71,10 @@ const PasswordRecoveryHandler = ({ children }: { children: React.ReactNode }) =>
 const IndexRedirect = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const adminSubdomain = isAdminSubdomain();
 
   useEffect(() => {
+    if (adminSubdomain) return; // Skip auth check on admin subdomain
     const checkAuth = async () => {
       // If URL hash contains recovery tokens, redirect to reset-password immediately
       const hash = window.location.hash;
@@ -85,7 +87,12 @@ const IndexRedirect = () => {
       setIsChecking(false);
     };
     checkAuth();
-  }, []);
+  }, [adminSubdomain]);
+
+  // On admin subdomain, always redirect to /admin (AdminLayout handles auth)
+  if (adminSubdomain) {
+    return <Navigate to="/admin" replace />;
+  }
 
   if (isChecking) {
     return (

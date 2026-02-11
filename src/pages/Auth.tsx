@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminSubdomain } from "@/lib/domain";
 import { KonfettiLogo } from "@/components/KonfettiLogo";
 import { useTranslation } from "react-i18next";
 import { CommunityGuidelinesDialog } from "@/components/CommunityGuidelinesDialog";
@@ -72,7 +73,9 @@ const Auth = () => {
         }
         
         // Existing user with complete profile
-        if (pendingInvite) {
+        if (isAdminSubdomain()) {
+          navigate("/admin");
+        } else if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
           navigate("/profile");
@@ -115,10 +118,12 @@ const Auth = () => {
         }
 
         toast.success(t('auth.welcomeBack'));
-        
+
         // Check if there's a pending invite in URL params
         const pendingInvite = searchParams.get("invite");
-        if (pendingInvite) {
+        if (isAdminSubdomain()) {
+          navigate("/admin");
+        } else if (pendingInvite) {
           navigate(`/join/${pendingInvite}`);
         } else {
           navigate("/profile");
