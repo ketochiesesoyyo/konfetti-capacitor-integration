@@ -195,7 +195,7 @@ export const UsersTab = () => {
         "*, reporter:profiles!reports_reporter_id_fkey(name), reported:profiles!reports_reported_user_id_fkey(name), events(name)"
       )
       .order("created_at", { ascending: false });
-    setReports((data as Report[]) || []);
+    setReports((data as unknown as Report[]) || []);
   };
 
   const loadBlocks = async () => {
@@ -205,7 +205,7 @@ export const UsersTab = () => {
         "*, blocker:profiles!blocked_users_blocker_id_fkey(name), blocked:profiles!blocked_users_blocked_id_fkey(name), events(name)"
       )
       .order("created_at", { ascending: false });
-    setBlocks((data as Block[]) || []);
+    setBlocks((data as unknown as Block[]) || []);
   };
 
   const openUserDetail = async (user: UserWithStats) => {
@@ -228,7 +228,7 @@ export const UsersTab = () => {
       )
       .eq("reported_user_id", user.user_id)
       .order("created_at", { ascending: false });
-    setUserReports((reps as Report[]) || []);
+    setUserReports((reps as unknown as Report[]) || []);
 
     // Load user's blocks (received)
     const { data: blks } = await supabase
@@ -238,7 +238,7 @@ export const UsersTab = () => {
       )
       .eq("blocked_id", user.user_id)
       .order("created_at", { ascending: false });
-    setUserBlocks((blks as Block[]) || []);
+    setUserBlocks((blks as unknown as Block[]) || []);
   };
 
   const toggleSort = (column: SortColumn) => {
