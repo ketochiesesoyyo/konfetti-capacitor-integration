@@ -74,10 +74,10 @@ const IndexRedirect = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Don't redirect if URL hash contains recovery tokens
+      // If URL hash contains recovery tokens, redirect to reset-password immediately
       const hash = window.location.hash;
       if (hash && hash.includes('type=recovery')) {
-        // Let the PasswordRecoveryHandler handle this
+        window.location.href = '/reset-password' + hash;
         return;
       }
       const { data: { session } } = await supabase.auth.getSession();
