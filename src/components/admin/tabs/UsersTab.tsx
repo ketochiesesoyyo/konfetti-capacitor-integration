@@ -465,7 +465,8 @@ export const UsersTab = () => {
       const result = response.data as { success: boolean; email?: string; error?: string };
       if (!result.success) throw new Error(result.error || "Error desconocido");
 
-      toast.success(`Email enviado a ${result.email || emailTarget.name}`);
+      const displayEmail = emailTarget.maskedEmail || result.email || "";
+      toast.success(`Email enviado a ${emailTarget.name}${displayEmail ? ` (${displayEmail})` : ""}`);
       setEmailDialogOpen(false);
     } catch (error: any) {
       console.error("Error sending email:", error);
