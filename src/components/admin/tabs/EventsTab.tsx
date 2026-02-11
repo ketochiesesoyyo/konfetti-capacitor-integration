@@ -67,6 +67,8 @@ const PAYMENT_STATUS_OPTIONS = [
 type StatusFilter = 'all' | 'active' | 'draft' | 'closed';
 type PaymentFilter = 'all' | 'pending' | 'partial' | 'paid';
 type DateFilter = 'all' | 'upcoming' | 'this_month' | 'next_month' | 'past';
+type CurrencyFilter = 'all' | 'MXN' | 'USD' | 'INR';
+type PricingFilter = 'all' | 'paid' | 'free';
 
 export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps) => {
   const navigate = useNavigate();
@@ -77,6 +79,8 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<CurrencyFilter>('all');
+  const [pricingFilter, setPricingFilter] = useState<PricingFilter>('all');
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -217,6 +221,20 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
         }
       }
 
+      // Pricing filter (paid vs free)
+      if (pricingFilter !== 'all') {
+        const isFree = !event.price || event.price === 0;
+        if (pricingFilter === 'free' && !isFree) return false;
+        if (pricingFilter === 'paid' && isFree) return false;
+      }
+
+      // Currency filter (exclude free events since they have no real currency)
+      if (currencyFilter !== 'all') {
+        const isFree = !event.price || event.price === 0;
+        if (isFree) return false;
+        if ((event.currency || 'MXN') !== currencyFilter) return false;
+      }
+
       // Date filter
       if (dateFilter !== 'all' && event.date) {
         const eventDate = parseLocalDate(event.date);
@@ -249,7 +267,7 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
 
       return true;
     });
-  }, [events, statusFilter, paymentFilter, dateFilter]);
+  }, [events, statusFilter, paymentFilter, dateFilter, currencyFilter, pricingFilter]);
 
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -290,12 +308,14 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
     closed: events.filter(e => getEventStatus(e) === 'closed').length,
   };
 
-  const hasActiveFilters = statusFilter !== 'all' || paymentFilter !== 'all' || dateFilter !== 'all';
+  const hasActiveFilters = statusFilter !== 'all' || paymentFilter !== 'all' || dateFilter !== 'all' || currencyFilter !== 'all' || pricingFilter !== 'all';
 
   const clearFilters = () => {
     setStatusFilter('all');
     setPaymentFilter('all');
     setDateFilter('all');
+    setCurrencyFilter('all');
+    setPricingFilter('all');
   };
 
   const handleStatsCardClick = (status: StatusFilter) => {
@@ -322,48 +342,86 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2">
           <Filter className="w-4 h-4" />
           <span>Filtros:</span>
         </div>
 
-        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-          <SelectTrigger className="w-[140px] h-9">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activos</SelectItem>
-            <SelectItem value="draft">Borradores</SelectItem>
-            <SelectItem value="closed">Cerrados</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Estado</span>
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Activos</SelectItem>
+              <SelectItem value="draft">Borradores</SelectItem>
+              <SelectItem value="closed">Cerrados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}>
-          <SelectTrigger className="w-[140px] h-9">
-            <SelectValue placeholder="Pago" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="pending">Pendiente</SelectItem>
-            <SelectItem value="partial">Parcial</SelectItem>
-            <SelectItem value="paid">Pagado</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Pago</span>
+          <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="partial">Parcial</SelectItem>
+              <SelectItem value="paid">Pagado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
-          <SelectTrigger className="w-[150px] h-9">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las fechas</SelectItem>
-            <SelectItem value="upcoming">Próximos</SelectItem>
-            <SelectItem value="this_month">Este mes</SelectItem>
-            <SelectItem value="next_month">Próximo mes</SelectItem>
-            <SelectItem value="past">Pasados</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Período</span>
+          <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as DateFilter)}>
+            <SelectTrigger className="w-[150px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las fechas</SelectItem>
+              <SelectItem value="upcoming">Próximos</SelectItem>
+              <SelectItem value="this_month">Este mes</SelectItem>
+              <SelectItem value="next_month">Próximo mes</SelectItem>
+              <SelectItem value="past">Pasados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Precio</span>
+          <Select value={pricingFilter} onValueChange={(value) => setPricingFilter(value as PricingFilter)}>
+            <SelectTrigger className="w-[120px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="paid">De pago</SelectItem>
+              <SelectItem value="free">Gratis</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Moneda</span>
+          <Select value={currencyFilter} onValueChange={(value) => setCurrencyFilter(value as CurrencyFilter)}>
+            <SelectTrigger className="w-[120px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="MXN">MXN</SelectItem>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="INR">INR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
@@ -491,7 +549,10 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                           event.price === 0 ? (
                             <span className="text-muted-foreground">Gratis</span>
                           ) : (
-                            <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                            <>
+                              <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                              <span className="text-xs text-muted-foreground ml-1">{event.currency || 'MXN'}</span>
+                            </>
                           )
                         ) : (
                           <span className="text-muted-foreground">-</span>

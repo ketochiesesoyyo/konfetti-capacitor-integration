@@ -60,6 +60,25 @@ const getPaymentStatusBadge = (status: string) => {
   }
 };
 
+const MultiCurrencyDisplay = ({ amounts }: { amounts: Record<string, number> }) => {
+  const entries = Object.entries(amounts).filter(([_, v]) => v > 0);
+  if (entries.length === 0) return <>$0.00</>;
+  if (entries.length === 1) {
+    const [cur, amt] = entries[0];
+    return <>{formatCurrency(amt, cur)} <span className="text-sm font-normal text-muted-foreground">{cur}</span></>;
+  }
+  return (
+    <div className="space-y-0.5">
+      {entries.map(([cur, amt]) => (
+        <div key={cur} className="flex items-baseline gap-1">
+          <span className="text-lg">{formatCurrency(amt, cur)}</span>
+          <span className="text-xs font-normal text-muted-foreground">{cur}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortColumn>('date');
@@ -68,27 +87,39 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
   // Only events with a price (excludes free/unpriced)
   const pricedEvents = useMemo(() => events.filter(e => e.price && e.price > 0), [events]);
 
-  // Stats
-  const totalRevenue = useMemo(() =>
+  // Stats grouped by currency
+  const totalRevenueByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
     pricedEvents
       .filter(e => e.payment_status === 'paid')
-      .reduce((sum, e) => sum + (e.price || 0), 0),
-    [pricedEvents]
-  );
+      .forEach(e => {
+        const cur = e.currency || 'MXN';
+        result[cur] = (result[cur] || 0) + (e.price || 0);
+      });
+    return result;
+  }, [pricedEvents]);
 
-  const totalCommissionsPaid = useMemo(() =>
+  const totalCommissionsPaidByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
     pricedEvents
       .filter(e => e.payment_status === 'paid')
-      .reduce((sum, e) => sum + getCommissionAmount(e), 0),
-    [pricedEvents]
-  );
+      .forEach(e => {
+        const cur = e.currency || 'MXN';
+        result[cur] = (result[cur] || 0) + getCommissionAmount(e);
+      });
+    return result;
+  }, [pricedEvents]);
 
-  const totalCommissionsPending = useMemo(() =>
+  const totalCommissionsPendingByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
     pricedEvents
       .filter(e => e.payment_status === 'pending' || e.payment_status === 'partial')
-      .reduce((sum, e) => sum + getCommissionAmount(e), 0),
-    [pricedEvents]
-  );
+      .forEach(e => {
+        const cur = e.currency || 'MXN';
+        result[cur] = (result[cur] || 0) + getCommissionAmount(e);
+      });
+    return result;
+  }, [pricedEvents]);
 
   const paidCount = useMemo(() =>
     pricedEvents.filter(e => e.payment_status === 'paid').length,
@@ -132,11 +163,12 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
     });
   }, [pricedEvents, sortBy, sortDir]);
 
-  // Monthly breakdown
+  // Monthly breakdown grouped by month + currency
   const monthlyBreakdown = useMemo(() => {
-    const months = new Map<string, {
+    const buckets = new Map<string, {
       label: string;
       sortKey: string;
+      currency: string;
       eventCount: number;
       totalPrice: number;
       totalCommissions: number;
@@ -147,14 +179,17 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
     pricedEvents.forEach(event => {
       if (!event.date) return;
       const d = parseLocalDate(event.date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const cur = event.currency || 'MXN';
+      const key = `${monthKey}-${cur}`;
       const label = format(d, "MMMM yyyy", { locale: es });
       const commission = getCommissionAmount(event);
 
-      if (!months.has(key)) {
-        months.set(key, {
+      if (!buckets.has(key)) {
+        buckets.set(key, {
           label: label.charAt(0).toUpperCase() + label.slice(1),
           sortKey: key,
+          currency: cur,
           eventCount: 0,
           totalPrice: 0,
           totalCommissions: 0,
@@ -163,7 +198,7 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
         });
       }
 
-      const m = months.get(key)!;
+      const m = buckets.get(key)!;
       m.eventCount++;
       m.totalPrice += event.price || 0;
       m.totalCommissions += commission;
@@ -174,7 +209,7 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
       }
     });
 
-    return Array.from(months.values()).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+    return Array.from(buckets.values()).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
   }, [pricedEvents]);
 
   if (isLoading) {
@@ -190,17 +225,17 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatsCard
-          value={formatCurrency(totalRevenue)}
+          value={<MultiCurrencyDisplay amounts={totalRevenueByCurrency} />}
           label="Total Ingresos"
           valueColor="text-emerald-600"
         />
         <StatsCard
-          value={formatCurrency(totalCommissionsPaid)}
+          value={<MultiCurrencyDisplay amounts={totalCommissionsPaidByCurrency} />}
           label="Comisiones Pagadas"
           valueColor="text-blue-600"
         />
         <StatsCard
-          value={formatCurrency(totalCommissionsPending)}
+          value={<MultiCurrencyDisplay amounts={totalCommissionsPendingByCurrency} />}
           label="Comisiones Pendientes"
           valueColor="text-amber-600"
         />
@@ -282,6 +317,7 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
                         </TableCell>
                         <TableCell>
                           <span className="font-medium">{formatCurrency(event.price || 0, event.currency || 'MXN')}</span>
+                          <span className="text-xs text-muted-foreground ml-1">{event.currency || 'MXN'}</span>
                         </TableCell>
                         <TableCell>
                           {commission > 0 ? (
@@ -323,6 +359,7 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Mes</TableHead>
+                    <TableHead className="text-center">Moneda</TableHead>
                     <TableHead className="text-right">Eventos</TableHead>
                     <TableHead className="text-right">Total Precio</TableHead>
                     <TableHead className="text-right">Comisiones</TableHead>
@@ -334,11 +371,14 @@ export const RevenueTab = ({ events, isLoading }: RevenueTabProps) => {
                   {monthlyBreakdown.map((month) => (
                     <TableRow key={month.sortKey}>
                       <TableCell className="font-medium">{month.label}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-xs">{month.currency}</Badge>
+                      </TableCell>
                       <TableCell className="text-right">{month.eventCount}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(month.totalPrice)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(month.totalCommissions)}</TableCell>
-                      <TableCell className="text-right text-emerald-600">{formatCurrency(month.paidAmount)}</TableCell>
-                      <TableCell className="text-right text-amber-600">{formatCurrency(month.pendingAmount)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(month.totalPrice, month.currency)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(month.totalCommissions, month.currency)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatCurrency(month.paidAmount, month.currency)}</TableCell>
+                      <TableCell className="text-right text-amber-600">{formatCurrency(month.pendingAmount, month.currency)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

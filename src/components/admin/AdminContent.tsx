@@ -255,36 +255,46 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
   const totalLeadsAndClients = requests.length;
   const conversionRate = totalLeadsAndClients > 0 ? (paidRequests / totalLeadsAndClients) * 100 : 0;
 
-  const defaultCurrency = "MXN";
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  const totalRevenue = hostedEvents
-    .filter(e => e.payment_status === 'paid' && e.price)
-    .reduce((sum, e) => sum + (e.price || 0), 0);
+  // Group amounts by currency
+  const groupByCurrency = (
+    events: HostedEvent[],
+    filter: (e: HostedEvent) => boolean
+  ): Record<string, number> => {
+    const result: Record<string, number> = {};
+    events.filter(filter).forEach(e => {
+      const cur = e.currency || 'MXN';
+      result[cur] = (result[cur] || 0) + (e.price || 0);
+    });
+    return result;
+  };
 
-  const revenueThisMonth = hostedEvents
-    .filter(e => {
-      if (!e.date || e.payment_status !== 'paid' || !e.price) return false;
-      const eventDate = new Date(e.date);
-      return eventDate >= startOfMonth && eventDate <= endOfMonth;
-    })
-    .reduce((sum, e) => sum + (e.price || 0), 0);
+  const totalRevenue = groupByCurrency(hostedEvents, e => e.payment_status === 'paid' && !!e.price);
 
-  const pendingPayments = hostedEvents
-    .filter(e => e.price && (!e.payment_status || e.payment_status === 'pending' || e.payment_status === 'partial'))
-    .reduce((sum, e) => sum + (e.price || 0), 0);
+  const revenueThisMonth = groupByCurrency(hostedEvents, e => {
+    if (!e.date || e.payment_status !== 'paid' || !e.price) return false;
+    const eventDate = new Date(e.date);
+    return eventDate >= startOfMonth && eventDate <= endOfMonth;
+  });
 
-  const commissionsTotal = hostedEvents
+  const pendingPayments = groupByCurrency(hostedEvents, e =>
+    !!e.price && (!e.payment_status || e.payment_status === 'pending' || e.payment_status === 'partial')
+  );
+
+  const commissionsTotal: Record<string, number> = {};
+  hostedEvents
     .filter(e => e.commission_type && e.commission_value)
-    .reduce((sum, e) => {
-      if (!e.commission_value || !e.price) return sum;
-      if (e.commission_type === 'percentage') {
-        return sum + (e.price * e.commission_value / 100);
-      }
-      return sum + e.commission_value;
-    }, 0);
+    .forEach(e => {
+      if (!e.commission_value || !e.price) return;
+      const cur = e.currency || 'MXN';
+      const comm = e.commission_type === 'percentage'
+        ? e.price * e.commission_value / 100
+        : e.commission_value;
+      commissionsTotal[cur] = (commissionsTotal[cur] || 0) + comm;
+    });
 
   const revenueMetrics = { totalRevenue, revenueThisMonth, pendingPayments, commissionsTotal };
 
@@ -319,9 +329,20 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
     <>
       <div className="p-4 md:p-6 lg:p-8">
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">{currentSection.title}</h1>
-          <p className="text-muted-foreground">{currentSection.subtitle}</p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">{currentSection.title}</h1>
+            <p className="text-muted-foreground">{currentSection.subtitle}</p>
+          </div>
+          <Button
+            onClick={() => {
+              setRequestForEventCreation(null);
+              setCreateEventDialogOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Crear Evento
+          </Button>
         </div>
 
         {/* Content */}
@@ -339,7 +360,6 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
                 conversionRate={conversionRate}
                 revenueMetrics={revenueMetrics}
                 upcomingEvents={upcomingEvents}
-                currency={defaultCurrency}
               />
             )}
 

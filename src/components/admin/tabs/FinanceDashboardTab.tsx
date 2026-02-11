@@ -70,6 +70,38 @@ const PIE_COLORS = {
 
 type TopClientSort = "rank" | "client" | "events" | "revenue" | "commissions" | "avgTicket";
 
+const MultiCurrencyDisplay = ({ amounts }: { amounts: Record<string, number> }) => {
+  const entries = Object.entries(amounts).filter(([_, v]) => v > 0);
+  if (entries.length === 0) return <>$0.00</>;
+  if (entries.length === 1) {
+    const [cur, amt] = entries[0];
+    return <>{formatCurrency(amt, cur)} <span className="text-sm font-normal text-muted-foreground">{cur}</span></>;
+  }
+  return (
+    <div className="space-y-0.5">
+      {entries.map(([cur, amt]) => (
+        <div key={cur} className="flex items-baseline gap-1">
+          <span className="text-lg">{formatCurrency(amt, cur)}</span>
+          <span className="text-xs font-normal text-muted-foreground">{cur}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const groupByCurrency = (
+  events: HostedEvent[],
+  filter: (e: HostedEvent) => boolean,
+  getValue: (e: HostedEvent) => number
+): Record<string, number> => {
+  const result: Record<string, number> = {};
+  events.filter(filter).forEach(e => {
+    const cur = e.currency || 'MXN';
+    result[cur] = (result[cur] || 0) + getValue(e);
+  });
+  return result;
+};
+
 export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabProps) => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<TopClientSort>("revenue");
@@ -77,41 +109,73 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
 
   const pricedEvents = useMemo(() => events.filter((e) => e.price && e.price > 0), [events]);
 
-  // ── KPI computations ──
+  // Currencies in use
+  const currencies = useMemo(() => {
+    const set = new Set<string>();
+    pricedEvents.forEach(e => set.add(e.currency || 'MXN'));
+    return Array.from(set).sort();
+  }, [pricedEvents]);
 
-  const totalBilledRevenue = useMemo(
-    () => pricedEvents.reduce((sum, e) => sum + (e.price || 0), 0),
-    [pricedEvents]
-  );
+  // ── KPI computations (per currency) ──
 
-  const paidRevenue = useMemo(
-    () =>
-      pricedEvents
-        .filter((e) => e.payment_status === "paid")
-        .reduce((sum, e) => sum + (e.price || 0), 0),
-    [pricedEvents]
-  );
+  const netRevenueByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
+    currencies.forEach(cur => {
+      const curEvents = pricedEvents.filter(e => (e.currency || 'MXN') === cur);
+      const paid = curEvents
+        .filter(e => e.payment_status === "paid")
+        .reduce((sum, e) => sum + (e.price || 0), 0);
+      const comms = curEvents
+        .filter(e => e.payment_status === "paid")
+        .reduce((sum, e) => sum + getCommissionAmount(e), 0);
+      result[cur] = paid - comms;
+    });
+    return result;
+  }, [pricedEvents, currencies]);
 
-  const totalCommissionsPaid = useMemo(
-    () =>
-      pricedEvents
-        .filter((e) => e.payment_status === "paid")
-        .reduce((sum, e) => sum + getCommissionAmount(e), 0),
-    [pricedEvents]
-  );
+  const avgTicketByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
+    currencies.forEach(cur => {
+      const curEvents = pricedEvents.filter(e => (e.currency || 'MXN') === cur);
+      const total = curEvents.reduce((sum, e) => sum + (e.price || 0), 0);
+      result[cur] = curEvents.length > 0 ? total / curEvents.length : 0;
+    });
+    return result;
+  }, [pricedEvents, currencies]);
 
-  const netRevenue = paidRevenue - totalCommissionsPaid;
-  const effectiveMargin = paidRevenue > 0 ? ((paidRevenue - totalCommissionsPaid) / paidRevenue) * 100 : 0;
-  const collectionRate = totalBilledRevenue > 0 ? (paidRevenue / totalBilledRevenue) * 100 : 0;
-  const avgTicket = pricedEvents.length > 0 ? totalBilledRevenue / pricedEvents.length : 0;
+  const revenuePerGuestByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
+    const totalAttendees = events.reduce((sum, e) => sum + (e.event_attendees?.[0]?.count || 0), 0);
+    if (totalAttendees === 0) return result;
+    currencies.forEach(cur => {
+      const paid = pricedEvents
+        .filter(e => (e.currency || 'MXN') === cur && e.payment_status === "paid")
+        .reduce((sum, e) => sum + (e.price || 0), 0);
+      if (paid > 0) result[cur] = paid / totalAttendees;
+    });
+    return result;
+  }, [pricedEvents, events, currencies]);
 
-  const totalAttendees = useMemo(
-    () => events.reduce((sum, e) => sum + (e.event_attendees?.[0]?.count || 0), 0),
-    [events]
-  );
-  const revenuePerGuest = totalAttendees > 0 ? paidRevenue / totalAttendees : 0;
+  // Percentage KPIs (overall per currency)
+  const effectiveMargin = useMemo(() => {
+    let totalPaid = 0;
+    let totalComms = 0;
+    pricedEvents.filter(e => e.payment_status === "paid").forEach(e => {
+      totalPaid += e.price || 0;
+      totalComms += getCommissionAmount(e);
+    });
+    return totalPaid > 0 ? ((totalPaid - totalComms) / totalPaid) * 100 : 0;
+  }, [pricedEvents]);
 
-  // MoM growth
+  const collectionRate = useMemo(() => {
+    const totalBilled = pricedEvents.reduce((sum, e) => sum + (e.price || 0), 0);
+    const totalPaid = pricedEvents
+      .filter(e => e.payment_status === "paid")
+      .reduce((sum, e) => sum + (e.price || 0), 0);
+    return totalBilled > 0 ? (totalPaid / totalBilled) * 100 : 0;
+  }, [pricedEvents]);
+
+  // MoM growth (per currency)
   const momGrowth = useMemo(() => {
     const now = new Date();
     const curMonth = now.getMonth();
@@ -135,36 +199,44 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
     return ((curRev - prevRev) / prevRev) * 100;
   }, [pricedEvents]);
 
-  // ── Monthly chart data ──
+  // ── Monthly chart data (per currency) ──
 
-  const monthlyChartData = useMemo(() => {
-    const months = new Map<
-      string,
-      { label: string; sortKey: string; cobrado: number; pendiente: number; comisiones: number }
-    >();
+  const monthlyChartDataByCurrency = useMemo(() => {
+    const result: Record<string, { label: string; sortKey: string; cobrado: number; pendiente: number; comisiones: number }[]> = {};
 
-    pricedEvents.forEach((event) => {
-      if (!event.date) return;
-      const d = parseLocalDate(event.date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = format(d, "MMM yy", { locale: es });
-      const commission = getCommissionAmount(event);
+    currencies.forEach(cur => {
+      const months = new Map<
+        string,
+        { label: string; sortKey: string; cobrado: number; pendiente: number; comisiones: number }
+      >();
 
-      if (!months.has(key)) {
-        months.set(key, { label, sortKey: key, cobrado: 0, pendiente: 0, comisiones: 0 });
-      }
+      pricedEvents
+        .filter(e => (e.currency || 'MXN') === cur)
+        .forEach((event) => {
+          if (!event.date) return;
+          const d = parseLocalDate(event.date);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          const label = format(d, "MMM yy", { locale: es });
+          const commission = getCommissionAmount(event);
 
-      const m = months.get(key)!;
-      if (event.payment_status === "paid") {
-        m.cobrado += event.price || 0;
-      } else {
-        m.pendiente += event.price || 0;
-      }
-      m.comisiones += commission;
+          if (!months.has(key)) {
+            months.set(key, { label, sortKey: key, cobrado: 0, pendiente: 0, comisiones: 0 });
+          }
+
+          const m = months.get(key)!;
+          if (event.payment_status === "paid") {
+            m.cobrado += event.price || 0;
+          } else {
+            m.pendiente += event.price || 0;
+          }
+          m.comisiones += commission;
+        });
+
+      result[cur] = Array.from(months.values()).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     });
 
-    return Array.from(months.values()).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  }, [pricedEvents]);
+    return result;
+  }, [pricedEvents, currencies]);
 
   // ── Pie chart data ──
 
@@ -195,26 +267,32 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
         contactId: string;
         name: string;
         totalEvents: number;
-        totalRevenue: number;
-        totalCommissions: number;
+        revenueByCurrency: Record<string, number>;
+        commissionsByCurrency: Record<string, number>;
       }
     >();
 
     pricedEvents.forEach((e) => {
       const cid = e.contact_id || "__none__";
       const cname = e.contacts?.contact_name || "Sin cliente";
+      const cur = e.currency || 'MXN';
 
       if (!clientMap.has(cid)) {
-        clientMap.set(cid, { contactId: cid, name: cname, totalEvents: 0, totalRevenue: 0, totalCommissions: 0 });
+        clientMap.set(cid, { contactId: cid, name: cname, totalEvents: 0, revenueByCurrency: {}, commissionsByCurrency: {} });
       }
 
       const c = clientMap.get(cid)!;
       c.totalEvents++;
-      c.totalRevenue += e.price || 0;
-      c.totalCommissions += getCommissionAmount(e);
+      c.revenueByCurrency[cur] = (c.revenueByCurrency[cur] || 0) + (e.price || 0);
+      c.commissionsByCurrency[cur] = (c.commissionsByCurrency[cur] || 0) + getCommissionAmount(e);
     });
 
-    return Array.from(clientMap.values()).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    // Sort by total revenue (sum of all currencies for ranking purposes)
+    return Array.from(clientMap.values()).sort((a, b) => {
+      const totalA = Object.values(a.revenueByCurrency).reduce((s, v) => s + v, 0);
+      const totalB = Object.values(b.revenueByCurrency).reduce((s, v) => s + v, 0);
+      return totalB - totalA;
+    });
   }, [pricedEvents]);
 
   const toggleSort = (column: TopClientSort) => {
@@ -228,6 +306,7 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
 
   const sortedClients = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
+    const sumValues = (obj: Record<string, number>) => Object.values(obj).reduce((s, v) => s + v, 0);
     return [...topClients].sort((a, b) => {
       switch (sortBy) {
         case "client":
@@ -235,16 +314,16 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
         case "events":
           return dir * (a.totalEvents - b.totalEvents);
         case "revenue":
-          return dir * (a.totalRevenue - b.totalRevenue);
+          return dir * (sumValues(a.revenueByCurrency) - sumValues(b.revenueByCurrency));
         case "commissions":
-          return dir * (a.totalCommissions - b.totalCommissions);
+          return dir * (sumValues(a.commissionsByCurrency) - sumValues(b.commissionsByCurrency));
         case "avgTicket": {
-          const avgA = a.totalEvents > 0 ? a.totalRevenue / a.totalEvents : 0;
-          const avgB = b.totalEvents > 0 ? b.totalRevenue / b.totalEvents : 0;
+          const avgA = a.totalEvents > 0 ? sumValues(a.revenueByCurrency) / a.totalEvents : 0;
+          const avgB = b.totalEvents > 0 ? sumValues(b.revenueByCurrency) / b.totalEvents : 0;
           return dir * (avgA - avgB);
         }
         default:
-          return dir * (a.totalRevenue - b.totalRevenue);
+          return dir * (sumValues(a.revenueByCurrency) - sumValues(b.revenueByCurrency));
       }
     });
   }, [topClients, sortBy, sortDir]);
@@ -256,10 +335,6 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
     () => pricedEvents.filter((e) => !e.commission_type).length,
     [pricedEvents]
   );
-
-  // ── Tooltip formatter ──
-
-  const tooltipFormatter = (value: number) => formatCurrency(value);
 
   if (isLoading) {
     return (
@@ -273,11 +348,11 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
     <div className="space-y-6">
       {/* Section A — KPI Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatsCard value={formatCurrency(netRevenue)} label="Ingreso Neto" valueColor="text-emerald-600" />
+        <StatsCard value={<MultiCurrencyDisplay amounts={netRevenueByCurrency} />} label="Ingreso Neto" valueColor="text-emerald-600" />
         <StatsCard value={`${effectiveMargin.toFixed(1)}%`} label="Margen Efectivo" valueColor="text-blue-600" />
         <StatsCard value={`${collectionRate.toFixed(1)}%`} label="Tasa de Cobro" valueColor="text-purple-600" />
-        <StatsCard value={formatCurrency(avgTicket)} label="Ticket Promedio" valueColor="text-teal-600" />
-        <StatsCard value={formatCurrency(revenuePerGuest)} label="Ingreso por Invitado" valueColor="text-indigo-600" />
+        <StatsCard value={<MultiCurrencyDisplay amounts={avgTicketByCurrency} />} label="Ticket Promedio" valueColor="text-teal-600" />
+        <StatsCard value={<MultiCurrencyDisplay amounts={revenuePerGuestByCurrency} />} label="Ingreso por Invitado" valueColor="text-indigo-600" />
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-1">
@@ -296,35 +371,40 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
         </Card>
       </div>
 
-      {/* Section B — Monthly Revenue Chart */}
-      {monthlyChartData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ingresos Mensuales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <ComposedChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={tooltipFormatter} />
-                <Legend />
-                <Bar dataKey="cobrado" name="Cobrado" stackId="revenue" fill="#10b981" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="pendiente" name="Pendiente" stackId="revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                <Line
-                  dataKey="comisiones"
-                  name="Comisiones"
-                  type="monotone"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
+      {/* Section B — Monthly Revenue Chart (per currency) */}
+      {currencies.map(cur => {
+        const chartData = monthlyChartDataByCurrency[cur] || [];
+        if (chartData.length === 0) return null;
+        const symbol = ({ MXN: "$", USD: "$", INR: "\u20B9" } as Record<string, string>)[cur] || "$";
+        return (
+          <Card key={cur}>
+            <CardHeader>
+              <CardTitle>Ingresos Mensuales {currencies.length > 1 ? `(${cur})` : ""}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={350}>
+                <ComposedChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${symbol}${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value, cur)} />
+                  <Legend />
+                  <Bar dataKey="cobrado" name="Cobrado" stackId="revenue" fill="#10b981" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="pendiente" name="Pendiente" stackId="revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Line
+                    dataKey="comisiones"
+                    name="Comisiones"
+                    type="monotone"
+                    stroke="#6366f1"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {/* Section C — Payment Status Pie Chart */}
       {pieData.length > 0 && (
@@ -381,7 +461,10 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
                 </TableHeader>
                 <TableBody>
                   {sortedClients.map((client, index) => {
-                    const clientAvg = client.totalEvents > 0 ? client.totalRevenue / client.totalEvents : 0;
+                    const avgByCurrency: Record<string, number> = {};
+                    Object.entries(client.revenueByCurrency).forEach(([cur, rev]) => {
+                      avgByCurrency[cur] = client.totalEvents > 0 ? rev / client.totalEvents : 0;
+                    });
                     return (
                       <TableRow key={client.contactId}>
                         <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
@@ -398,9 +481,15 @@ export const FinanceDashboardTab = ({ events, isLoading }: FinanceDashboardTabPr
                           )}
                         </TableCell>
                         <TableCell>{client.totalEvents}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(client.totalRevenue)}</TableCell>
-                        <TableCell>{formatCurrency(client.totalCommissions)}</TableCell>
-                        <TableCell>{formatCurrency(clientAvg)}</TableCell>
+                        <TableCell className="font-medium">
+                          <MultiCurrencyDisplay amounts={client.revenueByCurrency} />
+                        </TableCell>
+                        <TableCell>
+                          <MultiCurrencyDisplay amounts={client.commissionsByCurrency} />
+                        </TableCell>
+                        <TableCell>
+                          <MultiCurrencyDisplay amounts={avgByCurrency} />
+                        </TableCell>
                       </TableRow>
                     );
                   })}

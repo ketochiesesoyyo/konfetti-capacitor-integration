@@ -1,8 +1,9 @@
+import { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
-  value: number | string;
+  value: ReactNode;
   label: string;
   valueColor?: string;
 }

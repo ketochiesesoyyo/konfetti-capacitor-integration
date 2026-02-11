@@ -35,7 +35,7 @@ export const AdminEventSuccessDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader className="text-center pb-2">
+        <DialogHeader className="pb-2 items-center text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
@@ -46,8 +46,8 @@ export const AdminEventSuccessDialog = ({
               </div>
             </div>
           </div>
-          <DialogTitle className="text-2xl font-bold">¡Evento Creado!</DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogTitle className="text-2xl font-bold text-center">¡Evento Creado!</DialogTitle>
+          <DialogDescription className="text-base text-center">
             El evento ha sido creado exitosamente y está listo para recibir invitados.
           </DialogDescription>
         </DialogHeader>

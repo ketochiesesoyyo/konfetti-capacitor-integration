@@ -530,57 +530,69 @@ export const UsersTab = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2">
           <Filter className="w-4 h-4" />
           <span>Filtros:</span>
         </div>
 
-        <Select value={genderFilter} onValueChange={(v) => setGenderFilter(v as GenderFilter)}>
-          <SelectTrigger className="w-[130px] h-9">
-            <SelectValue placeholder="Género" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="male">Masculino</SelectItem>
-            <SelectItem value="female">Femenino</SelectItem>
-            <SelectItem value="other">Otro</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Género</span>
+          <Select value={genderFilter} onValueChange={(v) => setGenderFilter(v as GenderFilter)}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="male">Masculino</SelectItem>
+              <SelectItem value="female">Femenino</SelectItem>
+              <SelectItem value="other">Otro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-          <SelectTrigger className="w-[130px] h-9">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activos</SelectItem>
-            <SelectItem value="banned">Suspendidos</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Estado</span>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Activos</SelectItem>
+              <SelectItem value="banned">Suspendidos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={flaggedFilter} onValueChange={(v) => setFlaggedFilter(v as FlaggedFilter)}>
-          <SelectTrigger className="w-[150px] h-9">
-            <SelectValue placeholder="Reportes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="flagged">Con reportes/bloqueos</SelectItem>
-            <SelectItem value="clean">Sin reportes</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Reportes</span>
+          <Select value={flaggedFilter} onValueChange={(v) => setFlaggedFilter(v as FlaggedFilter)}>
+            <SelectTrigger className="w-[150px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="flagged">Con reportes/bloqueos</SelectItem>
+              <SelectItem value="clean">Sin reportes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={registrationFilter} onValueChange={(v) => setRegistrationFilter(v as RegistrationFilter)}>
-          <SelectTrigger className="w-[150px] h-9">
-            <SelectValue placeholder="Registro" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="this_month">Este mes</SelectItem>
-            <SelectItem value="last_3_months">Últimos 3 meses</SelectItem>
-            <SelectItem value="last_6_months">Últimos 6 meses</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Registro</span>
+          <Select value={registrationFilter} onValueChange={(v) => setRegistrationFilter(v as RegistrationFilter)}>
+            <SelectTrigger className="w-[150px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="this_month">Este mes</SelectItem>
+              <SelectItem value="last_3_months">Últimos 3 meses</SelectItem>
+              <SelectItem value="last_6_months">Últimos 6 meses</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">

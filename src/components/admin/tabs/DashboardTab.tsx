@@ -32,10 +32,10 @@ interface Event {
 }
 
 interface RevenueMetrics {
-  totalRevenue: number;
-  revenueThisMonth: number;
-  pendingPayments: number;
-  commissionsTotal: number;
+  totalRevenue: Record<string, number>;
+  revenueThisMonth: Record<string, number>;
+  pendingPayments: Record<string, number>;
+  commissionsTotal: Record<string, number>;
 }
 
 interface DashboardTabProps {
@@ -45,8 +45,26 @@ interface DashboardTabProps {
   conversionRate: number;
   revenueMetrics: RevenueMetrics;
   upcomingEvents: Event[];
-  currency: string;
 }
+
+const MultiCurrencyDisplay = ({ amounts }: { amounts: Record<string, number> }) => {
+  const entries = Object.entries(amounts).filter(([_, v]) => v > 0);
+  if (entries.length === 0) return <>$0.00</>;
+  if (entries.length === 1) {
+    const [cur, amt] = entries[0];
+    return <>{formatCurrency(amt, cur)} <span className="text-sm font-normal text-muted-foreground">{cur}</span></>;
+  }
+  return (
+    <div className="space-y-0.5">
+      {entries.map(([cur, amt]) => (
+        <div key={cur} className="flex items-baseline gap-1">
+          <span className="text-lg">{formatCurrency(amt, cur)}</span>
+          <span className="text-xs font-normal text-muted-foreground">{cur}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 type SortColumn = 'name' | 'date' | 'created_at' | 'client' | 'price' | 'status' | 'guests' | 'payment';
 
@@ -93,7 +111,6 @@ export const DashboardTab = ({
   conversionRate,
   revenueMetrics,
   upcomingEvents,
-  currency,
 }: DashboardTabProps) => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortColumn>('date');
@@ -163,26 +180,26 @@ export const DashboardTab = ({
       <div>
         <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
           <TrendingUp className="w-4 h-4" />
-          Métricas Financieras ({currency})
+          Métricas Financieras
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatsCard
-            value={formatCurrency(revenueMetrics.totalRevenue, currency)}
+            value={<MultiCurrencyDisplay amounts={revenueMetrics.totalRevenue} />}
             label="Ingresos Totales"
             valueColor="text-foreground"
           />
           <StatsCard
-            value={formatCurrency(revenueMetrics.revenueThisMonth, currency)}
+            value={<MultiCurrencyDisplay amounts={revenueMetrics.revenueThisMonth} />}
             label="Ingresos Este Mes"
             valueColor="text-foreground"
           />
           <StatsCard
-            value={formatCurrency(revenueMetrics.pendingPayments, currency)}
+            value={<MultiCurrencyDisplay amounts={revenueMetrics.pendingPayments} />}
             label="Pagos Pendientes"
             valueColor="text-foreground"
           />
           <StatsCard
-            value={formatCurrency(revenueMetrics.commissionsTotal, currency)}
+            value={<MultiCurrencyDisplay amounts={revenueMetrics.commissionsTotal} />}
             label="Comisiones Totales"
             valueColor="text-foreground"
           />
@@ -288,7 +305,10 @@ export const DashboardTab = ({
                           event.price === 0 ? (
                             <span className="text-muted-foreground">Gratis</span>
                           ) : (
-                            <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                            <>
+                              <span className="font-medium">{formatCurrency(event.price, event.currency || 'MXN')}</span>
+                              <span className="text-xs text-muted-foreground ml-1">{event.currency || 'MXN'}</span>
+                            </>
                           )
                         ) : (
                           <span className="text-muted-foreground">-</span>
