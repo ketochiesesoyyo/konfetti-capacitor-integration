@@ -27,6 +27,7 @@ interface Event {
   invite_code?: string;
   status?: string;
   close_date?: string;
+  created_at?: string;
   event_attendees?: { count: number }[];
 }
 
@@ -47,7 +48,7 @@ interface DashboardTabProps {
   currency: string;
 }
 
-type SortColumn = 'name' | 'date' | 'client' | 'price' | 'status' | 'guests' | 'payment';
+type SortColumn = 'name' | 'date' | 'created_at' | 'client' | 'price' | 'status' | 'guests' | 'payment';
 
 const formatCurrency = (amount: number, currency: string) => {
   const symbols: Record<string, string> = {
@@ -114,6 +115,8 @@ export const DashboardTab = ({
         return dir * a.name.localeCompare(b.name);
       case 'date':
         return dir * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'created_at':
+        return dir * (new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
       case 'client':
         const clientA = a.contacts?.contact_name || '';
         const clientB = b.contacts?.contact_name || '';
@@ -145,13 +148,13 @@ export const DashboardTab = ({
       <div>
         <h3 className="text-sm font-medium text-muted-foreground mb-3">Estadísticas CRM</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatsCard value={leadsCount} label="Leads Activos" valueColor="text-amber-500" />
-          <StatsCard value={clientsCount} label="Total Clientes" valueColor="text-primary" />
-          <StatsCard value={eventsCount} label="Total Eventos" valueColor="text-emerald-500" />
+          <StatsCard value={leadsCount} label="Leads Activos" valueColor="text-foreground" />
+          <StatsCard value={clientsCount} label="Total Clientes" valueColor="text-foreground" />
+          <StatsCard value={eventsCount} label="Total Eventos" valueColor="text-foreground" />
           <StatsCard
             value={`${conversionRate.toFixed(0)}%`}
             label="Tasa de Conversión"
-            valueColor="text-purple-500"
+            valueColor="text-foreground"
           />
         </div>
       </div>
@@ -166,22 +169,22 @@ export const DashboardTab = ({
           <StatsCard
             value={formatCurrency(revenueMetrics.totalRevenue, currency)}
             label="Ingresos Totales"
-            valueColor="text-emerald-600"
+            valueColor="text-foreground"
           />
           <StatsCard
             value={formatCurrency(revenueMetrics.revenueThisMonth, currency)}
             label="Ingresos Este Mes"
-            valueColor="text-blue-600"
+            valueColor="text-foreground"
           />
           <StatsCard
             value={formatCurrency(revenueMetrics.pendingPayments, currency)}
             label="Pagos Pendientes"
-            valueColor="text-amber-600"
+            valueColor="text-foreground"
           />
           <StatsCard
             value={formatCurrency(revenueMetrics.commissionsTotal, currency)}
             label="Comisiones Totales"
-            valueColor="text-purple-600"
+            valueColor="text-foreground"
           />
         </div>
       </div>
@@ -203,6 +206,7 @@ export const DashboardTab = ({
                     <SortableTableHeader column="name" label="Evento" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="date" label="Fecha" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="created_at" label="Creado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="status" label="Estado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="guests" label="Invitados" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="price" label="Precio" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
@@ -253,6 +257,11 @@ export const DashboardTab = ({
                       </TableCell>
                       <TableCell>
                         {format(parseLocalDate(event.date), "dd MMM yyyy", { locale: es })}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {event.created_at
+                          ? format(new Date(event.created_at), "dd MMM yyyy", { locale: es })
+                          : "-"}
                       </TableCell>
                       <TableCell>
                         <Badge

@@ -44,7 +44,7 @@ interface Contact {
   companies: { name: string } | null;
 }
 
-type SortColumn = 'name' | 'date' | 'status' | 'guests' | 'client' | 'price' | 'payment';
+type SortColumn = 'name' | 'date' | 'created_at' | 'status' | 'guests' | 'client' | 'price' | 'payment';
 
 interface EventsTabProps {
   events: HostedEvent[];
@@ -261,6 +261,8 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
         if (!a.date) return 1;
         if (!b.date) return -1;
         return dir * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'created_at':
+        return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       case 'status':
         return dir * getEventStatus(a).localeCompare(getEventStatus(b));
       case 'guests':
@@ -311,32 +313,12 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards - Clickable */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div
-          onClick={() => handleStatsCardClick('all')}
-          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'all' ? 'ring-2 ring-primary ring-offset-2' : 'hover:scale-[1.02]'}`}
-        >
-          <StatsCard value={stats.total} label="Total Eventos" />
-        </div>
-        <div
-          onClick={() => handleStatsCardClick('active')}
-          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'active' ? 'ring-2 ring-emerald-500 ring-offset-2' : 'hover:scale-[1.02]'}`}
-        >
-          <StatsCard value={stats.active} label="Activos" valueColor="text-emerald-500" />
-        </div>
-        <div
-          onClick={() => handleStatsCardClick('draft')}
-          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'draft' ? 'ring-2 ring-amber-500 ring-offset-2' : 'hover:scale-[1.02]'}`}
-        >
-          <StatsCard value={stats.draft} label="Borradores" valueColor="text-amber-500" />
-        </div>
-        <div
-          onClick={() => handleStatsCardClick('closed')}
-          className={`cursor-pointer transition-all rounded-xl ${statusFilter === 'closed' ? 'ring-2 ring-muted-foreground ring-offset-2' : 'hover:scale-[1.02]'}`}
-        >
-          <StatsCard value={stats.closed} label="Cerrados" valueColor="text-muted-foreground" />
-        </div>
+        <StatsCard value={stats.total} label="Total Eventos" />
+        <StatsCard value={stats.active} label="Activos" />
+        <StatsCard value={stats.draft} label="Borradores" />
+        <StatsCard value={stats.closed} label="Cerrados" />
       </div>
 
       {/* Filter Bar */}
@@ -426,6 +408,7 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                     <SortableTableHeader column="name" label="Evento" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="client" label="Cliente" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="date" label="Fecha" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                    <SortableTableHeader column="created_at" label="Creado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="status" label="Estado" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="guests" label="Invitados" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                     <SortableTableHeader column="price" label="Precio" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
@@ -479,6 +462,9 @@ export const EventsTab = ({ events, isLoading, onEventUpdated }: EventsTabProps)
                           ? format(parseLocalDate(event.date), "dd MMM yyyy", { locale: es })
                           : <span className="text-muted-foreground">Sin fecha</span>
                         }
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(event.created_at), "dd MMM yyyy", { locale: es })}
                       </TableCell>
                       <TableCell>
                         <Badge

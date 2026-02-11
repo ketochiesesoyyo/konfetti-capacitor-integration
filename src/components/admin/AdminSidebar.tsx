@@ -85,23 +85,23 @@ export const AdminSidebar = ({
 
   const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className={cn(
-      "flex flex-col h-full bg-card border-r",
+      "flex flex-col h-full bg-[hsl(220,13%,12%)] text-gray-300 border-r border-[hsl(220,13%,20%)]",
       isCollapsed && !isMobile ? "w-[70px]" : "w-[240px]",
       "transition-all duration-300"
     )}>
       {/* Header */}
       <div className={cn(
-        "flex items-center h-16 px-4 border-b",
+        "flex items-center h-16 px-4 border-b border-[hsl(220,13%,20%)]",
         isCollapsed && !isMobile ? "justify-center" : "justify-between"
       )}>
         {(!isCollapsed || isMobile) && (
-          <h1 className="text-lg font-bold text-primary">Konfetti Admin</h1>
+          <h1 className="text-lg font-bold text-white">Konfetti Admin</h1>
         )}
         {!isMobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -114,7 +114,7 @@ export const AdminSidebar = ({
         {navSections.map((section) => (
           <div key={section.title} className="mb-6">
             {(!isCollapsed || isMobile) && (
-              <h2 className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <h2 className="px-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 {section.title}
               </h2>
             )}
@@ -137,13 +137,13 @@ export const AdminSidebar = ({
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? "bg-white/10 text-white border-l-[3px] border-l-primary"
+                        : "text-gray-400 hover:bg-white/5 hover:text-gray-200",
                       isCollapsed && !isMobile && "justify-center px-2"
                     )}
                     title={isCollapsed && !isMobile ? item.label : undefined}
                   >
-                    <Icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-primary-foreground")} />
+                    <Icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
                     {(!isCollapsed || isMobile) && (
                       <>
                         <span className="flex-1 text-left">{item.label}</span>
@@ -151,8 +151,8 @@ export const AdminSidebar = ({
                           <span className={cn(
                             "px-2 py-0.5 text-xs rounded-full",
                             isActive
-                              ? "bg-primary-foreground/20 text-primary-foreground"
-                              : "bg-muted-foreground/20 text-muted-foreground"
+                              ? "bg-white/20 text-white"
+                              : "bg-white/10 text-gray-400"
                           )}>
                             {item.badge}
                           </span>
@@ -168,11 +168,11 @@ export const AdminSidebar = ({
       </nav>
 
       {/* Footer */}
-      <div className="border-t p-2 space-y-1">
+      <div className="border-t border-[hsl(220,13%,20%)] p-2 space-y-1">
         <button
           onClick={() => navigate("/dashboard")}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-gray-200 transition-colors",
             isCollapsed && !isMobile && "justify-center px-2"
           )}
           title={isCollapsed && !isMobile ? "Volver al Dashboard" : undefined}
@@ -187,8 +187,8 @@ export const AdminSidebar = ({
   return (
     <>
       {/* Mobile Header with Hamburger */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-card border-b z-40 flex items-center justify-between px-4">
-        <h1 className="text-lg font-bold text-primary">Konfetti Admin</h1>
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[hsl(220,13%,12%)] border-b border-[hsl(220,13%,20%)] z-40 flex items-center justify-between px-4">
+        <h1 className="text-lg font-bold text-white">Konfetti Admin</h1>
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">

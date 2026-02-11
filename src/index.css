@@ -323,4 +323,45 @@ All colors MUST be HSL.
   .animate-bounce-in {
     animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
+
+  /* Admin Panel - Notion-style minimal overrides */
+  .admin-panel {
+    --shadow-xs: none;
+    --shadow-soft: none;
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --shadow-heavy: none;
+
+    /* Neutral gray borders instead of warm peach */
+    --border: 0 0% 83%;
+    --input: 0 0% 88%;
+
+    /* Neutral text colors */
+    --foreground: 220 10% 15%;
+    --muted-foreground: 220 5% 45%;
+    --title: 220 10% 15%;
+
+    /* Gray background, darker cards */
+    --background: 220 5% 95%;
+    --card: 220 5% 88%;
+    --card-foreground: 220 10% 15%;
+  }
+
+  .admin-panel .rounded-\[28px\] {
+    border-radius: 0.5rem;
+  }
+
+  .admin-panel .hover-lift:hover {
+    transform: none;
+  }
+
+  /* Compact card spacing */
+  .admin-panel .p-8 {
+    padding: 1rem;
+  }
+
+  .admin-panel .p-8.pt-0 {
+    padding: 1rem;
+    padding-top: 0;
+  }
 }

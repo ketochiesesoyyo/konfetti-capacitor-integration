@@ -134,7 +134,7 @@ export const AdminLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="admin-panel min-h-screen bg-background flex">
       {/* Sidebar */}
       <AdminSidebar
         activeSection={getActiveSection()}
