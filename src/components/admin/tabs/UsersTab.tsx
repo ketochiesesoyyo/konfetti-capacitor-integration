@@ -85,9 +85,10 @@ interface UserWithStats extends UserProfile {
   eventsCount: number;
   reportsReceived: number;
   blocksReceived: number;
+  maskedEmail: string | null;
 }
 
-type SortColumn = "name" | "gender" | "age" | "created_at" | "events" | "reports" | "blocks";
+type SortColumn = "name" | "email" | "gender" | "age" | "created_at" | "events" | "reports" | "blocks";
 type GenderFilter = "all" | "male" | "female" | "other";
 type StatusFilter = "all" | "active" | "banned";
 type FlaggedFilter = "all" | "flagged" | "clean";
@@ -161,6 +162,13 @@ export const UsersTab = () => {
       .from("blocked_users")
       .select("blocked_id");
 
+    // Load masked emails (admin-only RPC)
+    const { data: emailsData } = await supabase.rpc("get_masked_emails");
+    const emailMap: Record<string, string> = {};
+    (emailsData as { user_id: string; masked_email: string }[] || []).forEach((e) => {
+      emailMap[e.user_id] = e.masked_email;
+    });
+
     // Count per user
     const eventCounts: Record<string, number> = {};
     attendees?.forEach((a) => {
@@ -183,6 +191,7 @@ export const UsersTab = () => {
       eventsCount: eventCounts[p.user_id] || 0,
       reportsReceived: reportCounts[p.user_id] || 0,
       blocksReceived: blockCounts[p.user_id] || 0,
+      maskedEmail: emailMap[p.user_id] || null,
     }));
 
     setUsers(usersWithStats);
@@ -272,7 +281,10 @@ export const UsersTab = () => {
     // Search
     if (search.trim()) {
       const s = search.toLowerCase();
-      filtered = filtered.filter((u) => u.name.toLowerCase().includes(s));
+      filtered = filtered.filter((u) =>
+        u.name.toLowerCase().includes(s) ||
+        (u.maskedEmail && u.maskedEmail.toLowerCase().includes(s))
+      );
     }
 
     // Status filter
@@ -325,6 +337,8 @@ export const UsersTab = () => {
       switch (sortBy) {
         case "name":
           return dir * a.name.localeCompare(b.name);
+        case "email":
+          return dir * (a.maskedEmail || "").localeCompare(b.maskedEmail || "");
         case "gender":
           return dir * (a.gender || "").localeCompare(b.gender || "");
         case "age":
@@ -600,6 +614,13 @@ export const UsersTab = () => {
                     onSort={toggleSort}
                   />
                   <SortableTableHeader
+                    column="email"
+                    label="Email"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={toggleSort}
+                  />
+                  <SortableTableHeader
                     column="gender"
                     label="Género"
                     sortBy={sortBy}
@@ -669,6 +690,9 @@ export const UsersTab = () => {
                         </div>
                         <span className="font-medium">{user.name}</span>
                       </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.maskedEmail || "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.gender === "male"
