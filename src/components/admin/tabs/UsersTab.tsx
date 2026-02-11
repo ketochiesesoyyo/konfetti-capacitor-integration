@@ -163,9 +163,9 @@ export const UsersTab = () => {
       .select("blocked_id");
 
     // Load masked emails (admin-only RPC)
-    const { data: emailsData } = await supabase.rpc("get_masked_emails");
+    const { data: emailsData } = await supabase.rpc("get_masked_emails" as any);
     const emailMap: Record<string, string> = {};
-    (emailsData as { user_id: string; masked_email: string }[] || []).forEach((e) => {
+    ((emailsData as unknown as { user_id: string; masked_email: string }[]) || []).forEach((e) => {
       emailMap[e.user_id] = e.masked_email;
     });
 
