@@ -218,7 +218,7 @@ const Auth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `https://konfetti-capacitor-integration.lovable.app/reset-password`,
+        redirectTo: `https://konfetti.app/reset-password`,
       });
 
       if (error) {
