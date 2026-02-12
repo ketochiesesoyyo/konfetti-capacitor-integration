@@ -10,6 +10,7 @@ import {
   Plus,
   DollarSign,
   BarChart3,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -83,6 +84,7 @@ export const AdminSidebar = ({
       items: [
         { id: "finance", label: "Dashboard", icon: BarChart3 },
         { id: "revenue", label: "Ingresos", icon: DollarSign },
+        { id: "analytics", label: "Análisis", icon: TrendingUp },
       ],
     },
   ];

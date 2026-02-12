@@ -162,6 +162,7 @@ const App = () => (
                   <Route path="users" element={<AdminContent activeTab="users" />} />
                   <Route path="revenue" element={<AdminContent activeTab="revenue" />} />
                   <Route path="finance" element={<AdminContent activeTab="finance" />} />
+                  <Route path="analytics" element={<AdminContent activeTab="analytics" />} />
                   <Route path="event/:eventId" element={<AdminEventDashboard />} />
                   <Route path="client/:id" element={<AdminClientDetail />} />
                 </Route>

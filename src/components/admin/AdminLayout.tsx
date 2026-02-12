@@ -93,6 +93,7 @@ export const AdminLayout = () => {
     if (path === '/admin/users') return 'users';
     if (path === '/admin/finance') return 'finance';
     if (path === '/admin/revenue') return 'revenue';
+    if (path === '/admin/analytics') return 'analytics';
     return 'dashboard';
   };
 
@@ -121,6 +122,9 @@ export const AdminLayout = () => {
         break;
       case 'revenue':
         navigate('/admin/revenue');
+        break;
+      case 'analytics':
+        navigate('/admin/analytics');
         break;
     }
   };

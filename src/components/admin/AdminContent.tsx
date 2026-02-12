@@ -20,6 +20,7 @@ import { UsersTab } from "./tabs/UsersTab";
 import { RevenueTab } from "./tabs/RevenueTab";
 import { FinanceDashboardTab } from "./tabs/FinanceDashboardTab";
 import { CompaniesTab } from "./tabs/CompaniesTab";
+import { AnalyticsTab } from "./tabs/AnalyticsTab";
 import { useAdminContext } from "./AdminLayout";
 
 interface EventRequest {
@@ -84,7 +85,7 @@ const STATUS_OPTIONS = [
 ];
 
 interface AdminContentProps {
-  activeTab: 'dashboard' | 'leads' | 'clients' | 'companies' | 'events' | 'users' | 'revenue' | 'finance';
+  activeTab: 'dashboard' | 'leads' | 'clients' | 'companies' | 'events' | 'users' | 'revenue' | 'finance' | 'analytics';
 }
 
 export const AdminContent = ({ activeTab }: AdminContentProps) => {
@@ -323,6 +324,7 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
     users: { title: "Usuarios", subtitle: "Usuarios registrados, reportes y bloqueos" },
     revenue: { title: "Ingresos", subtitle: "Resumen financiero de tus eventos" },
     finance: { title: "Dashboard Financiero", subtitle: "Métricas y análisis de rendimiento" },
+    analytics: { title: "Análisis de Empresas", subtitle: "Cohort, retención y concentración de ingresos" },
   };
 
   const currentSection = sectionTitles[activeTab] || sectionTitles.dashboard;
@@ -405,6 +407,14 @@ export const AdminContent = ({ activeTab }: AdminContentProps) => {
             {activeTab === "finance" && (
               <FinanceDashboardTab
                 events={hostedEvents}
+                isLoading={isLoading}
+              />
+            )}
+
+            {activeTab === "analytics" && (
+              <AnalyticsTab
+                events={hostedEvents}
+                clients={clients}
                 isLoading={isLoading}
               />
             )}
