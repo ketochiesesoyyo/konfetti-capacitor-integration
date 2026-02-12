@@ -41,6 +41,7 @@ const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m =
 const AdminContent = lazy(() => import("./components/admin/AdminContent").then(m => ({ default: m.AdminContent })));
 const AdminEventDashboard = lazy(() => import("./pages/AdminEventDashboard"));
 const AdminClientDetail = lazy(() => import("./pages/AdminClientDetail"));
+const AdminCompanyDetail = lazy(() => import("./pages/AdminCompanyDetail"));
 
 // Portal components (lazy loaded)
 const PortalLayout = lazy(() => import("./components/portal/PortalLayout").then(m => ({ default: m.PortalLayout })));
@@ -165,6 +166,7 @@ const App = () => (
                   <Route path="analytics" element={<AdminContent activeTab="analytics" />} />
                   <Route path="event/:eventId" element={<AdminEventDashboard />} />
                   <Route path="client/:id" element={<AdminClientDetail />} />
+                  <Route path="company/:id" element={<AdminCompanyDetail />} />
                 </Route>
               )}
               {/* Client Portal */}

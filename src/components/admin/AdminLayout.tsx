@@ -86,6 +86,7 @@ export const AdminLayout = () => {
     const path = location.pathname;
     if (path.includes('/admin/event/')) return 'events';
     if (path.includes('/admin/client/')) return 'clients';
+    if (path.includes('/admin/company/')) return 'companies';
     if (path === '/admin/leads') return 'leads';
     if (path === '/admin/clients') return 'clients';
     if (path === '/admin/events') return 'events';

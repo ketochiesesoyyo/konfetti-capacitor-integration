@@ -105,25 +105,88 @@ export type Database = {
       }
       companies: {
         Row: {
+          avg_guest_count: number | null
+          avg_weddings_per_year: number | null
+          city: string | null
+          commission_rate: number | null
+          country: string | null
           created_at: string
+          employee_count: number | null
+          facebook: string | null
           id: string
+          instagram: string | null
+          linkedin: string | null
+          logo_url: string | null
           name: string
           notes: string | null
+          partnership_tier: string | null
+          pinterest: string | null
+          price_tier: string | null
+          referral_source: string | null
+          regions_covered: string[] | null
+          specialties: string[] | null
+          state: string | null
+          tax_id: string | null
+          tiktok: string | null
           updated_at: string
+          website: string | null
+          year_founded: number | null
         }
         Insert: {
+          avg_guest_count?: number | null
+          avg_weddings_per_year?: number | null
+          city?: string | null
+          commission_rate?: number | null
+          country?: string | null
           created_at?: string
+          employee_count?: number | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
           name: string
           notes?: string | null
+          partnership_tier?: string | null
+          pinterest?: string | null
+          price_tier?: string | null
+          referral_source?: string | null
+          regions_covered?: string[] | null
+          specialties?: string[] | null
+          state?: string | null
+          tax_id?: string | null
+          tiktok?: string | null
           updated_at?: string
+          website?: string | null
+          year_founded?: number | null
         }
         Update: {
+          avg_guest_count?: number | null
+          avg_weddings_per_year?: number | null
+          city?: string | null
+          commission_rate?: number | null
+          country?: string | null
           created_at?: string
+          employee_count?: number | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
           name?: string
           notes?: string | null
+          partnership_tier?: string | null
+          pinterest?: string | null
+          price_tier?: string | null
+          referral_source?: string | null
+          regions_covered?: string[] | null
+          specialties?: string[] | null
+          state?: string | null
+          tax_id?: string | null
+          tiktok?: string | null
           updated_at?: string
+          website?: string | null
+          year_founded?: number | null
         }
         Relationships: []
       }
