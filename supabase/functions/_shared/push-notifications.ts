@@ -17,6 +17,12 @@ interface APNsConfig {
   production: boolean;
 }
 
+interface FCMServiceAccount {
+  client_email: string;
+  private_key: string;
+  project_id: string;
+}
+
 // Generate JWT for APNs authentication
 async function generateAPNsToken(config: APNsConfig): Promise<string> {
   const privateKey = await jose.importPKCS8(config.privateKey, "ES256");
@@ -81,6 +87,85 @@ async function sendToAPNs(
   }
 }
 
+// Get OAuth2 access token for FCM using service account credentials
+async function getFCMAccessToken(serviceAccount: FCMServiceAccount): Promise<string> {
+  const privateKey = await jose.importPKCS8(serviceAccount.private_key, "RS256");
+
+  const jwt = await new jose.SignJWT({
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuer(serviceAccount.client_email)
+    .setSubject(serviceAccount.client_email)
+    .setAudience("https://oauth2.googleapis.com/token")
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(privateKey);
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Failed to get FCM access token: ${response.status} ${errorBody}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+// Send push notification to a single device via FCM
+async function sendToFCM(
+  deviceToken: string,
+  payload: PushPayload,
+  serviceAccount: FCMServiceAccount
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const accessToken = await getFCMAccessToken(serviceAccount);
+    const url = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
+
+    const fcmPayload = {
+      message: {
+        token: deviceToken,
+        notification: {
+          title: payload.title,
+          body: payload.body,
+        },
+        data: payload.data || {},
+        android: {
+          priority: "high" as const,
+          notification: {
+            channel_id: "konfetti_messages",
+          },
+        },
+      },
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "authorization": `Bearer ${accessToken}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(fcmPayload),
+    });
+
+    if (response.ok) {
+      return { success: true };
+    } else {
+      const errorBody = await response.text();
+      console.error(`[PUSH] FCM error ${response.status}:`, errorBody);
+      return { success: false, error: `FCM error: ${response.status} ${errorBody}` };
+    }
+  } catch (error) {
+    console.error("[PUSH] Error sending to FCM:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
 // Main function to send push notifications to a user
 export async function sendPushNotification(
   supabaseAdmin: any,
@@ -94,8 +179,22 @@ export async function sendPushNotification(
   const apnsBundleId = Deno.env.get("APNS_BUNDLE_ID") || "app.konfetti.mobile";
   const apnsProduction = Deno.env.get("APNS_PRODUCTION") === "true";
 
-  if (!apnsKeyId || !apnsTeamId || !apnsPrivateKey) {
-    console.log("[PUSH] APNs not configured, skipping push notification");
+  // Parse FCM service account
+  const fcmServiceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT");
+  let fcmServiceAccount: FCMServiceAccount | null = null;
+  if (fcmServiceAccountJson) {
+    try {
+      fcmServiceAccount = JSON.parse(fcmServiceAccountJson) as FCMServiceAccount;
+    } catch (e) {
+      console.error("[PUSH] Failed to parse FCM_SERVICE_ACCOUNT:", e);
+    }
+  }
+
+  const apnsConfigured = !!(apnsKeyId && apnsTeamId && apnsPrivateKey);
+  const fcmConfigured = !!fcmServiceAccount;
+
+  if (!apnsConfigured && !fcmConfigured) {
+    console.log("[PUSH] Neither APNs nor FCM configured, skipping push notification");
     return { sent: 0, failed: 0 };
   }
 
@@ -115,27 +214,42 @@ export async function sendPushNotification(
     return { sent: 0, failed: 0 };
   }
 
-  const config: APNsConfig = {
-    keyId: apnsKeyId,
-    teamId: apnsTeamId,
-    privateKey: apnsPrivateKey.replace(/\\n/g, "\n"), // Handle escaped newlines
+  const apnsConfig: APNsConfig | null = apnsConfigured ? {
+    keyId: apnsKeyId!,
+    teamId: apnsTeamId!,
+    privateKey: apnsPrivateKey!.replace(/\\n/g, "\n"),
     bundleId: apnsBundleId,
     production: apnsProduction,
-  };
+  } : null;
 
   let sent = 0;
   let failed = 0;
 
   for (const { token, platform } of tokens) {
-    if (platform === "ios") {
-      const result = await sendToAPNs(token, payload, config);
+    if (platform === "ios" && apnsConfig) {
+      const result = await sendToAPNs(token, payload, apnsConfig);
       if (result.success) {
         sent++;
       } else {
         failed++;
         // If token is invalid, remove it
         if (result.error?.includes("BadDeviceToken") || result.error?.includes("Unregistered")) {
-          console.log("[PUSH] Removing invalid token:", token);
+          console.log("[PUSH] Removing invalid iOS token:", token);
+          await supabaseAdmin
+            .from("device_tokens")
+            .delete()
+            .eq("token", token);
+        }
+      }
+    } else if (platform === "android" && fcmServiceAccount) {
+      const result = await sendToFCM(token, payload, fcmServiceAccount);
+      if (result.success) {
+        sent++;
+      } else {
+        failed++;
+        // If token is invalid, remove it
+        if (result.error?.includes("UNREGISTERED") || result.error?.includes("INVALID_ARGUMENT")) {
+          console.log("[PUSH] Removing invalid Android token:", token);
           await supabaseAdmin
             .from("device_tokens")
             .delete()
@@ -143,7 +257,6 @@ export async function sendPushNotification(
         }
       }
     }
-    // TODO: Add FCM support for Android when needed
   }
 
   console.log(`[PUSH] Notifications sent: ${sent}, failed: ${failed}`);
