@@ -8,6 +8,29 @@ Format: dates in YYYY-MM-DD, grouped by category.
 
 ## 2026-02-11
 
+### Admin Dashboard — Contact Detail Page Redesign (`/admin/client/:id`)
+
+**Goal:** Redesign the contact detail page to match the company detail page layout, prominently showing which company/agency the contact belongs to.
+
+**Files changed:**
+- `src/pages/AdminClientDetail.tsx` — Full layout redesign: back button header with name + status/type badges + clickable company link, 4 stats cards (events, guests, paid revenue, pending revenue), two-column grid with contact info + portal status + notes cards, enriched events table with price and payment status columns
+
+**Status:** Deployed to `admin.konfetti.app` via Vercel.
+
+### Admin Dashboard — Company Phone, Email & Regions Covered
+
+**Goal:** Add company-level phone and email fields (independent of individual contacts), and surface the existing `regions_covered` array for companies that operate in multiple cities.
+
+**Database migration:**
+- `supabase/migrations/20260211220000_add_company_phone_email.sql` — Added `phone` and `email` columns to `companies` table
+
+**Files changed:**
+- `src/integrations/supabase/types.ts` — Added `phone` and `email` to companies Row/Insert/Update types
+- `src/components/admin/tabs/CompaniesTab.tsx` — Added phone/email fields to create/edit dialogs under "Información General"; added "Ciudades / Regiones que cubre" comma-separated input under "Ubicación"; city label clarified to "Ciudad (sede)"
+- `src/pages/AdminCompanyDetail.tsx` — Phone/email displayed in header subtitle; regions covered shown as badges in company profile card; phone/email/regions editable in edit dialog
+
+**Status:** Deployed to `admin.konfetti.app` via Vercel. Migration run via Supabase SQL Editor.
+
 ### Admin Dashboard — Analytics Tab (`/admin/analytics`)
 
 **Goal:** Add P1 analytics capabilities to the admin dashboard: cohort analysis, net revenue retention, and revenue concentration tracking for wedding planner companies.
