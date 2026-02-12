@@ -31,6 +31,36 @@ Format: dates in YYYY-MM-DD, grouped by category.
 
 **Status:** Deployed to `admin.konfetti.app` via Vercel.
 
+### Admin Dashboard — Enriched Company Profiles (`/admin/companies`, `/admin/company/:id`)
+
+**Goal:** Expand the companies/empresas section from a basic name+notes table into a full CRM profile for wedding planner companies, with social links, location, business details, and a dedicated detail page.
+
+**Database migration:**
+- `supabase/migrations/20260211180000_enrich_companies_table.sql` — Added 21 new columns to `companies` table:
+  - Social: `website`, `instagram`, `linkedin`, `facebook`, `pinterest`, `tiktok`
+  - Location: `country`, `city`, `state`, `regions_covered`
+  - Business: `employee_count`, `year_founded`, `logo_url`, `tax_id`
+  - Wedding planner: `price_tier`, `avg_weddings_per_year`, `avg_guest_count`, `specialties`
+  - Relationship: `partnership_tier`, `referral_source`, `commission_rate`
+
+**Files changed:**
+- `src/integrations/supabase/types.ts` — Updated `companies` Row/Insert/Update types with all new fields
+- `src/components/admin/tabs/CompaniesTab.tsx` — Enriched table (Location, Tier, Social columns), full create/edit dialogs with 5 sections, clickable rows to detail page, search by name/city/country
+- `src/App.tsx` — Added lazy import + route for `AdminCompanyDetail`
+- `src/components/admin/AdminLayout.tsx` — Added `/admin/company/` path to sidebar highlight
+
+**Files created:**
+- `src/pages/AdminCompanyDetail.tsx` — Company detail page with:
+  - Stats cards (contacts, events, paid revenue, pending revenue)
+  - Company profile card (segment, referral source, commission, employees, year founded, RFC)
+  - Wedding planner profile card (weddings/year, avg guests, specialties badges)
+  - Social links card with clickable external links
+  - Contacts table (clickable to client detail)
+  - Events table (clickable to event dashboard)
+  - Full inline edit dialog
+
+**Status:** Deployed to `admin.konfetti.app` via Vercel. Migration run via Supabase SQL Editor.
+
 ---
 
 ## 2025-02-11
