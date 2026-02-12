@@ -14,6 +14,8 @@ import {
   Linkedin,
   Facebook,
   MapPin,
+  Phone,
+  Mail,
   Crown,
   ExternalLink,
   Hash,
@@ -46,6 +48,8 @@ interface Company {
   facebook: string | null;
   pinterest: string | null;
   tiktok: string | null;
+  phone: string | null;
+  email: string | null;
   country: string | null;
   city: string | null;
   state: string | null;
@@ -127,8 +131,9 @@ const AdminCompanyDetail = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: "", notes: "", website: "", instagram: "", linkedin: "", facebook: "", pinterest: "", tiktok: "",
-    country: "", city: "", state: "", employee_count: "", year_founded: "", tax_id: "",
+    name: "", notes: "", phone: "", email: "",
+    website: "", instagram: "", linkedin: "", facebook: "", pinterest: "", tiktok: "",
+    country: "", city: "", state: "", regions_covered: "", employee_count: "", year_founded: "", tax_id: "",
     price_tier: "", avg_weddings_per_year: "", avg_guest_count: "", specialties: [] as string[],
     partnership_tier: "", referral_source: "", commission_rate: "",
   });
@@ -185,6 +190,8 @@ const AdminCompanyDetail = () => {
     setEditForm({
       name: company.name,
       notes: company.notes || "",
+      phone: company.phone || "",
+      email: company.email || "",
       website: company.website || "",
       instagram: company.instagram || "",
       linkedin: company.linkedin || "",
@@ -194,6 +201,7 @@ const AdminCompanyDetail = () => {
       country: company.country || "",
       city: company.city || "",
       state: company.state || "",
+      regions_covered: company.regions_covered?.join(", ") || "",
       employee_count: company.employee_count?.toString() || "",
       year_founded: company.year_founded?.toString() || "",
       tax_id: company.tax_id || "",
@@ -220,6 +228,8 @@ const AdminCompanyDetail = () => {
       .update({
         name: editForm.name.trim(),
         notes: editForm.notes.trim() || null,
+        phone: editForm.phone.trim() || null,
+        email: editForm.email.trim() || null,
         website: editForm.website.trim() || null,
         instagram: editForm.instagram.trim() || null,
         linkedin: editForm.linkedin.trim() || null,
@@ -229,6 +239,7 @@ const AdminCompanyDetail = () => {
         country: editForm.country.trim() || null,
         city: editForm.city.trim() || null,
         state: editForm.state.trim() || null,
+        regions_covered: editForm.regions_covered.trim() ? editForm.regions_covered.split(",").map(s => s.trim()).filter(Boolean) : null,
         employee_count: editForm.employee_count ? parseInt(editForm.employee_count) : null,
         year_founded: editForm.year_founded ? parseInt(editForm.year_founded) : null,
         tax_id: editForm.tax_id.trim() || null,
@@ -310,11 +321,23 @@ const AdminCompanyDetail = () => {
               <h1 className="text-2xl md:text-3xl font-bold">{company.name}</h1>
               {getTierBadge(company.partnership_tier)}
             </div>
-            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
               {location && (
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" />
                   {location}
+                </span>
+              )}
+              {company.phone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5" />
+                  {company.phone}
+                </span>
+              )}
+              {company.email && (
+                <span className="flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5" />
+                  {company.email}
                 </span>
               )}
               <span className="flex items-center gap-1">
@@ -410,6 +433,17 @@ const AdminCompanyDetail = () => {
                 </div>
               )}
             </div>
+
+            {company.regions_covered && company.regions_covered.length > 0 && (
+              <div className="pt-2 border-t">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Ciudades / Regiones que cubre</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {company.regions_covered.map((region) => (
+                    <Badge key={region} variant="secondary" className="text-xs">{region}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {company.notes && (
               <div className="pt-2 border-t">
@@ -663,6 +697,16 @@ const AdminCompanyDetail = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
+                    <Label className="text-sm font-medium">Teléfono</Label>
+                    <Input value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+52 33 1234 5678" className="h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Email</Label>
+                    <Input type="email" value={editForm.email} onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))} placeholder="info@empresa.com" className="h-10" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
                     <Label className="text-sm font-medium">Tier de Alianza</Label>
                     <Select value={editForm.partnership_tier} onValueChange={(v) => setEditForm(prev => ({ ...prev, partnership_tier: v }))}>
                       <SelectTrigger className="h-10"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
@@ -761,9 +805,14 @@ const AdminCompanyDetail = () => {
                   <Input value={editForm.state} onChange={(e) => setEditForm(prev => ({ ...prev, state: e.target.value }))} placeholder="Jalisco" className="h-10" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Ciudad</Label>
+                  <Label className="text-sm font-medium">Ciudad (sede)</Label>
                   <Input value={editForm.city} onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))} placeholder="Guadalajara" className="h-10" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Ciudades / Regiones que cubre</Label>
+                <Input value={editForm.regions_covered} onChange={(e) => setEditForm(prev => ({ ...prev, regions_covered: e.target.value }))} placeholder="Guadalajara, CDMX, Cancún, San Miguel de Allende..." className="h-10" />
+                <p className="text-xs text-muted-foreground">Separadas por coma</p>
               </div>
             </div>
 

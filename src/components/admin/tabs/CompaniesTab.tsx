@@ -35,6 +35,8 @@ interface Company {
   facebook: string | null;
   pinterest: string | null;
   tiktok: string | null;
+  phone: string | null;
+  email: string | null;
   country: string | null;
   city: string | null;
   state: string | null;
@@ -84,6 +86,8 @@ const SPECIALTIES_OPTIONS = [
 interface CompanyFormData {
   name: string;
   notes: string;
+  phone: string;
+  email: string;
   website: string;
   instagram: string;
   linkedin: string;
@@ -93,6 +97,7 @@ interface CompanyFormData {
   country: string;
   city: string;
   state: string;
+  regions_covered: string;
   employee_count: string;
   year_founded: string;
   tax_id: string;
@@ -106,8 +111,9 @@ interface CompanyFormData {
 }
 
 const emptyForm: CompanyFormData = {
-  name: "", notes: "", website: "", instagram: "", linkedin: "", facebook: "", pinterest: "", tiktok: "",
-  country: "", city: "", state: "", employee_count: "", year_founded: "", tax_id: "",
+  name: "", notes: "", phone: "", email: "",
+  website: "", instagram: "", linkedin: "", facebook: "", pinterest: "", tiktok: "",
+  country: "", city: "", state: "", regions_covered: "", employee_count: "", year_founded: "", tax_id: "",
   price_tier: "", avg_weddings_per_year: "", avg_guest_count: "", specialties: [],
   partnership_tier: "", referral_source: "", commission_rate: "",
 };
@@ -115,6 +121,8 @@ const emptyForm: CompanyFormData = {
 const companyToForm = (c: Company): CompanyFormData => ({
   name: c.name,
   notes: c.notes || "",
+  phone: c.phone || "",
+  email: c.email || "",
   website: c.website || "",
   instagram: c.instagram || "",
   linkedin: c.linkedin || "",
@@ -124,6 +132,7 @@ const companyToForm = (c: Company): CompanyFormData => ({
   country: c.country || "",
   city: c.city || "",
   state: c.state || "",
+  regions_covered: c.regions_covered?.join(", ") || "",
   employee_count: c.employee_count?.toString() || "",
   year_founded: c.year_founded?.toString() || "",
   tax_id: c.tax_id || "",
@@ -139,6 +148,8 @@ const companyToForm = (c: Company): CompanyFormData => ({
 const formToInsert = (f: CompanyFormData) => ({
   name: f.name.trim(),
   notes: f.notes.trim() || null,
+  phone: f.phone.trim() || null,
+  email: f.email.trim() || null,
   website: f.website.trim() || null,
   instagram: f.instagram.trim() || null,
   linkedin: f.linkedin.trim() || null,
@@ -148,6 +159,7 @@ const formToInsert = (f: CompanyFormData) => ({
   country: f.country.trim() || null,
   city: f.city.trim() || null,
   state: f.state.trim() || null,
+  regions_covered: f.regions_covered.trim() ? f.regions_covered.split(",").map(s => s.trim()).filter(Boolean) : null,
   employee_count: f.employee_count ? parseInt(f.employee_count) : null,
   year_founded: f.year_founded ? parseInt(f.year_founded) : null,
   tax_id: f.tax_id.trim() || null,
@@ -385,6 +397,16 @@ export const CompaniesTab = () => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-phone`} className="text-sm font-medium">Teléfono</Label>
+              <Input id={`${idPrefix}-phone`} value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+52 33 1234 5678" className="h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-email`} className="text-sm font-medium">Email</Label>
+              <Input id={`${idPrefix}-email`} type="email" value={form.email} onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))} placeholder="info@empresa.com" className="h-10" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
               <Label className="text-sm font-medium">Tier de Alianza</Label>
               <Select value={form.partnership_tier} onValueChange={(v) => setForm(prev => ({ ...prev, partnership_tier: v }))}>
                 <SelectTrigger className="h-10"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
@@ -483,9 +505,14 @@ export const CompaniesTab = () => {
             <Input id={`${idPrefix}-state`} value={form.state} onChange={(e) => setForm(prev => ({ ...prev, state: e.target.value }))} placeholder="Jalisco" className="h-10" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`${idPrefix}-city`} className="text-sm font-medium">Ciudad</Label>
+            <Label htmlFor={`${idPrefix}-city`} className="text-sm font-medium">Ciudad (sede)</Label>
             <Input id={`${idPrefix}-city`} value={form.city} onChange={(e) => setForm(prev => ({ ...prev, city: e.target.value }))} placeholder="Guadalajara" className="h-10" />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-regions`} className="text-sm font-medium">Ciudades / Regiones que cubre</Label>
+          <Input id={`${idPrefix}-regions`} value={form.regions_covered} onChange={(e) => setForm(prev => ({ ...prev, regions_covered: e.target.value }))} placeholder="Guadalajara, CDMX, Cancún, San Miguel de Allende..." className="h-10" />
+          <p className="text-xs text-muted-foreground">Separadas por coma</p>
         </div>
       </div>
 

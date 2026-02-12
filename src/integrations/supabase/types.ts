@@ -111,6 +111,7 @@ export type Database = {
           commission_rate: number | null
           country: string | null
           created_at: string
+          email: string | null
           employee_count: number | null
           facebook: string | null
           id: string
@@ -120,6 +121,7 @@ export type Database = {
           name: string
           notes: string | null
           partnership_tier: string | null
+          phone: string | null
           pinterest: string | null
           price_tier: string | null
           referral_source: string | null
@@ -139,6 +141,7 @@ export type Database = {
           commission_rate?: number | null
           country?: string | null
           created_at?: string
+          email?: string | null
           employee_count?: number | null
           facebook?: string | null
           id?: string
@@ -148,6 +151,7 @@ export type Database = {
           name: string
           notes?: string | null
           partnership_tier?: string | null
+          phone?: string | null
           pinterest?: string | null
           price_tier?: string | null
           referral_source?: string | null
@@ -167,6 +171,7 @@ export type Database = {
           commission_rate?: number | null
           country?: string | null
           created_at?: string
+          email?: string | null
           employee_count?: number | null
           facebook?: string | null
           id?: string
@@ -176,6 +181,7 @@ export type Database = {
           name?: string
           notes?: string | null
           partnership_tier?: string | null
+          phone?: string | null
           pinterest?: string | null
           price_tier?: string | null
           referral_source?: string | null
