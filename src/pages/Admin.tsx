@@ -304,10 +304,10 @@ const Admin = () => {
     }, 0);
 
   const revenueMetrics = {
-    totalRevenue,
-    revenueThisMonth,
-    pendingPayments,
-    commissionsTotal,
+    totalRevenue: { [defaultCurrency]: totalRevenue },
+    revenueThisMonth: { [defaultCurrency]: revenueThisMonth },
+    pendingPayments: { [defaultCurrency]: pendingPayments },
+    commissionsTotal: { [defaultCurrency]: commissionsTotal },
   };
 
   // Upcoming events this month (all events, not just those with financial data)
@@ -383,7 +383,6 @@ const Admin = () => {
                 conversionRate={conversionRate}
                 revenueMetrics={revenueMetrics}
                 upcomingEvents={upcomingEvents}
-                currency={defaultCurrency}
               />
             )}
 
