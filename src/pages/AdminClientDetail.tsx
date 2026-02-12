@@ -16,6 +16,8 @@ import {
   Send,
   ExternalLink,
   UserCheck,
+  ArrowLeft,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { parseLocalDate } from "@/lib/utils";
+import { parseLocalDate, cn } from "@/lib/utils";
 import { useAdminContext } from "@/components/admin/AdminLayout";
 
 interface Contact {
@@ -66,6 +68,9 @@ interface ClientEvent {
   invite_code: string;
   image_url: string | null;
   close_date: string;
+  price: number | null;
+  currency: string;
+  payment_status: string;
   event_attendees: { count: number }[];
 }
 
@@ -73,6 +78,11 @@ interface Company {
   id: string;
   name: string;
 }
+
+const formatCurrency = (amount: number, currency: string = "MXN") => {
+  const symbols: Record<string, string> = { MXN: "$", USD: "$", INR: "₹" };
+  return `${symbols[currency] || "$"}${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 const AdminClientDetail = () => {
   const navigate = useNavigate();
@@ -365,6 +375,12 @@ const AdminClientDetail = () => {
   };
 
   const totalGuests = events.reduce((acc, e) => acc + (e.event_attendees?.[0]?.count || 0), 0);
+  const totalRevenue = events.reduce((sum, e) => (e as any).payment_status === 'paid' && (e as any).price ? sum + (e as any).price : sum, 0);
+  const pendingRevenue = events.reduce((sum, e) => {
+    const ps = (e as any).payment_status;
+    const price = (e as any).price;
+    return (ps === 'pending' || ps === 'partial') && price ? sum + price : sum;
+  }, 0);
 
   if (isLoading) {
     return (
@@ -379,313 +395,395 @@ const AdminClientDetail = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4">
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin/clients")}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <h1 className="text-2xl md:text-3xl font-bold">{contact.contact_name}</h1>
               <Badge
                 variant="outline"
-                className={
+                className={cn(
+                  "text-xs",
                   contact.status === 'active'
-                    ? 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30'
+                    ? 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400'
                     : 'bg-muted text-muted-foreground'
-                }
+                )}
               >
                 {contact.status === 'active' ? 'Activo' : 'Archivado'}
               </Badge>
-            </div>
-            {contact.companies?.name && (
-              <p className="text-muted-foreground flex items-center gap-1 mt-1">
-                <Building2 className="w-4 h-4" />
-                {contact.companies.name}
-              </p>
-            )}
-          </div>
-          {contact.status === 'active' && (
-            <Button variant="outline" onClick={openEditDialog}>
-              <Pencil className="w-4 h-4 mr-2" />
-              Editar
-            </Button>
-          )}
-        </div>
-
-        {/* Contact Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información de Contacto</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                {contact.email ? (
-                  <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
-                    {contact.email}
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">Sin email</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                {contact.phone ? (
-                  <a href={`tel:${contact.phone}`} className="text-primary hover:underline">
-                    {contact.phone}
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">Sin teléfono</span>
-                )}
-              </div>
-            </div>
-            <div>
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="text-xs">
                 {contact.contact_type === 'couple' ? 'Pareja' : 'Wedding Planner'}
               </Badge>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+              {contact.companies?.name && (
+                <button
+                  onClick={() => contact.company_id && navigate(`/admin/company/${contact.company_id}`)}
+                  className="flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  {contact.companies.name}
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              )}
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                Desde {format(new Date(contact.created_at), "MMMM yyyy", { locale: es })}
+              </span>
+            </div>
+          </div>
+        </div>
+        {contact.status === 'active' && (
+          <Button onClick={openEditDialog}>
+            <Pencil className="w-4 h-4 mr-2" />
+            Editar
+          </Button>
+        )}
+      </div>
 
-        {/* Portal Status */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-sm font-medium">Portal de Contactos</div>
-                {getPortalStatus() === 'active' ? (
-                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">
-                    <UserCheck className="w-3 h-3 mr-1" />
-                    Portal activo
-                  </Badge>
-                ) : getPortalStatus() === 'invited' ? (
-                  <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500/30">
-                    <Send className="w-3 h-3 mr-1" />
-                    Invitado
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-muted text-muted-foreground">
-                    Sin invitar
-                  </Badge>
-                )}
-              </div>
-              {contact.status === 'active' && !contact.user_id && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleInviteToPortal}
-                  disabled={!contact.email || isInviting}
-                >
-                  {isInviting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <div className="text-2xl font-bold">{events.length}</div>
+            <p className="text-sm text-muted-foreground">Eventos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold">{totalGuests}</div>
+            <p className="text-sm text-muted-foreground">Total Invitados</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {formatCurrency(totalRevenue)}
+            </div>
+            <p className="text-sm text-muted-foreground">Ingresos Pagados</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {formatCurrency(pendingRevenue)}
+            </div>
+            <p className="text-sm text-muted-foreground">Por Cobrar</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Contact Info Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Información de Contacto
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-3 p-2 rounded-lg">
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  {contact.email ? (
+                    <a href={`mailto:${contact.email}`} className="text-sm text-primary hover:underline">
+                      {contact.email}
+                    </a>
                   ) : (
-                    <Send className="w-4 h-4 mr-2" />
+                    <span className="text-sm text-muted-foreground">Sin email</span>
                   )}
-                  {contact.invited_at ? "Reenviar Invitación" : "Invitar al Portal"}
-                </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded-lg">
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Teléfono</p>
+                  {contact.phone ? (
+                    <a href={`tel:${contact.phone}`} className="text-sm text-primary hover:underline">
+                      {contact.phone}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Sin teléfono</span>
+                  )}
+                </div>
+              </div>
+              {contact.companies?.name && (
+                <div className="flex items-center gap-3 p-2 rounded-lg">
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Empresa</p>
+                    <button
+                      onClick={() => contact.company_id && navigate(`/admin/company/${contact.company_id}`)}
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      {contact.companies.name}
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-            {!contact.email && !contact.user_id && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Se necesita un email para invitar al portal
-              </p>
-            )}
-            {contact.email && contact.invited_at && (
-              <div className="mt-3 flex items-center gap-2">
-                <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
-                  {`${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email)}`}
-                </code>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={async () => {
-                    const url = `${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email!)}`;
-                    await navigator.clipboard.writeText(url);
-                    toast.success("Enlace copiado al portapapeles");
-                  }}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Portal Status + Notes */}
+        <div className="space-y-6">
+          {/* Portal Status */}
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-primary">{events.length}</div>
-              <p className="text-sm text-muted-foreground">Total Eventos</p>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5" />
+                Portal de Contactos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  {getPortalStatus() === 'active' ? (
+                    <Badge variant="outline" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400">
+                      <UserCheck className="w-3 h-3 mr-1" />
+                      Portal activo
+                    </Badge>
+                  ) : getPortalStatus() === 'invited' ? (
+                    <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500/30 dark:text-blue-400">
+                      <Send className="w-3 h-3 mr-1" />
+                      Invitado
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-muted text-muted-foreground">
+                      Sin invitar
+                    </Badge>
+                  )}
+                </div>
+                {contact.status === 'active' && !contact.user_id && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleInviteToPortal}
+                    disabled={!contact.email || isInviting}
+                  >
+                    {isInviting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    {contact.invited_at ? "Reenviar" : "Invitar"}
+                  </Button>
+                )}
+              </div>
+              {!contact.email && !contact.user_id && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Se necesita un email para invitar al portal
+                </p>
+              )}
+              {contact.email && contact.invited_at && (
+                <div className="mt-3 flex items-center gap-2">
+                  <code className="text-xs bg-muted px-2 py-1 rounded flex-1 truncate">
+                    {`${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email)}`}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      const url = `${window.location.origin}/portal/register?email=${encodeURIComponent(contact.email!)}`;
+                      await navigator.clipboard.writeText(url);
+                      toast.success("Enlace copiado al portapapeles");
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Notes */}
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-emerald-500">{totalGuests}</div>
-              <p className="text-sm text-muted-foreground">Total Invitados</p>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Notas
+                {isSavingNotes && (
+                  <span className="text-sm text-muted-foreground font-normal flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Guardando...
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="Agregar notas sobre este contacto..."
+                value={notes}
+                onChange={handleNotesChange}
+                rows={4}
+              />
             </CardContent>
           </Card>
         </div>
+      </div>
 
-        {/* Events Table */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Eventos
-            </CardTitle>
-            <Button
-              size="sm"
-              onClick={() => navigate(`/admin?createEventForContact=${contact.id}`)}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Nuevo Evento
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {events.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Este contacto no tiene eventos aún
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Evento</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Invitados</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {events.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                              {event.image_url ? (
-                                <img
-                                  src={event.image_url}
-                                  alt={event.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                              )}
-                            </div>
-                            <span className="font-medium">{event.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {event.date
-                            ? format(parseLocalDate(event.date), "dd MMM yyyy", { locale: es })
-                            : <span className="text-muted-foreground">Sin fecha</span>
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              getEventStatus(event) === 'draft'
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-300'
-                                : getEventStatus(event) === 'closed'
-                                  ? 'bg-muted text-muted-foreground'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                            }
-                          >
-                            {getEventStatus(event) === 'draft' ? 'Borrador' : getEventStatus(event) === 'closed' ? 'Cerrado' : 'Activo'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                            <span>{event.event_attendees?.[0]?.count || 0}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/admin/event/${event.id}`)}
-                          >
-                            Ver
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Events Table */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Eventos ({events.length})
+          </CardTitle>
+          <Button
+            size="sm"
+            onClick={() => navigate(`/admin?createEventForContact=${contact.id}`)}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Nuevo Evento
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {events.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              Este contacto no tiene eventos aún
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Evento</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Asistentes</TableHead>
+                  <TableHead>Precio</TableHead>
+                  <TableHead>Pago</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow
+                    key={event.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/admin/event/${event.id}`)}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                          {event.image_url ? (
+                            <img
+                              src={event.image_url}
+                              alt={event.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <span className="font-medium">{event.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {event.date
+                        ? format(parseLocalDate(event.date), "d MMM yyyy", { locale: es })
+                        : "Sin fecha"
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {event.event_attendees?.[0]?.count || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {(event as any).price
+                        ? formatCurrency((event as any).price, (event as any).currency)
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-xs",
+                          (event as any).payment_status === 'paid'
+                            ? "bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400"
+                            : (event as any).payment_status === 'partial'
+                              ? "bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400"
+                              : "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400"
+                        )}
+                      >
+                        {(event as any).payment_status === 'paid' ? 'Pagado' : (event as any).payment_status === 'partial' ? 'Parcial' : 'Pendiente'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-xs",
+                          getEventStatus(event) === 'draft'
+                            ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400'
+                            : getEventStatus(event) === 'closed'
+                              ? 'bg-muted text-muted-foreground'
+                              : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400'
+                        )}
+                      >
+                        {getEventStatus(event) === 'draft' ? 'Borrador' : getEventStatus(event) === 'closed' ? 'Cerrado' : 'Activo'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Notes Section */}
+      {/* Actions */}
+      {contact.status === 'active' && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Notas
-              {isSavingNotes && (
-                <span className="text-sm text-muted-foreground font-normal flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Guardando...
-                </span>
-              )}
-            </CardTitle>
+            <CardTitle>Acciones</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="Agregar notas sobre este contacto..."
-              value={notes}
-              onChange={handleNotesChange}
-              rows={4}
-            />
+          <CardContent className="flex gap-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-red-600 hover:text-red-700">
+                  <Archive className="w-4 h-4 mr-2" />
+                  Archivar Contacto
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Archivar Contacto</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta acción archivará al contacto. El contacto no aparecerá en la lista de contactos activos pero sus datos se conservarán.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleArchive} disabled={isArchiving}>
+                    {isArchiving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Archivando...
+                      </>
+                    ) : (
+                      "Archivar"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
-
-        {/* Actions */}
-        {contact.status === 'active' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones</CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="text-red-600 hover:text-red-700">
-                    <Archive className="w-4 h-4 mr-2" />
-                    Archivar Contacto
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Archivar Contacto</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción archivará al contacto. El contacto no aparecerá en la lista de contactos activos pero sus datos se conservarán.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleArchive} disabled={isArchiving}>
-                      {isArchiving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Archivando...
-                        </>
-                      ) : (
-                        "Archivar"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
       {/* Edit Client Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
