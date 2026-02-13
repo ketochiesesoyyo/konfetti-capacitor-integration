@@ -14,7 +14,7 @@ export function TermsConditionsDialog({ open, onOpenChange }: TermsConditionsDia
           <DialogTitle>Konfetti Terms and Conditions of Use</DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4 overflow-auto">
-          <div className="legal-content space-y-4 text-sm">
+          <div className="space-y-6 text-sm">
             <section>
               <p className="mb-4">
                 Welcome to Konfetti's Terms and Conditions of Use ("Terms").

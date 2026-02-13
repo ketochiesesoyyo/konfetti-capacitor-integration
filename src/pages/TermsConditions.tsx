@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { LandingFooter } from "@/components/landing/LandingFooter";
@@ -20,18 +20,11 @@ const TermsConditions = () => {
             {t('auth.backToHome')}
           </Link>
           
-          <div className="legal-hero">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-white/70 text-xs font-medium uppercase tracking-wider">Legal</span>
-            </div>
-            <h1>Terms and Conditions of Use</h1>
-            <p>The rules and agreements that govern your use of Konfetti</p>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-8">
+            Konfetti Terms and Conditions of Use
+          </h1>
           
-          <div className="legal-content space-y-4">
+          <div className="prose prose-sm max-w-none">
             <TermsContent />
           </div>
         </div>
@@ -43,7 +36,7 @@ const TermsConditions = () => {
 
 function TermsContent() {
   return (
-    <>
+    <div className="space-y-6 text-sm">
       <section>
         <p className="mb-4">
           Welcome to Konfetti's Terms and Conditions of Use ("Terms").
@@ -60,7 +53,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>1. About Konfetti</h3>
+        <h3 className="font-semibold text-base mb-2">1. ABOUT KONFETTI</h3>
         <p className="mb-2">
           Konfetti is a digital platform designed to help people attending weddings, social events, or private celebrations connect before, during, and after the event.
         </p>
@@ -73,7 +66,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>2. Eligibility and Account Creation</h3>
+        <h3 className="font-semibold text-base mb-2">2. ELIGIBILITY AND ACCOUNT CREATION</h3>
         <p className="mb-2">To use Konfetti, you must:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Be at least 18 years old (or the legal age of majority in your jurisdiction, if higher);</li>
@@ -113,7 +106,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>3. Types of Content</h3>
+        <h3 className="font-semibold text-base mb-2">3. TYPES OF CONTENT</h3>
         <p className="mb-2">On Konfetti, you will encounter three categories of content:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li><strong>Your Content:</strong> what you upload, share, or write (e.g., photos, messages, profile text);</li>
@@ -163,7 +156,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>4. User Conduct and Restrictions</h3>
+        <h3 className="font-semibold text-base mb-2">4. USER CONDUCT AND RESTRICTIONS</h3>
         <p className="mb-2">You agree to use Konfetti in a respectful, safe, and lawful manner.</p>
         <p className="mb-2">You must not:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
@@ -186,7 +179,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>5. Safety and Community Integrity</h3>
+        <h3 className="font-semibold text-base mb-2">5. SAFETY AND COMMUNITY INTEGRITY</h3>
         <p className="mb-2">
           Safety is central to the Konfetti experience. We use a combination of automated moderation and human review to protect users and maintain trust.
         </p>
@@ -207,7 +200,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>6. Access and Service Terms</h3>
+        <h3 className="font-semibold text-base mb-2">6. ACCESS AND SERVICE TERMS</h3>
         <h4 className="font-semibold mb-2">Event Access</h4>
         <p className="mb-2">
           Konfetti operates on an invite-only basis. Access to certain features is granted to event hosts, planners, or organizers ("Hosts") upon request and approval.
@@ -236,7 +229,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>7. Virtual Features and Experimental Tools</h3>
+        <h3 className="font-semibold text-base mb-2">7. VIRTUAL FEATURES AND EXPERIMENTAL TOOLS</h3>
         <p className="mb-2">Konfetti may, from time to time, offer features such as:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Badges, event themes, or digital collectibles ("Virtual Items"); or</li>
@@ -251,7 +244,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>8. Notifications and Communications</h3>
+        <h3 className="font-semibold text-base mb-2">8. NOTIFICATIONS AND COMMUNICATIONS</h3>
         <p className="mb-2">By creating an account, you agree that Konfetti may send you:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Service notifications (e.g., event reminders, match updates);</li>
@@ -267,7 +260,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>9. Location-Based Features</h3>
+        <h3 className="font-semibold text-base mb-2">9. LOCATION-BASED FEATURES</h3>
         <p className="mb-2">Konfetti may use GPS, Wi-Fi, Bluetooth, or similar technology to:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Verify your presence at an event,</li>
@@ -281,7 +274,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>10. Disclaimers</h3>
+        <h3 className="font-semibold text-base mb-2">10. DISCLAIMERS</h3>
         <p className="mb-2">
           Konfetti, its content, and its services are provided "as is" and "as available," without warranties of any kind, whether express or implied.
         </p>
@@ -297,7 +290,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>11. Limitation of Liability</h3>
+        <h3 className="font-semibold text-base mb-2">11. LIMITATION OF LIABILITY</h3>
         <p className="mb-2">To the maximum extent permitted by law, Konfetti, its directors, employees, partners, or affiliates shall not be liable for:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Indirect, incidental, consequential, punitive, or special damages;</li>
@@ -313,7 +306,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>12. Indemnification</h3>
+        <h3 className="font-semibold text-base mb-2">12. INDEMNIFICATION</h3>
         <p className="mb-2">You agree to indemnify, defend, and hold harmless Konfetti, its affiliates, employees, and partners from any claims, losses, damages, liabilities, costs, or expenses (including legal fees) arising out of:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Your use of Konfetti;</li>
@@ -325,7 +318,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>13. Copyright and Intellectual Property Claims</h3>
+        <h3 className="font-semibold text-base mb-2">13. COPYRIGHT AND INTELLECTUAL PROPERTY CLAIMS</h3>
         <p className="mb-2">
           If you believe that any content on Konfetti infringes your intellectual property rights, please send a written notice to:
         </p>
@@ -346,7 +339,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>14. Governing Law and Dispute Resolution</h3>
+        <h3 className="font-semibold text-base mb-2">14. GOVERNING LAW AND DISPUTE RESOLUTION</h3>
         <p className="mb-2">
           These Terms are governed by the laws of Mexico, without regard to conflict of law principles.
         </p>
@@ -359,7 +352,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>15. Changes to These Terms</h3>
+        <h3 className="font-semibold text-base mb-2">15. CHANGES TO THESE TERMS</h3>
         <p className="mb-2">
           Konfetti may update these Terms at any time. Significant changes will be communicated through the App, email, or other reasonable means.
         </p>
@@ -369,7 +362,7 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>16. Severability and Waiver</h3>
+        <h3 className="font-semibold text-base mb-2">16. SEVERABILITY AND WAIVER</h3>
         <p className="mb-2">
           If any provision of these Terms is found invalid or unenforceable, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full effect.
         </p>
@@ -379,14 +372,14 @@ function TermsContent() {
       </section>
 
       <section>
-        <h3>17. Entire Agreement</h3>
+        <h3 className="font-semibold text-base mb-2">17. ENTIRE AGREEMENT</h3>
         <p>
           These Terms, together with our Privacy Policy and Community Guidelines, constitute the entire agreement between you and Konfetti. They supersede all prior agreements, representations, or understandings.
         </p>
       </section>
 
       <section>
-        <h3>18. Contact Us</h3>
+        <h3 className="font-semibold text-base mb-2">18. CONTACT US</h3>
         <p className="mb-2">For questions, concerns, or feedback, contact us at:</p>
         <ul className="list-none mb-4 space-y-1">
           <li><strong>Email:</strong> support@konfetti.app</li>
@@ -399,12 +392,12 @@ function TermsContent() {
         </p>
       </section>
 
-      <section className="!bg-transparent !border-0 !shadow-none !p-0">
+      <section className="border-t pt-4">
         <p className="text-xs text-muted-foreground">
           Last Updated: January 2025
         </p>
       </section>
-    </>
+    </div>
   );
 }
 
