@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import journeyMatch from "@/assets/journey-step1-match1.jpg";
-import journeyWedding from "@/assets/journey-step2-wedding1.jpg";
-import journeyDate from "@/assets/journey-step3-date1.jpg";
+import screenshotDiscover from "@/assets/app-screenshot-discover.jpg";
+import screenshotMatch from "@/assets/app-screenshot-match.jpg";
+import screenshotChat from "@/assets/app-screenshot-chat.jpg";
 
 export const HeroSection = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const ref = useScrollReveal();
 
-  const journeyImages = [
-    { src: journeyMatch, alt: "Match on the app" },
-    { src: journeyWedding, alt: "Meet at the wedding" },
-    { src: journeyDate, alt: "Go on a date" },
+  const appScreenshots = [
+    { src: screenshotDiscover, alt: "Discover matches at weddings" },
+    { src: screenshotMatch, alt: "It's a match!" },
+    { src: screenshotChat, alt: "Chat with your matches" },
   ];
 
   return (
@@ -36,17 +36,17 @@ export const HeroSection = () => {
           {t("landing.hero.subheadline")}
         </p>
 
-        {/* Journey images strip */}
+        {/* App screenshots strip */}
         <div className="flex justify-center gap-3 md:gap-5 py-6">
-          {journeyImages.map((img, i) => (
+          {appScreenshots.map((img, i) => (
             <div
               key={i}
-              className="reveal-child w-28 h-40 sm:w-36 sm:h-52 md:w-44 md:h-64 lg:w-52 lg:h-80 rounded-2xl overflow-hidden"
+              className="reveal-child w-28 h-56 sm:w-36 sm:h-72 md:w-44 md:h-[22rem] lg:w-52 lg:h-[26rem] rounded-2xl overflow-hidden shadow-lg"
             >
               <img
                 src={img.src}
                 alt={img.alt}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
           ))}
