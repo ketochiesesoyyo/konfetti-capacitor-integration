@@ -28,7 +28,9 @@ export const CommunityGuidelinesDialog = ({
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4 overflow-auto">
-          {isSpanish ? <SpanishGuidelines /> : <EnglishGuidelines />}
+          <div className="legal-content space-y-4 text-sm">
+            {isSpanish ? <SpanishGuidelines /> : <EnglishGuidelines />}
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
