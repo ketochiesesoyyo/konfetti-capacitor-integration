@@ -26,9 +26,11 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const ContactForm = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -53,8 +55,7 @@ export const ContactForm = () => {
     setIsSubmitting(true);
     try {
       const formattedDate = format(data.wedding_date, "yyyy-MM-dd");
-      
-      // Save to database
+
       const { error } = await supabase.from("event_requests").insert({
         submitter_type: data.submitter_type,
         contact_name: data.contact_name,
@@ -70,7 +71,6 @@ export const ContactForm = () => {
 
       if (error) throw error;
 
-      // Send email notification (fire and forget - don't block success)
       try {
         await supabase.functions.invoke("event-request-notification", {
           body: {
@@ -87,7 +87,6 @@ export const ContactForm = () => {
           },
         });
       } catch (emailError) {
-        // Log but don't fail the submission
         console.error("Failed to send notification email:", emailError);
       }
 
@@ -106,9 +105,9 @@ export const ContactForm = () => {
 
   if (isSuccess) {
     return (
-      <section id="contact-form" className="py-20 px-6 bg-gradient-to-b from-primary/5 to-background">
+      <section id="contact-form" ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-card rounded-2xl p-12 shadow-card border border-border">
+          <div className="bg-muted/30 rounded-2xl p-8 md:p-12">
             <CheckCircle className="h-16 w-16 text-primary mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-foreground mb-4">
               {t("landing.contactForm.successTitle")}
@@ -130,10 +129,11 @@ export const ContactForm = () => {
   }
 
   return (
-    <section id="contact-form" className="py-20 px-6 bg-gradient-to-b from-primary/5 to-background">
+    <section id="contact-form" ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <p className="eyebrow mb-3">{t("landing.contactForm.label")}</p>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.contactForm.title")}
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -141,7 +141,7 @@ export const ContactForm = () => {
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl p-8 shadow-card border border-border">
+        <div className="bg-muted/30 rounded-2xl p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Submitter Type */}
@@ -208,7 +208,7 @@ export const ContactForm = () => {
                 />
               )}
 
-              {/* Partner Names - Side by Side */}
+              {/* Partner Names */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -299,7 +299,7 @@ export const ContactForm = () => {
                 )}
               />
 
-              {/* Contact Info - Side by Side */}
+              {/* Contact Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}

@@ -7,8 +7,8 @@ export const LandingFooter = () => {
   const { t } = useTranslation();
 
   return (
-    <footer className="bg-card border-t border-border">
-        <div className="max-w-6xl mx-auto px-6 py-16">
+    <footer className="border-t border-border/50">
+        <div className="max-w-5xl mx-auto px-6 py-16">
           <div className="grid md:grid-cols-3 gap-12 mb-12">
             {/* Contact Us */}
             <div className="space-y-4">

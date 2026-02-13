@@ -27,7 +27,7 @@ const ForCouples = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-page min-h-screen bg-background">
       <LandingNav />
       <CouplesHeroSection />
       <CouplesSocialProof />

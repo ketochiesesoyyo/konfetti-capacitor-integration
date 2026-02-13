@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Quote, Star } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 import testimonialCarole from "@/assets/testimonial-carole.jpg";
 import testimonialGuillermo from "@/assets/testimonial-guillermo.jpg";
 
 export const CouplesTestimonials = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   const testimonials = [
     {
@@ -21,67 +22,70 @@ export const CouplesTestimonials = () => {
       image: testimonialGuillermo,
       matchesResult: t("landing.couples.testimonials.testimonial2Result"),
     },
+    {
+      quote: t("landing.couples.testimonials.testimonial3Quote"),
+      name: t("landing.couples.testimonials.testimonial3Name"),
+      role: t("landing.couples.testimonials.testimonial3Role"),
+      matchesResult: t("landing.couples.testimonials.testimonial3Result"),
+    },
+    {
+      quote: t("landing.couples.testimonials.testimonial4Quote"),
+      name: t("landing.couples.testimonials.testimonial4Name"),
+      role: t("landing.couples.testimonials.testimonial4Role"),
+      matchesResult: t("landing.couples.testimonials.testimonial4Result"),
+    },
   ];
 
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="max-w-5xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            {t("landing.couples.testimonials.title")}
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            {t("landing.couples.testimonials.subtitle")}
-          </p>
-        </div>
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20">
+      {/* Header */}
+      <div className="text-center mb-16 px-6">
+        <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+          {t("landing.couples.testimonials.title")}
+        </h2>
+        <p className="text-lg text-muted-foreground">
+          {t("landing.couples.testimonials.subtitle")}
+        </p>
+      </div>
 
-        {/* Testimonials */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={index}
-              className="bg-card border border-border rounded-2xl p-8 relative"
-            >
-              {/* Quote icon */}
-              <Quote className="h-10 w-10 text-primary/20 absolute top-6 right-6" />
+      {/* Horizontal scroll row */}
+      <div className="flex gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth px-6 pb-4 justify-center">
+        {testimonials.map((testimonial, index) => (
+          <div
+            key={index}
+            className="reveal-child snap-start shrink-0 w-[320px] space-y-5"
+          >
+            {/* Decorative quote mark */}
+            <span className="block text-6xl leading-none text-primary/20 font-display select-none">
+              &ldquo;
+            </span>
 
-              {/* Stars */}
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                ))}
-              </div>
+            {/* Quote */}
+            <blockquote className="text-sm italic font-medium text-foreground leading-relaxed -mt-4">
+              {testimonial.quote}
+            </blockquote>
 
-              {/* Quote */}
-              <p className="text-lg text-foreground mb-6 relative z-10">
-                "{testimonial.quote}"
-              </p>
+            {/* Result badge */}
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+              {testimonial.matchesResult}
+            </div>
 
-              {/* Result badge */}
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-6">
-                {testimonial.matchesResult}
-              </div>
-
-              {/* Author */}
-              <div className="flex items-center gap-4">
+            {/* Author */}
+            <div className="flex items-center gap-3">
+              {"image" in testimonial && testimonial.image && (
                 <img
-                  src={testimonial.image}
+                  src={testimonial.image as string}
                   alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover object-top"
                 />
-                <div>
-                  <div className="font-medium text-foreground">
-                    {testimonial.name}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {testimonial.role}
-                  </div>
-                </div>
+              )}
+              <div>
+                <p className="font-bold text-foreground text-sm">{testimonial.name}</p>
+                <p className="text-xs text-muted-foreground">{testimonial.role}</p>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );

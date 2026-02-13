@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Heart, Star, Shield, Zap, Gift, Users } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const PlannerBenefits = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   const benefits = [
     {
@@ -38,10 +40,10 @@ export const PlannerBenefits = () => {
   ];
 
   return (
-    <section className="py-20 px-6 bg-muted/30">
-      <div className="max-w-6xl mx-auto">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20 px-6">
+      <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.planner.benefits.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -55,20 +57,15 @@ export const PlannerBenefits = () => {
             return (
               <div
                 key={index}
-                className="flex flex-col p-6 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300"
+                className="reveal-child text-center space-y-3"
               >
-                {/* Icon */}
-                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                  <IconComponent className="h-7 w-7 text-primary" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                  <IconComponent className="h-6 w-6 text-primary" />
                 </div>
-
-                {/* Title */}
-                <h3 className="text-xl font-bold text-foreground mb-2">
+                <h3 className="text-lg font-bold text-foreground">
                   {benefit.title}
                 </h3>
-
-                {/* Description */}
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {benefit.description}
                 </p>
               </div>

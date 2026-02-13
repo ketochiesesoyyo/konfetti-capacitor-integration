@@ -436,3 +436,48 @@ All colors MUST be HSL.
 .legal-hero p {
   @apply text-white/80 text-sm;
 }
+
+/* ───── Landing Page Scoped Overrides ───── */
+.landing-page {
+  --radius: 1.5rem;
+}
+
+/* Scroll-reveal animation */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children inside a revealed parent */
+.scroll-reveal.revealed .reveal-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-child {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal-child:nth-child(1) { transition-delay: 0.1s; }
+.reveal-child:nth-child(2) { transition-delay: 0.2s; }
+.reveal-child:nth-child(3) { transition-delay: 0.3s; }
+.reveal-child:nth-child(4) { transition-delay: 0.4s; }
+
+/* Landing typography — Playfair Display for hero headlines */
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Eyebrow label styling */
+.eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[0.15em] text-primary;
+}

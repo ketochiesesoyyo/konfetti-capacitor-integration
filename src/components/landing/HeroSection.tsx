@@ -1,88 +1,73 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import profileTim from "@/assets/profile-tim.jpg";
-import profileMaria from "@/assets/profile-maria.jpg";
-import profileHannah from "@/assets/profile-hannah.jpg";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+import journeyMatch from "@/assets/journey-step1-match1.jpg";
+import journeyWedding from "@/assets/journey-step2-wedding1.jpg";
+import journeyDate from "@/assets/journey-step3-date1.jpg";
 
 export const HeroSection = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const ref = useScrollReveal();
 
-  const profiles = [
-    { name: "Tim", age: 27, initials: "T", image: profileTim },
-    { name: "Maria", age: 27, initials: "M", image: profileMaria },
-    { name: "Hannah", age: 29, initials: "H", image: profileHannah },
+  const journeyImages = [
+    { src: journeyMatch, alt: "Match on the app" },
+    { src: journeyWedding, alt: "Meet at the wedding" },
+    { src: journeyDate, alt: "Go on a date" },
   ];
 
   return (
-    <section className="relative py-20 flex flex-col">
+    <section
+      ref={ref}
+      className="scroll-reveal relative min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-6 py-20 bg-gradient-to-b from-background via-primary/3 to-background"
+    >
+      <div className="max-w-4xl mx-auto text-center space-y-8">
+        {/* Eyebrow / tagline */}
+        <p className="eyebrow">{t("landing.intro.tagline")}</p>
 
-      {/* Hero Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
-            {t("landing.hero.headline")}
-          </h1>
+        {/* Headline */}
+        <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[1.1] tracking-tight">
+          {t("landing.hero.headline")}
+        </h1>
 
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t("landing.hero.subheadline")}
-          </p>
+        {/* Subheadline */}
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          {t("landing.hero.subheadline")}
+        </p>
 
-          {/* Profile Cards Preview */}
-          <div className="flex justify-center gap-4 py-8">
-            {profiles.map((profile, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center space-y-2 animate-fade-in"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary/20 shadow-card">
-                  <AvatarImage 
-                    src={profile.image} 
-                    alt={profile.name}
-                    className="object-cover object-center"
-                  />
-                  <AvatarFallback className="bg-gradient-primary-vertical text-primary-foreground text-xl">
-                    {profile.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-sm font-medium text-foreground">
-                  {profile.name}, {profile.age}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button
-              size="lg"
-              variant="gradient"
-              onClick={() => {
-                document.getElementById("contact-form")?.scrollIntoView({ 
-                  behavior: "smooth" 
-                });
-              }}
-              className="w-full sm:w-auto min-w-[200px]"
+        {/* Journey images strip */}
+        <div className="flex justify-center gap-3 md:gap-5 py-6">
+          {journeyImages.map((img, i) => (
+            <div
+              key={i}
+              className="reveal-child w-28 h-40 sm:w-36 sm:h-52 md:w-44 md:h-64 lg:w-52 lg:h-80 rounded-2xl overflow-hidden"
             >
-              {t("landing.hero.createEvent")}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/auth")}
-              className="w-full sm:w-auto min-w-[200px]"
-            >
-              {t("landing.hero.joinEvent")}
-            </Button>
-          </div>
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
 
-          {/* Secondary CTA */}
-          <p className="text-sm text-muted-foreground pt-4">
+        {/* Single gradient CTA */}
+        <div className="flex flex-col items-center gap-4 pt-2">
+          <Button
+            size="lg"
+            variant="gradient"
+            onClick={() => {
+              document
+                .getElementById("contact-form")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="min-w-[220px] text-base"
+          >
+            {t("landing.hero.createEvent")}
+          </Button>
+
+          <p className="text-sm text-muted-foreground">
             {t("landing.hero.getStarted")}{" "}
             <button
               onClick={() => navigate("/auth")}
@@ -91,34 +76,28 @@ export const HeroSection = () => {
               {t("landing.hero.signUp")}
             </button>
           </p>
+        </div>
 
-          {/* Store Badges */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t("landing.hero.availableNow", "Available now")}</span>
-              <a
-                href="https://apps.apple.com/us/app/konfetti-app/id6758306249"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block transition-transform hover:scale-105"
-              >
-                <img
-                  src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                  alt="Download on the App Store"
-                  className="h-[40px] w-[135px] object-contain"
-                />
-              </a>
-            </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t("landing.hero.comingSoon", "Coming soon")}</span>
-              <div className="inline-block opacity-40 grayscale pointer-events-none select-none">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                  alt="Get it on Google Play"
-                  className="h-[40px] w-[135px] object-contain"
-                />
-              </div>
-            </div>
+        {/* App Store badges — no labels */}
+        <div className="pt-4 flex items-center justify-center gap-6">
+          <a
+            href="https://apps.apple.com/us/app/konfetti-app/id6758306249"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block transition-transform hover:scale-105"
+          >
+            <img
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              alt="Download on the App Store"
+              className="h-[40px] w-[135px] object-contain"
+            />
+          </a>
+          <div className="inline-block opacity-40 grayscale pointer-events-none select-none">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+              alt="Get it on Google Play"
+              className="h-[40px] w-[135px] object-contain"
+            />
           </div>
         </div>
       </div>

@@ -612,11 +612,12 @@
     },
     "howItWorks": {
       "title": "How it works",
+      "label": "How It Works",
       "subtitle": "Konfetti is a social matchmaking app for guests attending the same wedding or private event.",
       "step": "Step",
       "step1": {
         "title": "Request your event",
-        "description": "Contact us via email (hello@konfetti.app) or WhatsApp to set up your event. We'll have it ready in no time!",
+        "description": "Contact us via email (hello@konfetti.app) or WhatsApp to set up your event. Create your profile, add photos, and set your preferences — all in minutes.",
         "visual": "📧 hello@konfetti.app"
       },
       "step2": {
@@ -673,7 +674,24 @@
     },
     "whyKonfetti": {
       "title": "Why Konfetti?",
+      "label": "Why Konfetti",
       "subtitle": "Because every wedding is already full of chemistry.",
+      "differentiator1": {
+        "title": "Event-only matchmaking",
+        "description": "No strangers, no endless feeds. You only see and connect with guests attending the same celebration."
+      },
+      "differentiator2": {
+        "title": "Safe & private by design",
+        "description": "Host-verified events, profile visibility scoped to attendees, and easy report & block tools."
+      },
+      "differentiator3": {
+        "title": "Real vibes, not random swipes",
+        "description": "Match with people who share a real-life connection through friends — not algorithm-fed strangers."
+      },
+      "differentiator4": {
+        "title": "Match before you meet",
+        "description": "Matchmaking opens before the event so you already know who to look for on the dance floor."
+      },
       "benefit1": {
         "title": "Event-only access",
         "description": "You only see and chat with guests from your event."
@@ -737,6 +755,7 @@
     },
     "testimonials": {
       "title": "What People Say About Konfetti",
+      "label": "Testimonials",
       "subtitle": "Real stories from real celebrations",
       "couple": {
         "quote": "I met my boyfriend using Konfetti! I trusted more in people introduced by our own friends than in other dating apps.",
@@ -788,6 +807,7 @@
     },
     "faq": {
       "title": "Frequently Asked Questions",
+      "label": "FAQ",
       "subtitle": "Everything you need to know about Konfetti",
       "q1": {
         "question": "How do I join an event?",
@@ -824,6 +844,7 @@
     },
     "contactForm": {
       "title": "Request Your Event",
+      "label": "Get Started",
       "subtitle": "Fill out the form below and we'll get back to you with a personalized quote",
       "submitterType": "Who is submitting this request?",
       "submitterCouple": "We are the couple",
@@ -933,19 +954,19 @@
         "title": "What Wedding Planners Say",
         "subtitle": "Hear from professionals who have used Konfetti at their events",
         "testimonial1": {
-          "quote": "My clients loved offering this to their guests. It added a fun, modern touch to the wedding and guests couldn't stop talking about it!",
-          "author": "Ana García",
-          "role": "Wedding Planner, Mexico City"
+          "quote": "Our international couples in Baja California absolutely loved having Konfetti at their destination weddings. Guests from different countries connected instantly — it brought a whole new energy to the celebration!",
+          "author": "Carolina Puentes",
+          "role": "Karla Casillas & Co"
         },
         "testimonial2": {
           "quote": "The single guests at the last wedding I organized made 20+ matches. Some even went on dates the week after! It was a huge hit.",
-          "author": "Carlos Mendoza",
-          "role": "Event Coordinator, Guadalajara"
+          "author": "Isabel Aguilar",
+          "role": "LPI, Mexico City"
         },
         "testimonial3": {
           "quote": "Zero hassle for me. I just shared the link and Konfetti handled everything else. My clients were thrilled with this extra detail.",
-          "author": "María López",
-          "role": "Wedding & Events, Monterrey"
+          "author": "Fer Díaz",
+          "role": "Lucero Alvarez Wedding Agency, Querétaro"
         }
       }
     },
@@ -966,13 +987,13 @@
         "subtitle": "These are stories from weddings that used Konfetti",
         "story1Quote": "Two of our best friends are now dating thanks to our wedding!",
         "story1Names": "Laura & Carlos",
-        "story1Location": "Madrid",
+        "story1Location": "Mexico City",
         "story2Quote": "Our guests still talk about how fun the matchmaking was",
         "story2Names": "Ana & Miguel",
-        "story2Location": "Barcelona",
+        "story2Location": "Los Cabos",
         "story3Quote": "We have 3 couples from our wedding still together!",
         "story3Names": "Sofia & David",
-        "story3Location": "Valencia",
+        "story3Location": "Playa del Carmen",
         "matchesBadge": "{{count}} matches at their wedding",
         "citiesLabel": "Active in these cities and many more"
       },
@@ -1024,17 +1045,29 @@
         "subtitle": "Real feedback from real weddings",
         "testimonial1Quote": "I was skeptical at first, but seeing our single friends so excited about the app was amazing. Two of them are now engaged!",
         "testimonial1Name": "Carole",
-        "testimonial1Role": "Bride, Barcelona 2024",
+        "testimonial1Role": "Bride, Cancun Dec 2025",
         "testimonial1Result": "2 couples still together",
-        "testimonial2Quote": "The best decision we made for our wedding. It cost us nothing and gave our guests something unique to experience.",
+        "testimonial2Quote": "The best decision we made for our wedding. Totally worth it and gave our guests something unique to experience.",
         "testimonial2Name": "Guillermo",
-        "testimonial2Role": "Groom, Madrid 2024",
-        "testimonial2Result": "15+ matches at the wedding"
+        "testimonial2Role": "Groom, San Miguel de Allende Jan 2026",
+        "testimonial2Result": "15+ matches at the wedding",
+        "testimonial3Quote": "Our guests were already talking about Konfetti before the reception even started. By the end of the night, everyone was comparing matches and making plans to meet up. It made the whole vibe so much more fun.",
+        "testimonial3Name": "Andrea & Luis",
+        "testimonial3Role": "Couple, Los Cabos Dec 2025",
+        "testimonial3Result": "8 matches, 3 still dating",
+        "testimonial4Quote": "We had guests flying in from five different countries. Konfetti broke the ice instantly — people who didn't even speak the same language were laughing and connecting. It was magical to watch.",
+        "testimonial4Name": "Sofía",
+        "testimonial4Role": "Bride, Playa del Carmen Jan 2026",
+        "testimonial4Result": "30+ guests joined",
+        "testimonial5Quote": "Honestly, we almost didn't do it because we thought it would be complicated. Turns out it took five minutes to set up and our guests are STILL talking about it two months later.",
+        "testimonial5Name": "Ricardo & Mía",
+        "testimonial5Role": "Couple, Mexico City Dec 2025",
+        "testimonial5Result": "12 matches in one night"
       },
       "urgency": {
         "headline": "Will your wedding just be another party?",
         "subheadline": "Or will it be the place where love stories begin?",
-        "stat1": "100% free for couples",
+        "stat1": "Simple, affordable pricing",
         "stat2": "Ready in 24 hours",
         "stat3": "No app download needed",
         "cta": "Yes, I want this for my wedding",

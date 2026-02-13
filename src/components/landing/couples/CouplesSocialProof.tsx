@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Star, MapPin } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const CouplesSocialProof = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   const stories = [
     {
@@ -26,15 +28,15 @@ export const CouplesSocialProof = () => {
   ];
 
   const cities = [
-    "Madrid", "Barcelona", "Valencia", "Sevilla", "Málaga", "Bilbao"
+    "Mexico City", "Los Cabos", "Playa del Carmen", "Cancun", "Cuernavaca", "San Miguel de Allende"
   ];
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.couples.socialProof.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -42,22 +44,19 @@ export const CouplesSocialProof = () => {
           </p>
         </div>
 
-        {/* Stories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        {/* Stories Grid — no card borders */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-16">
           {stories.map((story, index) => (
-            <div
-              key={index}
-              className="bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all"
-            >
+            <div key={index} className="reveal-child space-y-4 bg-background rounded-2xl p-6 shadow-sm">
               {/* Stars */}
-              <div className="flex gap-1 mb-4">
+              <div className="flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                 ))}
               </div>
 
               {/* Quote */}
-              <p className="text-foreground mb-4 italic">"{story.quote}"</p>
+              <p className="text-foreground italic leading-relaxed">"{story.quote}"</p>
 
               {/* Names & Location */}
               <div className="flex items-center justify-between text-sm">
@@ -69,14 +68,14 @@ export const CouplesSocialProof = () => {
               </div>
 
               {/* Matches badge */}
-              <div className="mt-4 inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
+              <div className="inline-flex items-center gap-2 bg-primary/15 text-primary px-3 py-1 rounded-full text-xs font-medium">
                 {t("landing.couples.socialProof.matchesBadge", { count: story.matches })}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Cities where it works */}
+        {/* Cities */}
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-4">
             {t("landing.couples.socialProof.citiesLabel")}
@@ -85,7 +84,7 @@ export const CouplesSocialProof = () => {
             {cities.map((city) => (
               <span
                 key={city}
-                className="bg-background border border-border px-4 py-2 rounded-full text-sm text-foreground"
+                className="bg-background px-4 py-2 rounded-full text-sm text-foreground shadow-sm"
               >
                 {city}
               </span>

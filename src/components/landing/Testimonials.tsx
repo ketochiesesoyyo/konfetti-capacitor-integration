@@ -1,21 +1,20 @@
 import { useTranslation } from "react-i18next";
-import { Quote } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 import testimonialCarole from "@/assets/testimonial-carole.jpg";
 import testimonialGuillermo from "@/assets/testimonial-guillermo.jpg";
 
 export const Testimonials = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   const testimonials = [
     {
-      type: "couple",
       quote: t("landing.testimonials.couple.quote"),
       author: t("landing.testimonials.couple.author"),
       role: t("landing.testimonials.couple.role"),
       image: testimonialCarole,
     },
     {
-      type: "host",
       quote: t("landing.testimonials.host.quote"),
       author: t("landing.testimonials.host.author"),
       role: t("landing.testimonials.host.role"),
@@ -24,10 +23,12 @@ export const Testimonials = () => {
   ];
 
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Section header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+          <p className="eyebrow mb-3">{t("landing.testimonials.label")}</p>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.testimonials.title")}
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -35,37 +36,31 @@ export const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={index}
-              className="relative p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300"
-            >
-              {/* Quote Icon */}
-              <div className="absolute top-6 right-6 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Quote className="h-6 w-6 text-primary" />
-              </div>
-
-              {/* Image */}
-              <div className="mb-6">
-                <div className="w-full h-56 md:h-64 rounded-2xl overflow-hidden">
-                  <img 
-                    src={testimonial.image} 
-                    alt={testimonial.author}
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
-              </div>
+        {/* Editorial quotes */}
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16">
+          {testimonials.map((item, index) => (
+            <div key={index} className="reveal-child space-y-6">
+              {/* Decorative quotation mark */}
+              <span className="block text-6xl leading-none text-primary/20 font-display select-none">
+                &ldquo;
+              </span>
 
               {/* Quote */}
-              <blockquote className="text-foreground text-lg leading-relaxed mb-6">
-                "{testimonial.quote}"
+              <blockquote className="text-lg italic font-medium text-foreground leading-relaxed -mt-4">
+                {item.quote}
               </blockquote>
 
-              {/* Author Info */}
-              <div className="space-y-1">
-                <p className="font-bold text-foreground">{testimonial.author}</p>
-                <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+              {/* Author */}
+              <div className="flex items-center gap-3">
+                <img
+                  src={item.image}
+                  alt={item.author}
+                  className="w-14 h-14 rounded-full object-cover object-top"
+                />
+                <div>
+                  <p className="font-bold text-foreground">{item.author}</p>
+                  <p className="text-sm text-muted-foreground">{item.role}</p>
+                </div>
               </div>
             </div>
           ))}

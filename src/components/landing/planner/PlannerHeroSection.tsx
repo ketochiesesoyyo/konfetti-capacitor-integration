@@ -1,53 +1,48 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const PlannerHeroSection = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   return (
-    <section className="relative py-20 flex flex-col">
+    <section
+      ref={ref}
+      className="scroll-reveal relative min-h-[90vh] flex items-center justify-center bg-gradient-to-b from-background via-primary/3 to-background"
+    >
+      <div className="max-w-4xl mx-auto px-6 py-24 text-center space-y-8">
+        {/* Eyebrow */}
+        <p className="eyebrow">{t("landing.planner.hero.badge")}</p>
 
-      {/* Hero Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Sparkles className="h-4 w-4" />
-            {t("landing.planner.hero.badge")}
-          </div>
+        {/* Headline */}
+        <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
+          {t("landing.planner.hero.headline")}
+        </h1>
 
-          {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
-            {t("landing.planner.hero.headline")}
-          </h1>
+        {/* Subheadline */}
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          {t("landing.planner.hero.subheadline")}
+        </p>
 
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t("landing.planner.hero.subheadline")}
-          </p>
-
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button
-              size="lg"
-              variant="gradient"
-              onClick={() => {
-                document.getElementById("contact-form")?.scrollIntoView({ 
-                  behavior: "smooth" 
-                });
-              }}
-              className="w-full sm:w-auto min-w-[250px]"
-            >
-              {t("landing.planner.hero.cta")}
-            </Button>
-          </div>
-
-          {/* Trust text */}
-          <p className="text-sm text-muted-foreground pt-4">
-            {t("landing.planner.hero.trust")}
-          </p>
+        {/* CTA */}
+        <div className="pt-4">
+          <Button
+            size="lg"
+            variant="gradient"
+            onClick={() => {
+              document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="min-w-[250px] text-base"
+          >
+            {t("landing.planner.hero.cta")}
+          </Button>
         </div>
+
+        {/* Trust text */}
+        <p className="text-sm text-muted-foreground">
+          {t("landing.planner.hero.trust")}
+        </p>
       </div>
 
       {/* Decorative gradient blur */}

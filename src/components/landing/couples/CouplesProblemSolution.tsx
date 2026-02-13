@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { X, Check } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const CouplesProblemSolution = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
   const withoutKonfetti = [
     t("landing.couples.problemSolution.without1"),
@@ -19,11 +21,11 @@ export const CouplesProblemSolution = () => {
   ];
 
   return (
-    <section className="py-20">
-      <div className="max-w-6xl mx-auto px-6">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.couples.problemSolution.title")}
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -32,9 +34,9 @@ export const CouplesProblemSolution = () => {
         </div>
 
         {/* Comparison */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-stretch">
           {/* Without Konfetti */}
-          <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-8">
+          <div className="bg-destructive/5 rounded-2xl p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
                 <X className="h-5 w-5 text-destructive" />
@@ -53,9 +55,8 @@ export const CouplesProblemSolution = () => {
             </ul>
           </div>
 
-
           {/* With Konfetti */}
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 relative">
+          <div className="bg-primary/5 rounded-2xl p-8 relative">
             {/* Recommended badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">

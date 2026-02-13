@@ -1,47 +1,44 @@
 import { useTranslation } from "react-i18next";
-import { Ticket, Shield, Sparkles, MessageCircle, Clock, Globe } from "lucide-react";
+import { Ticket, Shield, Sparkles, Clock } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const WhyKonfetti = () => {
   const { t } = useTranslation();
+  const ref = useScrollReveal();
 
-  const benefits = [
+  const differentiators = [
     {
       icon: Ticket,
-      title: t("landing.whyKonfetti.benefit1.title"),
-      description: t("landing.whyKonfetti.benefit1.description"),
+      title: t("landing.whyKonfetti.differentiator1.title"),
+      description: t("landing.whyKonfetti.differentiator1.description"),
     },
     {
       icon: Shield,
-      title: t("landing.whyKonfetti.benefit2.title"),
-      description: t("landing.whyKonfetti.benefit2.description"),
+      title: t("landing.whyKonfetti.differentiator2.title"),
+      description: t("landing.whyKonfetti.differentiator2.description"),
     },
     {
       icon: Sparkles,
-      title: t("landing.whyKonfetti.benefit3.title"),
-      description: t("landing.whyKonfetti.benefit3.description"),
-    },
-    {
-      icon: MessageCircle,
-      title: t("landing.whyKonfetti.benefit4.title"),
-      description: t("landing.whyKonfetti.benefit4.description"),
+      title: t("landing.whyKonfetti.differentiator3.title"),
+      description: t("landing.whyKonfetti.differentiator3.description"),
     },
     {
       icon: Clock,
-      title: t("landing.whyKonfetti.benefit5.title"),
-      description: t("landing.whyKonfetti.benefit5.description"),
-    },
-    {
-      icon: Globe,
-      title: t("landing.whyKonfetti.benefit6.title"),
-      description: t("landing.whyKonfetti.benefit6.description"),
+      title: t("landing.whyKonfetti.differentiator4.title"),
+      description: t("landing.whyKonfetti.differentiator4.description"),
     },
   ];
 
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section
+      ref={ref}
+      className="scroll-reveal py-24 md:py-32 px-6 bg-muted/20"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Section header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+          <p className="eyebrow mb-3">{t("landing.whyKonfetti.label")}</p>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
             {t("landing.whyKonfetti.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -49,20 +46,20 @@ export const WhyKonfetti = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {benefits.map((benefit, index) => {
-            const IconComponent = benefit.icon;
+        {/* 2×2 grid — no card borders */}
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          {differentiators.map((item, index) => {
+            const IconComponent = item.icon;
             return (
-              <div
-                key={index}
-                className="p-8 rounded-3xl bg-card border border-border shadow-card hover:shadow-card-hover transition-all duration-300 space-y-4"
-              >
-                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <IconComponent className="h-7 w-7 text-primary" />
+              <div key={index} className="reveal-child space-y-3">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <IconComponent className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">{benefit.title}</h3>
+                <h3 className="text-xl font-bold text-foreground">
+                  {item.title}
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {benefit.description}
+                  {item.description}
                 </p>
               </div>
             );
