@@ -105,7 +105,7 @@ export const HeroSection = () => {
                 <img
                   src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
                   alt="Download on the App Store"
-                  className="h-12"
+                  className="h-[40px] w-[135px] object-contain"
                 />
               </a>
             </div>
@@ -115,7 +115,7 @@ export const HeroSection = () => {
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                   alt="Get it on Google Play"
-                  className="h-12"
+                  className="h-[40px] w-[135px] object-contain"
                 />
               </div>
             </div>
