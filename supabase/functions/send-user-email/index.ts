@@ -37,13 +37,12 @@ const handler = async (req: Request): Promise<Response> => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await callerClient.auth.getUser();
+    if (userError || !user) {
       throw new Error("Unauthorized");
     }
 
-    const callerUserId = claimsData.claims.sub;
+    const callerUserId = user.id;
 
     // Check admin role using service role client
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
