@@ -92,20 +92,33 @@ export const HeroSection = () => {
             </button>
           </p>
 
-          {/* App Store Badge */}
-          <div className="pt-6">
-            <a
-              href="https://apps.apple.com/us/app/konfetti-app/id6758306249"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-transform hover:scale-105"
-            >
-              <img
-                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                alt="Download on the App Store"
-                className="h-12"
-              />
-            </a>
+          {/* Store Badges */}
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t("landing.hero.availableNow", "Available now")}</span>
+              <a
+                href="https://apps.apple.com/us/app/konfetti-app/id6758306249"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-transform hover:scale-105"
+              >
+                <img
+                  src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                  alt="Download on the App Store"
+                  className="h-12"
+                />
+              </a>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t("landing.hero.comingSoon", "Coming soon")}</span>
+              <div className="inline-block opacity-40 grayscale pointer-events-none select-none">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                  alt="Get it on Google Play"
+                  className="h-12"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
