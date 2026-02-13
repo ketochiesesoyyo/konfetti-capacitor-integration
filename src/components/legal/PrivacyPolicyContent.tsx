@@ -1,6 +1,6 @@
 export function PrivacyPolicyContent() {
   return (
-    <div className="space-y-6 text-sm">
+    <>
       <section>
         <p className="mb-4">
           <strong>Effective Date:</strong> January 2025
@@ -8,13 +8,13 @@ export function PrivacyPolicyContent() {
         <p className="mb-4">
           Konfetti ("Konfetti", "we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and website (collectively, the "App").
         </p>
-        <p className="mb-4">
+        <p>
           By using Konfetti, you agree to the collection and use of information in accordance with this policy.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">1. INFORMATION WE COLLECT</h3>
+        <h3>1. Information We Collect</h3>
         
         <h4 className="font-semibold mb-2">Personal Information You Provide</h4>
         <p className="mb-2">When you create an account and use Konfetti, we collect:</p>
@@ -33,13 +33,13 @@ export function PrivacyPolicyContent() {
         </ul>
 
         <h4 className="font-semibold mb-2">Location Information</h4>
-        <p className="mb-4">
+        <p>
           We may collect location data only when necessary to verify event attendance. You can disable location services in your device settings, though some features may be limited.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">2. HOW WE USE YOUR INFORMATION</h3>
+        <h3>2. How We Use Your Information</h3>
         <p className="mb-2">We use your information to:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li>Create and manage your account</li>
@@ -55,7 +55,7 @@ export function PrivacyPolicyContent() {
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">3. HOW WE SHARE YOUR INFORMATION</h3>
+        <h3>3. How We Share Your Information</h3>
         <p className="mb-2 font-semibold">We do NOT sell your personal data.</p>
         <p className="mb-2">We may share your information with:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
@@ -74,7 +74,7 @@ export function PrivacyPolicyContent() {
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">4. DATA RETENTION</h3>
+        <h3>4. Data Retention</h3>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li><strong>Active Accounts:</strong> Your data is stored while your account is active.</li>
           <li><strong>Account Deletion:</strong> When you delete your account, we remove your personal data within 30 days. Some anonymized data may be retained for safety and analytics purposes.</li>
@@ -84,7 +84,7 @@ export function PrivacyPolicyContent() {
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">5. YOUR RIGHTS (GDPR & CCPA)</h3>
+        <h3>5. Your Rights (GDPR & CCPA)</h3>
         <p className="mb-2">Depending on your location, you may have the right to:</p>
         <ul className="list-disc pl-6 mb-4 space-y-1">
           <li><strong>Access:</strong> Request a copy of your personal data</li>
@@ -95,13 +95,13 @@ export function PrivacyPolicyContent() {
           <li><strong>Restriction:</strong> Request limited processing of your data</li>
           <li><strong>Withdraw Consent:</strong> Withdraw consent where processing is based on consent</li>
         </ul>
-        <p className="mb-4">
+        <p>
           To exercise these rights, contact us at <strong>privacy@konfetti.app</strong>
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">6. DATA SECURITY</h3>
+        <h3>6. Data Security</h3>
         <p className="mb-4">
           We implement appropriate technical and organizational measures to protect your personal data, including:
         </p>
@@ -111,58 +111,58 @@ export function PrivacyPolicyContent() {
           <li>Regular security assessments</li>
           <li>Access controls and employee training</li>
         </ul>
-        <p className="mb-4">
+        <p>
           However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">7. COOKIES AND TRACKING</h3>
-        <p className="mb-4">
+        <h3>7. Cookies and Tracking</h3>
+        <p>
           We use minimal cookies and similar technologies for session management and authentication. We do not use third-party advertising cookies or extensive tracking technologies.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">8. CHILDREN'S PRIVACY</h3>
-        <p className="mb-4">
+        <h3>8. Children's Privacy</h3>
+        <p>
           Konfetti is intended for users who are 18 years of age or older. We do not knowingly collect personal information from anyone under 18. If we become aware that we have collected data from a minor, we will take steps to delete that information promptly.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">9. INTERNATIONAL DATA TRANSFERS</h3>
-        <p className="mb-4">
+        <h3>9. International Data Transfers</h3>
+        <p>
           Your information may be transferred to and processed in countries other than your country of residence. We ensure appropriate safeguards are in place for such transfers in compliance with applicable data protection laws.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">10. CHANGES TO THIS POLICY</h3>
-        <p className="mb-4">
+        <h3>10. Changes to This Policy</h3>
+        <p>
           We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Effective Date" above. Your continued use of Konfetti after changes constitutes acceptance of the updated policy.
         </p>
       </section>
 
       <section>
-        <h3 className="font-semibold text-base mb-2">11. CONTACT US</h3>
+        <h3>11. Contact Us</h3>
         <p className="mb-2">For privacy-related inquiries or to exercise your rights, contact us at:</p>
         <ul className="list-none mb-4 space-y-1">
           <li><strong>Email:</strong> privacy@konfetti.app</li>
           <li><strong>General Support:</strong> support@konfetti.app</li>
         </ul>
-        <p className="mb-4">
+        <p>
           <strong>Data Controller:</strong><br />
           Konfetti<br />
           Mexico
         </p>
       </section>
 
-      <section className="border-t pt-4">
+      <section className="!bg-transparent !border-0 !shadow-none !p-0">
         <p className="text-xs text-muted-foreground">
           Last Updated: January 2025
         </p>
       </section>
-    </div>
+    </>
   );
 }
