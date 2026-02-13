@@ -1158,7 +1158,7 @@ const Matchmaking = () => {
             {/* Entire card content is now scrollable */}
             <div className="overflow-y-auto flex-1 pb-40">
               {/* Photo Section */}
-              <div className="relative h-[450px] gradient-sunset overflow-hidden">
+              <div className="relative aspect-[3/4] gradient-sunset overflow-hidden">
                 <img
                   src={currentPhotos[0] || "/placeholder.svg"}
                   alt={currentProfile.name}
@@ -1190,7 +1190,7 @@ const Matchmaking = () => {
                     <img
                       src={currentPhotos[1]}
                       alt={`${currentProfile.name} photo 2`}
-                      className="w-full h-[400px] object-cover"
+                      className="w-full aspect-[3/4] object-cover"
                     />
                   </div>
                 )}
@@ -1209,7 +1209,7 @@ const Matchmaking = () => {
                           <img
                             src={currentPhotos[2]}
                             alt={`${currentProfile.name} photo 3`}
-                            className="w-full h-[400px] object-cover"
+                            className="w-full aspect-[3/4] object-cover"
                           />
                         </div>
                       )}
@@ -1236,7 +1236,7 @@ const Matchmaking = () => {
                     <img
                       src={photo}
                       alt={`${currentProfile.name} photo ${idx + 4}`}
-                      className="w-full h-[400px] object-cover"
+                      className="w-full aspect-[3/4] object-cover"
                     />
                   </div>
                 ))}
