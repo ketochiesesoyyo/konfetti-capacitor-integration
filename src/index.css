@@ -386,3 +386,53 @@ All colors MUST be HSL.
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
+
+/* Legal content styling - cards for sections, refined headings */
+.legal-content > section,
+.legal-content > div {
+  @apply bg-card border border-border/60 rounded-2xl p-6 shadow-sm;
+}
+
+.legal-content > section h3,
+.legal-content > div > h2 {
+  @apply text-primary font-bold text-base tracking-wide uppercase pb-2 mb-3 border-b border-border/40;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.legal-content > div > h3 {
+  @apply text-foreground font-semibold text-sm mt-4 mb-2;
+}
+
+.legal-content > section h4 {
+  @apply text-foreground/80 font-semibold text-sm mt-3 mb-2;
+}
+
+.legal-content > section ul,
+.legal-content > div ul {
+  @apply text-muted-foreground;
+}
+
+.legal-content > section p,
+.legal-content > div p {
+  @apply text-muted-foreground leading-relaxed;
+}
+
+.legal-content > section strong,
+.legal-content > div strong {
+  @apply text-foreground;
+}
+
+/* Legal page hero */
+.legal-hero {
+  @apply relative overflow-hidden rounded-2xl p-8 mb-8;
+  background: var(--gradient-header);
+}
+
+.legal-hero h1 {
+  @apply text-2xl md:text-3xl font-bold text-white mb-2;
+}
+
+.legal-hero p {
+  @apply text-white/80 text-sm;
+}
