@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { Mail, Settings, Link, Sparkles, Heart } from "lucide-react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import journeyMatch from "@/assets/journey-step1-match1.jpg";
-import journeyWedding from "@/assets/journey-step2-wedding1.jpg";
-import journeyDate from "@/assets/journey-step3-date1.jpg";
 
 export const HowItWorks = () => {
   const { t } = useTranslation();
@@ -10,31 +8,35 @@ export const HowItWorks = () => {
 
   const steps = [
     {
-      number: "01",
+      icon: Mail,
       title: t("landing.howItWorks.step1.title"),
       description: t("landing.howItWorks.step1.description"),
-      image: journeyMatch,
-      alt: "Request your event",
     },
     {
-      number: "02",
+      icon: Settings,
       title: t("landing.howItWorks.step2.title"),
       description: t("landing.howItWorks.step2.description"),
-      image: journeyWedding,
-      alt: "Invite guests",
     },
     {
-      number: "03",
+      icon: Link,
       title: t("landing.howItWorks.step3.title"),
       description: t("landing.howItWorks.step3.description"),
-      image: journeyDate,
-      alt: "Match and connect",
+    },
+    {
+      icon: Sparkles,
+      title: t("landing.howItWorks.step4.title"),
+      description: t("landing.howItWorks.step4.description"),
+    },
+    {
+      icon: Heart,
+      title: t("landing.howItWorks.step5.title"),
+      description: t("landing.howItWorks.step5.description"),
     },
   ];
 
   return (
     <section ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-20">
           <p className="eyebrow mb-3">{t("landing.howItWorks.label")}</p>
@@ -46,46 +48,52 @@ export const HowItWorks = () => {
           </p>
         </div>
 
-        {/* Alternating rows */}
-        <div className="space-y-20 md:space-y-32">
-          {steps.map((step, index) => {
-            const isEven = index % 2 === 0;
-            return (
-              <div
-                key={index}
-                className="grid md:grid-cols-2 gap-10 md:gap-16 items-center"
-              >
-                {/* Text side */}
-                <div
-                  className={`space-y-4 ${isEven ? "md:order-1" : "md:order-2"}`}
-                >
-                  {/* Large decorative step number */}
-                  <span className="block font-display text-7xl md:text-8xl font-bold text-primary/10 leading-none select-none">
-                    {step.number}
-                  </span>
-                  <h3 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+        {/* Vertical timeline */}
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2" />
 
-                {/* Image side */}
+          <div className="space-y-8 md:space-y-12">
+            {steps.map((step, index) => {
+              const isLeft = index % 2 === 0;
+              return (
                 <div
-                  className={`${isEven ? "md:order-2" : "md:order-1"}`}
+                  key={index}
+                  className={`reveal-child relative flex flex-col md:flex-row items-center ${
+                    isLeft ? "" : "md:flex-row-reverse"
+                  }`}
                 >
-                  <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-                    <img
-                      src={step.image}
-                      alt={step.alt}
-                      className="w-full h-full object-cover"
-                    />
+                  {/* Card */}
+                  <div className={`flex-1 ${isLeft ? "md:pr-16" : "md:pl-16"}`}>
+                    <div
+                      className={`bg-muted/50 rounded-2xl p-6 space-y-3 ${
+                        isLeft ? "md:ml-auto" : "md:mr-auto"
+                      } md:max-w-md`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <step.icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium text-primary">
+                          {t("landing.howItWorks.step")} {index + 1}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground">{step.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {step.description}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Timeline dot */}
+                  <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary border-4 border-background shadow-sm" />
+
+                  {/* Spacer */}
+                  <div className="hidden md:block flex-1" />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

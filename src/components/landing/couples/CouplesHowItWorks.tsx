@@ -28,7 +28,7 @@ export const CouplesHowItWorks = () => {
   ];
 
   return (
-    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20 px-6">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/40 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">

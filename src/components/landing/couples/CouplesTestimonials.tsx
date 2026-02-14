@@ -37,7 +37,7 @@ export const CouplesTestimonials = () => {
   ];
 
   return (
-    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/40">
       {/* Header */}
       <div className="text-center mb-16 px-6">
         <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">

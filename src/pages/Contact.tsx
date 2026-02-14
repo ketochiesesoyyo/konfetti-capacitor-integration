@@ -144,7 +144,7 @@ const Contact = () => {
       <section ref={formRef} className="scroll-reveal py-12 px-6 pb-24">
         <div className="max-w-2xl mx-auto">
           {isSuccess ? (
-            <div className="bg-muted/30 rounded-2xl p-12 text-center">
+            <div className="bg-muted/50 rounded-2xl p-12 text-center">
               <CheckCircle className="h-16 w-16 text-primary mx-auto mb-6" />
               <h2 className="font-display text-2xl font-bold text-foreground mb-4">
                 {t("landing.contact.successTitle")}
@@ -160,7 +160,7 @@ const Contact = () => {
               </Button>
             </div>
           ) : (
-            <div className="bg-muted/30 rounded-2xl p-8 md:p-12">
+            <div className="bg-muted/50 rounded-2xl p-8 md:p-12">
               <div className="text-center mb-8">
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">
                   {t("landing.contact.formTitle")}

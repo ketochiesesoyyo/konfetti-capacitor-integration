@@ -32,7 +32,7 @@ export const CouplesSocialProof = () => {
   ];
 
   return (
-    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/20">
+    <section ref={ref} className="scroll-reveal py-24 md:py-32 bg-muted/40">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">

@@ -41,12 +41,12 @@ export const HeroSection = () => {
           {appScreenshots.map((img, i) => (
             <div
               key={i}
-              className="reveal-child w-28 h-56 sm:w-36 sm:h-72 md:w-44 md:h-[22rem] lg:w-52 lg:h-[26rem] rounded-2xl overflow-hidden shadow-lg"
+              className="reveal-child w-28 sm:w-36 md:w-44 lg:w-52 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-lg"
             >
               <img
                 src={img.src}
                 alt={img.alt}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-auto"
               />
             </div>
           ))}

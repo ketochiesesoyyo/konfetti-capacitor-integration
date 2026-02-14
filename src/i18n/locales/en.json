@@ -616,19 +616,24 @@
       "subtitle": "Konfetti is a social matchmaking app for guests attending the same wedding or private event.",
       "step": "Step",
       "step1": {
-        "title": "Request your event",
-        "description": "Contact us via email (hello@konfetti.app) or WhatsApp to set up your event. Create your profile, add photos, and set your preferences — all in minutes.",
-        "visual": "📧 hello@konfetti.app"
+        "title": "Contact us",
+        "description": "Send us your event details. We'll send you a personalized quote."
       },
       "step2": {
-        "title": "Invite guests",
-        "description": "Send private links so only your guests can join.",
-        "visual": "🔗 Copy Event Link"
+        "title": "We set everything up",
+        "description": "We create the event, set the matchmaking dates, and prepare everything for the guests."
       },
       "step3": {
-        "title": "Match and connect",
-        "description": "Guests browse, swipe, and chat before meeting in real life at the event.",
-        "visual": "🎉 It's a Match!"
+        "title": "Share the link",
+        "description": "We give you a private link to share in your wedding invitations, SMS or WhatsApp group. That's it."
+      },
+      "step4": {
+        "title": "Watch the magic happen",
+        "description": "Your guests create profiles and start matching before the wedding. You'll see the connections grow."
+      },
+      "step5": {
+        "title": "Love is in the air!",
+        "description": "Those who match then chat, meet at the wedding, and who knows — maybe they'll start their own love story!"
       }
     },
     "profileCreation": {

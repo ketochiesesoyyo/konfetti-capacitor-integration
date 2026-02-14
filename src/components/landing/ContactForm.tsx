@@ -107,7 +107,7 @@ export const ContactForm = () => {
     return (
       <section id="contact-form" ref={ref} className="scroll-reveal py-24 md:py-32 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-muted/30 rounded-2xl p-8 md:p-12">
+          <div className="bg-muted/50 rounded-2xl p-8 md:p-12">
             <CheckCircle className="h-16 w-16 text-primary mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-foreground mb-4">
               {t("landing.contactForm.successTitle")}
@@ -141,7 +141,7 @@ export const ContactForm = () => {
           </p>
         </div>
 
-        <div className="bg-muted/30 rounded-2xl p-8 md:p-12">
+        <div className="bg-muted/50 rounded-2xl p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Submitter Type */}

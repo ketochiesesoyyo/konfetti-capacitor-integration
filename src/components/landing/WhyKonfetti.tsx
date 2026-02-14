@@ -32,7 +32,7 @@ export const WhyKonfetti = () => {
   return (
     <section
       ref={ref}
-      className="scroll-reveal py-24 md:py-32 px-6 bg-muted/20"
+      className="scroll-reveal py-24 md:py-32 px-6 bg-muted/40"
     >
       <div className="max-w-5xl mx-auto">
         {/* Section header */}
