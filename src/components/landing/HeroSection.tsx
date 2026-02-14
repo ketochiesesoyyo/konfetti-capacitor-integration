@@ -76,6 +76,10 @@ export const HeroSection = () => {
               {t("landing.hero.signUp")}
             </button>
           </p>
+
+          <p className="text-xs text-muted-foreground/70 tracking-wide uppercase">
+            {t("landing.hero.worldwide")}
+          </p>
         </div>
 
         {/* App Store badges — no labels */}

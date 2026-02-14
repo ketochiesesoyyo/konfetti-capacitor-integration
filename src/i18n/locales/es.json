@@ -564,7 +564,8 @@
       "createEvent": "Crear un Evento",
       "joinEvent": "Unirse a un Evento",
       "getStarted": "¿Nuevo aquí?",
-      "signUp": "Regístrate gratis"
+      "signUp": "Regístrate gratis",
+      "worldwide": "Disponible para bodas y eventos en todo el mundo"
     },
     "nav": {
       "couples": "Para Novios",
@@ -836,6 +837,10 @@
       "q6": {
         "question": "¿Cómo funciona el timing del matchmaking?",
         "answer": "El matchmaking se abre 1 semana antes de la fecha del evento y se cierra 3 días después. Esto da tiempo a los invitados para conectar antes y después de la celebración."
+      },
+      "q7": {
+        "question": "¿Konfetti está disponible en mi país?",
+        "answer": "¡Sí! Konfetti funciona para bodas y eventos en cualquier parte del mundo. Ya sea que tu celebración sea en México, Estados Unidos, Europa o más allá — nosotros nos encargamos de todo. Solo contáctanos a través de nuestro formulario y te enviaremos una cotización personalizada."
       },
       "q7": {
         "question": "¿Puedo editar mi perfil después de unirme?",

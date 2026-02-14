@@ -565,7 +565,8 @@
       "createEvent": "Create an Event",
       "joinEvent": "Join an Event",
       "getStarted": "New here?",
-      "signUp": "Sign up for free"
+      "signUp": "Sign up for free",
+      "worldwide": "Available for weddings and events worldwide"
     },
     "nav": {
       "couples": "For Couples",
@@ -837,6 +838,10 @@
       "q6": {
         "question": "How does matchmaking timing work?",
         "answer": "Matchmaking opens 1 week before the event date and closes 3 days after. This gives guests time to connect before and after the celebration."
+      },
+      "q7": {
+        "question": "Is Konfetti available in my country?",
+        "answer": "Yes! Konfetti works for weddings and events anywhere in the world. Whether your celebration is in Mexico, the US, Europe, or beyond — we'll set everything up for you. Just reach out through our contact form and we'll send you a personalized quote."
       },
       "q7": {
         "question": "Can I edit my profile after joining?",

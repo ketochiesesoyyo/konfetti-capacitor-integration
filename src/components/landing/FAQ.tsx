@@ -36,6 +36,10 @@ export const FAQ = () => {
       question: t("landing.faq.q6.question"),
       answer: t("landing.faq.q6.answer"),
     },
+    {
+      question: t("landing.faq.q7.question"),
+      answer: t("landing.faq.q7.answer"),
+    },
   ];
 
   return (
